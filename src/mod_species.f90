@@ -122,8 +122,8 @@ contains
       type(species_fields_t), intent(inout) :: species
       type(transport_properties_t), intent(in) :: transport
 
-      real(rk), allocatable :: dY(:)
-      real(rk) :: flux, face_area, dist
+      real(rk), allocatable :: dY(:), diff_flux(:), adv_flux(:), Y_face_lin(:)
+      real(rk) :: flux, face_area, dist, sum_diff_flux
       real(rk) :: Y_owner, Y_neighbor, Y_face
       real(rk) :: diff_face
       integer :: c, f, fid, owner, neighbor
@@ -134,6 +134,9 @@ contains
       if (species%nspecies <= 0) return
 
       allocate(dY(species%nspecies))
+      allocate(diff_flux(species%nspecies))
+      allocate(adv_flux(species%nspecies))
+      allocate(Y_face_lin(species%nspecies))
 
       species%Y_old = species%Y
 
@@ -143,7 +146,7 @@ contains
 
          do f = 1, mesh%ncell_faces(c)
             fid = mesh%cell_faces(f,c)
-            flux = fields%face_flux(fid)
+            flux = fields%face_flux(fid) ! Mass flux (outward positive for owner)
 
             owner = mesh%faces(fid)%owner
             neighbor = face_effective_neighbor(mesh, bc, fid, c)
@@ -151,6 +154,7 @@ contains
             face_area = mesh%faces(fid)%area
             dist = face_normal_distance(mesh, bc, fid, c, neighbor)
 
+            sum_diff_flux = zero
             do k = 1, species%nspecies
                Y_owner = species%Y_old(k, owner)
                
@@ -158,29 +162,37 @@ contains
                   call boundary_species(mesh, bc, fid, k, Y_owner, Y_neighbor, is_dirichlet)
                else
                   Y_neighbor = species%Y_old(k, neighbor)
-                  is_dirichlet = .false.
+                  is_dirichlet = .true. ! Treat internal as dirichlet for flux calculation
                end if
 
-               ! Upwind advection
+               ! 1. Advective flux (outward positive for owner)
                if (flux > zero) then
                   Y_face = Y_owner
                else
                   Y_face = Y_neighbor
                end if
+               adv_flux(k) = -flux * Y_face
 
-               ! Advective flux (outward positive)
-               dY(k) = dY(k) - flux * Y_face
-
-               ! Diffusive flux (central difference, outward positive)
+               ! 2. Raw Diffusive flux (central difference, outward positive for owner)
                ! flux_diff = - D * grad(Y) dot n * area
+               diff_flux(k) = zero
                if (neighbor /= 0 .or. is_dirichlet) then
                   if (neighbor == 0) then
                      diff_face = transport%diffusivity(k, owner)
                   else
                      diff_face = 0.5_rk * (transport%diffusivity(k, owner) + transport%diffusivity(k, neighbor))
                   end if
-                  dY(k) = dY(k) + diff_face * (Y_neighbor - Y_owner) / dist * face_area
+                  diff_flux(k) = diff_face * (Y_neighbor - Y_owner) / dist * face_area
                end if
+               
+               sum_diff_flux = sum_diff_flux + diff_flux(k)
+               Y_face_lin(k) = 0.5_rk * (Y_owner + Y_neighbor)
+            end do
+
+            ! 3. Apply Correction to ensure sum(diff_flux) = 0
+            ! We subtract the net imbalance distributed by mass fraction.
+            do k = 1, species%nspecies
+               dY(k) = dY(k) + adv_flux(k) + (diff_flux(k) - Y_face_lin(k) * sum_diff_flux)
             end do
          end do
 

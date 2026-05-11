@@ -11,6 +11,7 @@ $$ \nabla \cdot \mathbf{u} = 0 $$
 $$ \frac{\partial \mathbf{u}}{\partial t} + \nabla \cdot (\mathbf{u} \mathbf{u}) = -\frac{1}{\rho} \nabla p + \nu \nabla^2 \mathbf{u} + \mathbf{f} $$
 
 Transport of $N$ passive species is solved as:
+(using a **Scale-on-Demand** architecture supporting $N \ge 0$)
 
 $$ \frac{\partial Y_k}{\partial t} + \nabla \cdot (\mathbf{u} Y_k) = \nabla \cdot (D_k \nabla Y_k) \quad k=1...N $$
 
@@ -52,7 +53,7 @@ A fractional-step projection method is used for pressure-velocity coupling.
 ## Species Transport
 
 *   **Stability:** Species are advanced using explicit upwind advection to ensure boundedness ($0 \le Y_k \le 1$).
-*   **Conservation:** After the explicit update, mass fractions are renormalized such that $\sum Y_k = 1$ to maintain consistency.
+*   **Conservation:** Diffusive fluxes are corrected using a **Correction Velocity** (or diffusive flux correction) to ensure that the net mass flux summed over all species is identically zero ($\sum J_{diff, k} = 0$). After the explicit update, mass fractions are renormalized such that $\sum Y_k = 1$ to maintain consistency and eliminate minor truncation errors.
 *   **Diffusivity:** Can be specified as a constant per-species or evaluated dynamically through the **Cantera** bridge.
 
 ## Conservation Diagnostics

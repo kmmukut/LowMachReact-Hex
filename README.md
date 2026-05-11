@@ -8,7 +8,8 @@ The current baseline implementation features:
 * **Cell-centered finite-volume** formulation on axis-aligned cuboid cells.
 * **Fractional-step projection method** with corrected conservative face fluxes.
 * **MPI decomposition** by owned cell ranges, with a globally replicated mesh to support spectral radiation solvers.
-* **Cantera 3.x integration** for dynamic evaluation of transport properties ($\mu$, $D_k$).
+* **Scale-on-Demand Species**: Dynamic species transport from 0 to 256+ species. Implements **Correction Velocity** for strict mass conservation. Supports manual selection or automatic discovery from Cantera mechanisms.
+* **Cantera 3.x integration**: Decoupled flags for viscosity/density and species diffusivity. Automatic mechanism loading for reacting flows.
 * **VTU/PVD output** for visualization in ParaView and CSV diagnostics for quantitative monitoring.
 
 ## Governing Equations

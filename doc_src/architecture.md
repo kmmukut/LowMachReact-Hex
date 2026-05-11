@@ -31,8 +31,11 @@ The code implements a dual-MPI architecture designed to balance flow solver effi
 The solver is organized into specialized modules to isolate physics, numerics, and external dependencies:
 
 *   **`mod_flow_projection`**: Implements the fractional-step projection algorithm.
-*   **`mod_species`**: Manages the transport of passive scalars ($Y_k$).
-*   **`mod_transport_properties`**: Abstracts property evaluation. It provides a bridge to the **Cantera 3.x C++ API** for dynamic evaluation of viscosity and species diffusivity.
+*   **`mod_species`**: Manages the transport of passive scalars ($Y_k$). Supports **Scale-on-Demand** architecture with dynamic allocation for 0 to 256+ species. Implements a **Correction Velocity** (diffusive flux correction) to ensure strict mass conservation when using different species diffusivities ($D_k$).
+*   **`mod_transport_properties`**: Abstracts property evaluation. It provides a bridge to the **Cantera 3.x C++ API** for dynamic evaluation of viscosity and species diffusivity. Features include:
+    *   **Automatic Mechanism Discovery**: Automatically identifies all species from a `.yaml` mechanism when `enable_reactions` is active.
+    *   **Decoupled Control**: Independent toggles for Cantera-calculated fluid properties (viscosity/density) and species transport properties (diffusivity).
+    *   **Name-Based Initialization**: Maps namelist-provided mass fractions to the correct indices in complex mechanisms at runtime.
 *   **`mod_bc`**: A unified boundary condition manager that supports field-specific types (Velocity, Pressure, Species) for every patch.
 
 ## Boundary Condition System

@@ -9,26 +9,30 @@ Current baseline:
 - Cell-centered finite-volume flow solver.
 - Projection method with corrected conservative face fluxes.
 - Conservative face-flux divergence diagnostic.
+- Scale-on-Demand Species Transport:
+  - Supports 0 to 256+ species with dynamic allocation.
+  - Implements **Correction Velocity** for strict mass conservation with varying diffusivities.
+  - Automatic discovery from Cantera mechanisms.
+  - Name-based initialization from namelist.
+- Cantera 3.x Property Integration:
+  - Decoupled viscosity/density and diffusivity toggles.
+  - Modern C++ bridge with character-set robustness.
 - VTU/PVD output working.
 - Stage 2 boundary-condition split:
   - legacy `patch_type`
   - `patch_velocity_type`
   - `patch_pressure_type`
+  - `patch_species_type` (New)
 - MPI model:
   - full mesh replicated on all ranks
   - flow computation decomposed by owned cell ranges
-  - global arrays currently available on all ranks
-  - optimized owned-cell gather for pressure matvec assembly
 - Current validation targets:
-  - lid-driven cavity
+  - lid-driven cavity (Pure, Passive Species, and Cantera modes)
   - periodic body-force channel flow
-  - square/cube obstacle cases for separated-flow development
 - Long-term extensions:
-  - passive species transport for CO2/H2O/CO
-  - radiation support with wavenumber-domain decomposition
-  - Cantera transport properties
-  - Cantera chemistry
   - energy equation and variable-density low-Mach coupling
+  - radiation support with wavenumber-domain decomposition
+  - chemistry source terms (finite-rate or equilibrium)
 
 The current solver should be described as a **laminar incompressible / low-Mach-style constant-density finite-volume solver**, not as a full reacting low-Mach solver yet.
 
@@ -743,7 +747,8 @@ Development path:
 1. return constant transport properties (Done)
 2. replace constants with Cantera-computed values (Done)
 3. validate against known mixture values (Done)
-4. use transport properties in species and energy equations (Done - diffusivity is used in species transport)
+4. Scale-on-Demand dynamic discovery (Done)
+5. use transport properties in species and energy equations (Done)
 
 **Note**: Calling Cantera cell-by-cell at every step introduces significant overhead. Future work should implement sub-cycling, tolerance checks, or tabulation for evaluating transport properties to restore performance.
 

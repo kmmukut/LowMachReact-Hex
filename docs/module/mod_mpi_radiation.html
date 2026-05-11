@@ -8,7 +8,7 @@
     <meta name="author" content="Khaled Mosharraf Mukut" >
     <link rel="icon" href="../favicon.png">
 
-    <title>hex_lowmach_fv &ndash; LowMach-Hex</title>
+    <title>mod_mpi_radiation &ndash; LowMach-Hex</title>
 
     <link href="../css/bootstrap.min.css" rel="stylesheet">
     <link href="../css/pygments.css" rel="stylesheet">
@@ -78,7 +78,8 @@
 
     <div class="container">
   <div class="row">
-    <h1>hex_lowmach_fv    <small>Program</small>
+    <h1>mod_mpi_radiation 
+    <small>Module</small>
     </h1>
     <div class="row">
   <div class="col-lg-12">
@@ -87,13 +88,13 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title="100.0% of total for programs.">93 statements</a>
+    title=" 2.9% of total for modules and submodules.">70 statements</a>
      </li> 
-    <li><i class="fa fa-code"></i><a href="../src/main.f90"> Source File</a></li>
+    <li><i class="fa fa-code"></i><a href="../src/mod_mpi_radiation.f90"> Source File</a></li>
   </ul>
   <ol class="breadcrumb in-well text-right">
-     <li><a href='../sourcefile/main.f90.html'>main.f90</a></li>
-     <li class="active">hex_lowmach_fv</li>
+     <li><a href='../sourcefile/mod_mpi_radiation.f90.html'>mod_mpi_radiation.f90</a></li>
+     <li class="active">mod_mpi_radiation</li>
   </ol>
 </div>
 </div>
@@ -112,21 +113,10 @@
   <h3>Contents</h3>
  
 <div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#vars-0">Variables</a></h3></div>
-  <div id="vars-0" class="panel-collapse collapse">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#types-0">Derived Types</a></h3></div>
+  <div id="types-0" class="panel-collapse collapse">
     <div class="list-group">
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-params~22">params</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-mesh~20">mesh</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-flow_mpi">flow_mpi</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-rad_mpi">rad_mpi</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-bc~12">bc</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-fields~9">fields</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-stats~5">stats</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-species~5">species</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-transport~5">transport</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-case_file">case_file</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-step~5">step</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-time~3">time</a>
+      <a class="list-group-item" href="../module/mod_mpi_radiation.html#type-radiation_mpi_t">radiation_mpi_t</a>
     </div>
   </div>
 </div>
@@ -134,7 +124,9 @@
   <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#subs-0">Subroutines</a></h3></div>
   <div class="list-group">
     <div id="subs-0" class="panel-collapse collapse">
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#proc-get_case_filename">get_case_filename</a>
+      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_mpi_initialize">radiation_mpi_initialize</a>
+      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_mpi_finalize">radiation_mpi_finalize</a>
+      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_task_bounds">radiation_task_bounds</a>
     </div>
   </div>
 </div>
@@ -144,52 +136,32 @@
     </div>
     
     <div class="col-md-9" id='text'>
-        <div class="panel panel-default">
+    
+<br>        <div class="panel panel-default">
       <div class="panel-heading">
   <h3 class="panel-title">Uses</h3>
       </div>
       <ul class="list-group">
       <li class="list-group-item">
   <ul class="list-inline">
-    <li><a href='../module/mod_mesh_io.html'>mod_mesh_io</a></li>
-    <li><a href='../module/mod_input.html'>mod_input</a></li>
-    <li><a href='../module/mod_output~2.html'>mod_output</a></li>
-    <li><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></li>
-    <li><a href='../module/mod_mpi_radiation.html'>mod_mpi_radiation</a></li>
-    <li><a href='../module/mod_flow_projection.html'>mod_flow_projection</a></li>
-    <li><a href='../module/mod_transport_properties.html'>mod_transport_properties</a></li>
-    <li><a href='../module/mod_bc.html'>mod_bc</a></li>
-    <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
-    <li><a href='../module/mod_species.html'>mod_species</a></li>
-    <li><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></li>
-    <li><a href='../module/mod_fields.html'>mod_fields</a></li>
     <li><a href="http://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node409.htm">mpi_f08</a></li>
+    <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
   </ul>
       </li>
       </ul>
     </div>
 
-    <p>Main entry point for the LowMach-Hex hexahedral low-Mach FV solver.</p>
-<br>
-     <section class="visible-xs visible-sm hidden-md">
-       <h3>Contents</h3>
+    
+    <br>
+
+    <section class="visible-xs visible-sm hidden-md">
+      <h3>Contents</h3>
  
 <div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#vars-1">Variables</a></h3></div>
-  <div id="vars-1" class="panel-collapse collapse">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#types-1">Derived Types</a></h3></div>
+  <div id="types-1" class="panel-collapse collapse">
     <div class="list-group">
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-params~22">params</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-mesh~20">mesh</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-flow_mpi">flow_mpi</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-rad_mpi">rad_mpi</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-bc~12">bc</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-fields~9">fields</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-stats~5">stats</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-species~5">species</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-transport~5">transport</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-case_file">case_file</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-step~5">step</a>
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#variable-time~3">time</a>
+      <a class="list-group-item" href="../module/mod_mpi_radiation.html#type-radiation_mpi_t">radiation_mpi_t</a>
     </div>
   </div>
 </div>
@@ -197,106 +169,106 @@
   <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#subs-1">Subroutines</a></h3></div>
   <div class="list-group">
     <div id="subs-1" class="panel-collapse collapse">
-      <a class="list-group-item" href="../program/hex_lowmach_fv.html#proc-get_case_filename">get_case_filename</a>
+      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_mpi_initialize">radiation_mpi_initialize</a>
+      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_mpi_finalize">radiation_mpi_finalize</a>
+      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_task_bounds">radiation_task_bounds</a>
     </div>
   </div>
 </div>
 
-     </section>
-     <br class="visible-xs visible-sm hidden-md">
+    </section>
+    <br class="visible-xs visible-sm hidden-md">
 
 
+    
+    
+
+    
     <section>
-    <h2>Variables</h2>
-    <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Attributes</th><th></th><th>Name</th><th></th><th>Initial</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" id="variable-params~22"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>params</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-mesh~20"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>mesh</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-flow_mpi"></span>type(<a href='../type/flow_mpi_t.html'>flow_mpi_t</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>flow_mpi</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-rad_mpi"></span>type(<a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>rad_mpi</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-bc~12"></span>type(bc_set_t)</td>
-  <td></td><td>::</td>
-  <td><strong>bc</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-fields~9"></span>type(<a href='../type/flow_fields_t.html'>flow_fields_t</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>fields</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-stats~5"></span>type(<a href='../type/solver_stats_t.html'>solver_stats_t</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>stats</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-species~5"></span>type(<a href='../type/species_fields_t.html'>species_fields_t</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>species</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-transport~5"></span>type(<a href='../type/transport_properties_t.html'>transport_properties_t</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>transport</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-case_file"></span>character(len=256)</td>
-  <td></td><td>::</td>
-  <td><strong>case_file</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-step~5"></span>integer</td>
-  <td></td><td>::</td>
-  <td><strong>step</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-time~3"></span>real(kind=rk)</td>
-  <td></td><td>::</td>
-  <td><strong>time</strong></td><td></td><td></td><td></td>
-</tr>
-</tbody>
-</table>
+     <h2>Derived Types</h2>
+     <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="type-radiation_mpi_t"></span><h3>type, public :: <a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>  </h3></div>
+  <div class="panel-body">
+     
+  </div>
+</div>
 
     </section>
-    <br>
+  <br>
     
-    
-    
-
-    
-
 
     <section>
     <h2>Subroutines</h2>
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-get_case_filename"></span><h3>subroutine <a href='../proc/get_case_filename.html'>get_case_filename</a>(filename)</h3></div>
+  <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_mpi_initialize"></span><h3>public subroutine <a href='../proc/radiation_mpi_initialize.html'>radiation_mpi_initialize</a>(rad, comm_parent, n_tasks)</h3></div>
   <div class="panel-body">
            
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" ></span>character(len=*),</td>
-<td>intent(out)</td>
+  <td><span class="anchor" ></span>type(<a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>),</td>
+<td>intent(inout)</td>
   <td></td>  <td></td><td>::</td>
-  <td><strong>filename</strong></td><td></td>
+  <td><strong>rad</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(MPI_Comm),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>comm_parent</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>integer,</td>
+<td>intent(in),</td>
+  <td>optional</td>  <td></td><td>::</td>
+  <td><strong>n_tasks</strong></td><td></td>
+</tr>
+</tbody>
+</table>
+
+
+  </div>
+  </div>
+
+      <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_mpi_finalize"></span><h3>public subroutine <a href='../proc/radiation_mpi_finalize.html'>radiation_mpi_finalize</a>(rad)</h3></div>
+  <div class="panel-body">
+           
+<h4>Arguments</h4>      <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>),</td>
+<td>intent(inout)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>rad</strong></td><td></td>
+</tr>
+</tbody>
+</table>
+
+
+  </div>
+  </div>
+
+      <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_task_bounds"></span><h3>public subroutine <a href='../proc/radiation_task_bounds.html'>radiation_task_bounds</a>(rad, n_tasks)</h3></div>
+  <div class="panel-body">
+           
+<h4>Arguments</h4>      <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>),</td>
+<td>intent(inout)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>rad</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>integer,</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>n_tasks</strong></td><td></td>
 </tr>
 </tbody>
 </table>
@@ -306,7 +278,7 @@
   </div>
 
     </section>    
-    
+    <br>
     
     </div>
   </div>

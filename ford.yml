@@ -4,7 +4,8 @@ author: Khaled Mosharraf Mukut
 project_github: https://github.com/kmmukut/LowMach-Hex
 project_website: https://sites.google.com/kmmukut/LowMach-Hex
 src_dir: src
-output_dir: docs/html
+output_dir: docs
+page_dir: doc_src
 display: public
   protected
   private

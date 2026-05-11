@@ -8,7 +8,7 @@
     <meta name="author" content="Khaled Mosharraf Mukut" >
     <link rel="icon" href="../favicon.png">
 
-    <title>mod_mpi_radiation &ndash; LowMach-Hex</title>
+    <title>mod_flow_projection &ndash; LowMach-Hex</title>
 
     <link href="../css/bootstrap.min.css" rel="stylesheet">
     <link href="../css/pygments.css" rel="stylesheet">
@@ -78,7 +78,7 @@
 
     <div class="container">
   <div class="row">
-    <h1>mod_mpi_radiation 
+    <h1>mod_flow_projection 
     <small>Module</small>
     </h1>
     <div class="row">
@@ -88,13 +88,13 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 2.9% of total for modules and submodules.">70 statements</a>
+    title="27.9% of total for modules and submodules.">669 statements</a>
      </li> 
-    <li><i class="fa fa-code"></i><a href="../src/mod_mpi_radiation.f90"> Source File</a></li>
+    <li><i class="fa fa-code"></i><a href="../src/mod_flow_projection.f90"> Source File</a></li>
   </ul>
   <ol class="breadcrumb in-well text-right">
-     <li><a href='../sourcefile/mod_mpi_radiation.f90.html'>mod_mpi_radiation.f90</a></li>
-     <li class="active">mod_mpi_radiation</li>
+     <li><a href='../sourcefile/mod_flow_projection.f90.html'>mod_flow_projection.f90</a></li>
+     <li class="active">mod_flow_projection</li>
   </ol>
 </div>
 </div>
@@ -116,7 +116,7 @@
   <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#types-0">Derived Types</a></h3></div>
   <div id="types-0" class="panel-collapse collapse">
     <div class="list-group">
-      <a class="list-group-item" href="../module/mod_mpi_radiation.html#type-radiation_mpi_t">radiation_mpi_t</a>
+      <a class="list-group-item" href="../module/mod_flow_projection.html#type-solver_stats_t">solver_stats_t</a>
     </div>
   </div>
 </div>
@@ -124,9 +124,9 @@
   <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#subs-0">Subroutines</a></h3></div>
   <div class="list-group">
     <div id="subs-0" class="panel-collapse collapse">
-      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_mpi_initialize">radiation_mpi_initialize</a>
-      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_mpi_finalize">radiation_mpi_finalize</a>
-      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_task_bounds">radiation_task_bounds</a>
+      <a class="list-group-item" href="../module/mod_flow_projection.html#proc-advance_projection_step">advance_projection_step</a>
+      <a class="list-group-item" href="../module/mod_flow_projection.html#proc-compute_flow_diagnostics">compute_flow_diagnostics</a>
+      <a class="list-group-item" href="../module/mod_flow_projection.html#proc-finalize_flow_projection_workspace">finalize_flow_projection_workspace</a>
     </div>
   </div>
 </div>
@@ -136,7 +136,16 @@
     </div>
     
     <div class="col-md-9" id='text'>
-    
+    <p>Incompressible Navier-Stokes solver using the projection method.</p>
+<p>This module implements the fractional-step projection method for 
+incompressible flows. It handles the momentum predictor step, 
+pressure Poisson solve using Conjugate Gradient, and velocity correction.
+Compute distance from cell center to face center along normal.</p>
+<p>@param mesh Full mesh.
+@param bc Boundary conditions.
+@param face_id Face ID.
+@param cell_id ID of the cell from which distance is measured.
+@param neighbor_id ID of the neighbor cell (used for periodic handling).</p>
 <br>        <div class="panel panel-default">
       <div class="panel-heading">
   <h3 class="panel-title">Uses</h3>
@@ -144,8 +153,13 @@
       <ul class="list-group">
       <li class="list-group-item">
   <ul class="list-inline">
-    <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
     <li><a href="http://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node409.htm">mpi_f08</a></li>
+    <li><a href='../module/mod_input.html'>mod_input</a></li>
+    <li><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></li>
+    <li><a href='../module/mod_bc.html'>mod_bc</a></li>
+    <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
+    <li><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></li>
+    <li><a href='../module/mod_fields.html'>mod_fields</a></li>
   </ul>
       </li>
       </ul>
@@ -161,7 +175,7 @@
   <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#types-1">Derived Types</a></h3></div>
   <div id="types-1" class="panel-collapse collapse">
     <div class="list-group">
-      <a class="list-group-item" href="../module/mod_mpi_radiation.html#type-radiation_mpi_t">radiation_mpi_t</a>
+      <a class="list-group-item" href="../module/mod_flow_projection.html#type-solver_stats_t">solver_stats_t</a>
     </div>
   </div>
 </div>
@@ -169,9 +183,9 @@
   <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#subs-1">Subroutines</a></h3></div>
   <div class="list-group">
     <div id="subs-1" class="panel-collapse collapse">
-      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_mpi_initialize">radiation_mpi_initialize</a>
-      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_mpi_finalize">radiation_mpi_finalize</a>
-      <a class="list-group-item" href="../module/mod_mpi_radiation.html#proc-radiation_task_bounds">radiation_task_bounds</a>
+      <a class="list-group-item" href="../module/mod_flow_projection.html#proc-advance_projection_step">advance_projection_step</a>
+      <a class="list-group-item" href="../module/mod_flow_projection.html#proc-compute_flow_diagnostics">compute_flow_diagnostics</a>
+      <a class="list-group-item" href="../module/mod_flow_projection.html#proc-finalize_flow_projection_workspace">finalize_flow_projection_workspace</a>
     </div>
   </div>
 </div>
@@ -187,8 +201,46 @@
     <section>
      <h2>Derived Types</h2>
      <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="type-radiation_mpi_t"></span><h3>type, public :: <a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>  </h3></div>
+  <div class="panel-heading codesum"><span class="anchor" id="type-solver_stats_t"></span><h3>type, public :: <a href='../type/solver_stats_t.html'>solver_stats_t</a>  </h3></div>
   <div class="panel-body">
+    <p>Solver diagnostics and performance statistics.</p>
+     <h4>Components</h4>
+    <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Visibility</th><th>Attributes</th><th></th><th>Name</th><th></th><th>Initial</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" id="variable-pressure_iterations"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>pressure_iterations</strong></td><td> =</td><td>0</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-pressure_residual"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>pressure_residual</strong></td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-max_divergence"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>max_divergence</strong></td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-rms_divergence"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>rms_divergence</strong></td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-net_boundary_flux"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>net_boundary_flux</strong></td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-kinetic_energy"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>kinetic_energy</strong></td><td> =</td><td>zero</td><td></td>
+</tr>
+</tbody>
+</table>
+
      
   </div>
 </div>
@@ -200,29 +252,49 @@
     <section>
     <h2>Subroutines</h2>
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_mpi_initialize"></span><h3>public subroutine <a href='../proc/radiation_mpi_initialize.html'>radiation_mpi_initialize</a>(rad, comm_parent, n_tasks)</h3></div>
+  <div class="panel-heading codesum"><span class="anchor" id="proc-advance_projection_step"></span><h3>public subroutine <a href='../proc/advance_projection_step.html'>advance_projection_step</a>(mesh, flow, bc, params, fields, stats)</h3></div>
   <div class="panel-body">
-           
+       
+<p>Advance the flow solution by one projection step.</p><a href="../proc/advance_projection_step.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+    
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" ></span>type(<a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>),</td>
-<td>intent(inout)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>rad</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>type(MPI_Comm),</td>
+  <td><span class="anchor" ></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
-  <td><strong>comm_parent</strong></td><td></td>
+  <td><strong>mesh</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" ></span>integer,</td>
-<td>intent(in),</td>
-  <td>optional</td>  <td></td><td>::</td>
-  <td><strong>n_tasks</strong></td><td></td>
+  <td><span class="anchor" ></span>type(<a href='../type/flow_mpi_t.html'>flow_mpi_t</a>),</td>
+<td>intent(inout)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>flow</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(bc_set_t),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>bc</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>params</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/flow_fields_t.html'>flow_fields_t</a>),</td>
+<td>intent(inout)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>fields</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/solver_stats_t.html'>solver_stats_t</a>),</td>
+<td>intent(out)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>stats</strong></td><td></td>
 </tr>
 </tbody>
 </table>
@@ -232,17 +304,47 @@
   </div>
 
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_mpi_finalize"></span><h3>public subroutine <a href='../proc/radiation_mpi_finalize.html'>radiation_mpi_finalize</a>(rad)</h3></div>
+  <div class="panel-heading codesum"><span class="anchor" id="proc-compute_flow_diagnostics"></span><h3>public subroutine <a href='../proc/compute_flow_diagnostics.html'>compute_flow_diagnostics</a>(mesh, flow, bc, params, fields, stats)</h3></div>
   <div class="panel-body">
            
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" ></span>type(<a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>),</td>
+  <td><span class="anchor" ></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>mesh</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/flow_mpi_t.html'>flow_mpi_t</a>),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>flow</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(bc_set_t),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>bc</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>params</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/flow_fields_t.html'>flow_fields_t</a>),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>fields</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>type(<a href='../type/solver_stats_t.html'>solver_stats_t</a>),</td>
 <td>intent(inout)</td>
   <td></td>  <td></td><td>::</td>
-  <td><strong>rad</strong></td><td></td>
+  <td><strong>stats</strong></td><td></td>
 </tr>
 </tbody>
 </table>
@@ -252,27 +354,12 @@
   </div>
 
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_task_bounds"></span><h3>public subroutine <a href='../proc/radiation_task_bounds.html'>radiation_task_bounds</a>(rad, n_tasks)</h3></div>
+  <div class="panel-heading codesum"><span class="anchor" id="proc-finalize_flow_projection_workspace"></span><h3>public subroutine <a href='../proc/finalize_flow_projection_workspace.html'>finalize_flow_projection_workspace</a>()</h3></div>
   <div class="panel-body">
-           
-<h4>Arguments</h4>      <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" ></span>type(<a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>),</td>
-<td>intent(inout)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>rad</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>integer,</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>n_tasks</strong></td><td></td>
-</tr>
-</tbody>
-</table>
-
+       
+<p>Deallocate the persistent flow projection workspace.</p>
+    
+<h4>Arguments</h4>      <em>None</em>
 
   </div>
   </div>

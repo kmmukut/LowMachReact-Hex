@@ -6,15 +6,15 @@
   nsteps = 10000
   dt = 2.5e-4
   output_interval = 500
+  use_dynamic_dt = .false.
+  max_cfl = 0.5
 /
 
 &fluid_input
   rho = 1.0
   nu = 1.0e-2
-  enable_cantera = .true.
-  cantera_mech_file = "gri30.yaml"
-  background_temp = 300.0
-  background_press = 101325.0
+  ! Cantera fluid props (viscosity) disabled — keep constant nu for Re=100 validation
+  enable_cantera = .false.
 /
 
 &solver_input

@@ -11,7 +11,7 @@ program lowmach_react_hex
                                  radiation_mpi_finalize
    use mod_bc, only : bc_set_t, build_bc_set, finalize_bc_set
    use mod_fields, only : flow_fields_t, initialize_fields, finalize_fields
-   use mod_flow_projection, only : solver_stats_t, advance_projection_step, compute_flow_diagnostics
+   use mod_flow_projection, only : solver_stats_t, advance_projection_step, compute_flow_diagnostics, compute_and_update_cfl
    use mod_output, only : prepare_output, write_diagnostics_header, write_diagnostics_row, &
                           write_vtu_unstructured, write_mesh_summary, write_pvd_collection
    use mod_species, only : species_fields_t, initialize_species, finalize_species, &
@@ -71,10 +71,14 @@ program lowmach_react_hex
    end if
 
    do step = 1, params%nsteps
-      if (params%enable_species) then
-         call update_transport_properties(mesh, params, species%Y, transport)
-      else
-         call update_transport_properties(mesh, params, transport=transport)
+      call compute_and_update_cfl(mesh, flow_mpi, params, fields, stats)
+
+      if (mod(step-1, params%transport_update_interval) == 0 .or. step == 1) then
+         if (params%enable_species) then
+            call update_transport_properties(mesh, params, species%Y, transport)
+         else
+            call update_transport_properties(mesh, params, transport=transport)
+         end if
       end if
       call advance_projection_step(mesh, flow_mpi, bc, params, transport, fields, stats)
       if (params%enable_species) then
@@ -87,9 +91,9 @@ program lowmach_react_hex
          call write_vtu_unstructured(params, flow_mpi, mesh, fields, species, step)
 
          if (flow_mpi%rank == 0) then
-            write(output_unit,'(a,i0,2x,a,es12.5,2x,a,es12.5,2x,a,es12.5,2x,a,i0)') &
-               'step=', step, 'time=', time, 'max_div=', stats%max_divergence, &
-               'ke=', stats%kinetic_energy, 'piter=', stats%pressure_iterations
+            write(output_unit,'(a,i0,2x,a,es12.5,2x,a,es12.5,2x,a,es12.5,2x,a,es12.5,2x,a,es12.5,2x,a,i0)') &
+               'step=', step, 'time=', time, 'dt=', params%dt, 'max_div=', stats%max_divergence, &
+               'cfl=', stats%cfl, 'ke=', stats%kinetic_energy, 'piter=', stats%pressure_iterations
          end if
       end if
    end do

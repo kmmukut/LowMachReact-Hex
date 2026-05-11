@@ -68,6 +68,20 @@ extern "C" {
         }
 
         try {
+            static int cached_ncells = 0;
+            static int cached_nspecies = 0;
+            static std::vector<double> cached_Y;
+            static std::vector<double> cached_mu;
+            static std::vector<double> cached_diff;
+
+            if (ncells != cached_ncells || nspecies != cached_nspecies) {
+                cached_Y.assign(ncells * std::max(1, nspecies), -1.0);
+                cached_mu.assign(ncells, 0.0);
+                cached_diff.assign(ncells * std::max(1, nspecies), 0.0);
+                cached_ncells = ncells;
+                cached_nspecies = nspecies;
+            }
+
             int cantera_nsp = (int)gas->nSpecies();
             std::vector<double> Y_cantera(cantera_nsp, 0.0);
             std::vector<double> diff_cantera(cantera_nsp, 0.0);
@@ -89,6 +103,24 @@ extern "C" {
             }
 
             for (int c = 0; c < ncells; ++c) {
+                bool use_cache = true;
+                double max_diff = 0.0;
+                for (int k = 0; k < nspecies; ++k) {
+                    double diff = std::abs(Y_in[c * nspecies + k] - cached_Y[c * nspecies + k]);
+                    if (diff > max_diff) max_diff = diff;
+                }
+                if (max_diff > 1.0e-5 || cached_mu[c] <= 0.0) {
+                    use_cache = false;
+                }
+
+                if (use_cache) {
+                    mu_out[c] = cached_mu[c];
+                    for (int k = 0; k < nspecies; ++k) {
+                        diff_out[c * nspecies + k] = cached_diff[c * nspecies + k];
+                    }
+                    continue; // Skip Cantera evaluation
+                }
+
                 // Reset Cantera mass fractions
                 std::fill(Y_cantera.begin(), Y_cantera.end(), 0.0);
                 double sum_Y = 0.0;
@@ -120,6 +152,8 @@ extern "C" {
                 // Get mixture-averaged diffusion coefficients
                 trans->getMixDiffCoeffs(diff_cantera.data());
 
+                cached_mu[c] = mu_out[c];
+
                 // Map back to solver species array
                 for (int k = 0; k < nspecies; ++k) {
                     if (sp_map[k] >= 0) {
@@ -127,6 +161,8 @@ extern "C" {
                     } else {
                         diff_out[c * nspecies + k] = 0.0;
                     }
+                    cached_diff[c * nspecies + k] = diff_out[c * nspecies + k];
+                    cached_Y[c * nspecies + k] = Y_in[c * nspecies + k];
                 }
             }
 

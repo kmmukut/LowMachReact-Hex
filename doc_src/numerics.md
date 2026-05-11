@@ -34,6 +34,13 @@ A fractional-step projection method is used for pressure-velocity coupling.
     $$ \mathbf{u}^{n+1} = \mathbf{u}^* - \frac{\Delta t}{\rho} \nabla \phi $$
     $$ p^{n+1} = p^n + \phi $$
 
+### Time Stepping and CFL Control
+
+The solver natively supports both fixed-step and dynamically scaled time integration.
+For unstructured/hexahedral grids, the physical cell CFL number is rigorously computed using the absolute sum of conservative boundary fluxes:
+$$ CFL_c = \frac{\Delta t}{V_c} \left( \frac{1}{2} \sum_{f} |F_f| \right) $$
+By tracking the maximum outward flux ratio across the domain, the solver dynamically scales $\Delta t$ at the beginning of each step to maintain a target $CFL_{max}$, perfectly balancing stability and computational efficiency.
+
 ## Finite Volume Discretization
 
 *   **Collocated Layout:** All variables are stored at cell centers.
@@ -62,3 +69,4 @@ The solver monitors several diagnostics to ensure stability and convergence:
 *   **Max/RMS Divergence:** Monitors the residual of the continuity equation.
 *   **Net Boundary Flux:** Verifies global mass conservation.
 *   **Kinetic Energy:** Tracks the physical energy evolution of the flow.
+*   **CFL Number:** Tracks the active global maximum CFL over the domain.

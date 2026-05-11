@@ -45,7 +45,7 @@ contains
       filename = trim(params%output_dir)//'/diagnostics.csv'
       open(newunit=unit_id, file=trim(filename), status='replace', action='write')
 
-      write(unit_id,'(a)') 'step,time,dt,max_divergence,rms_divergence,net_boundary_flux,kinetic_energy,pressure_iterations,pressure_residual'
+      write(unit_id,'(a)') 'step,time,dt,max_divergence,rms_divergence,net_boundary_flux,kinetic_energy,pressure_iterations,pressure_residual,cfl'
 
       close(unit_id)
    end subroutine write_diagnostics_header
@@ -66,10 +66,10 @@ contains
       filename = trim(params%output_dir)//'/diagnostics.csv'
       open(newunit=unit_id, file=trim(filename), status='old', position='append', action='write')
 
-      write(unit_id,'(i0,",",es16.8,",",es16.8,",",es16.8,",",es16.8,",",es16.8,",",es16.8,",",i0,",",es16.8)') &
-         step, time, params%dt, stats%max_divergence, stats%rms_divergence, &
-         stats%net_boundary_flux, stats%kinetic_energy, stats%pressure_iterations, &
-         stats%pressure_residual
+      write(unit_id,'(i0,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,i0,a,es16.8,a,es16.8)') &
+            step, ',', time, ',', params%dt, ',', stats%max_divergence, ',', &
+            stats%rms_divergence, ',', stats%net_boundary_flux, ',', &
+            stats%kinetic_energy, ',', stats%pressure_iterations, ',', stats%pressure_residual, ',', stats%cfl
 
       close(unit_id)
    end subroutine write_diagnostics_row

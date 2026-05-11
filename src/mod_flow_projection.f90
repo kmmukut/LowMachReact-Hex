@@ -11,8 +11,10 @@ module mod_flow_projection
    use mod_mpi_flow, only : flow_mpi_t, flow_allreduce_global_vector, &
                             flow_allreduce_global_scalar, flow_allgather_owned_scalar, &
                             flow_global_dot_owned, flow_global_max_owned
-   use mod_bc, only : bc_set_t, bc_periodic, bc_neumann, patch_type_for_face, &
-                      boundary_velocity, face_effective_neighbor
+   use mod_bc, only : bc_set_t, bc_periodic, bc_neumann, bc_dirichlet, &
+                      patch_type_for_face, boundary_velocity, &
+                      face_effective_neighbor, boundary_pressure_type, &
+                      boundary_pressure
    use mod_fields, only : flow_fields_t
    use mod_transport_properties, only : transport_properties_t
    implicit none
@@ -27,10 +29,12 @@ module mod_flow_projection
       real(rk) :: rms_divergence = zero    !< RMS velocity divergence [1/s]
       real(rk) :: net_boundary_flux = zero !< Net mass flux across all boundaries
       real(rk) :: kinetic_energy = zero    !< Total kinetic energy in domain [J]
+      real(rk) :: cfl = zero               !< Active CFL number
    end type solver_stats_t
 
    type :: pressure_operator_cache_t
       logical :: initialized = .false.
+      logical :: has_dirichlet_pressure = .false.
       integer :: ncells = 0
       integer :: max_faces = 0
       integer, allocatable :: nb(:,:)       ! (max_faces,ncells)
@@ -61,6 +65,7 @@ module mod_flow_projection
    type(projection_workspace_t), save :: projection_work
 
    public :: advance_projection_step, compute_flow_diagnostics
+   public :: compute_and_update_cfl
    public :: finalize_flow_projection_workspace, face_normal_distance
    !> Compute distance from cell center to face center along normal.
    !!
@@ -92,7 +97,7 @@ contains
       type(case_params_t), intent(in) :: params
       type(transport_properties_t), intent(in) :: transport
       type(flow_fields_t), intent(inout) :: fields
-      type(solver_stats_t), intent(out) :: stats
+      type(solver_stats_t), intent(inout) :: stats
 
       integer :: c
 
@@ -151,7 +156,9 @@ contains
                              fields%div(c) * mesh%cells(c)%volume
          end do
 
-         rhs_poisson(1) = zero
+         if (.not. pressure_cache%has_dirichlet_pressure) then
+            rhs_poisson(1) = zero
+         end if
          fields%phi = zero
 
          call solve_pressure_correction(mesh, flow, bc, params, rhs_poisson, fields%phi, stats)
@@ -160,7 +167,9 @@ contains
          ! 5. Incremental pressure update.
          ! ------------------------------------------------------------
          fields%p = fields%p + fields%phi
-         fields%p(1) = zero
+         if (.not. pressure_cache%has_dirichlet_pressure) then
+            fields%p(1) = zero
+         end if
 
          ! ------------------------------------------------------------
          ! 6. Correct conservative face flux.
@@ -307,6 +316,7 @@ contains
       integer :: lf, f, nb
       real(rk) :: nvec(3)
       real(rk) :: pf
+      logical :: is_dirichlet
 
       gradp = zero
 
@@ -319,7 +329,11 @@ contains
          if (nb > 0) then
             pf = face_linear_scalar(mesh, bc, f, cell_id, nb, p(cell_id), p(nb))
          else
-            pf = p(cell_id)
+            if (boundary_pressure_type(mesh, bc, f) == bc_dirichlet) then
+               call boundary_pressure(mesh, bc, f, p(cell_id), pf, is_dirichlet)
+            else
+               pf = p(cell_id)
+            end if
          end if
 
          gradp = gradp + pf * nvec * mesh%faces(f)%area
@@ -388,6 +402,12 @@ contains
 
             local_flux(f) = predicted_flux(f) - params%dt / params%rho * &
                             mesh%faces(f)%area * (phi(nb) - phi(owner)) / dist
+         else
+            if (boundary_pressure_type(mesh, bc, f) == bc_dirichlet) then
+               dist = face_normal_distance(mesh, bc, f, owner, 0)
+               local_flux(f) = predicted_flux(f) - params%dt / params%rho * &
+                               mesh%faces(f)%area * (zero - phi(owner)) / dist
+            end if
          end if
       end do
    end subroutine correct_face_flux
@@ -451,11 +471,13 @@ contains
 
          r = rhs - ap
 
-         r(1) = zero
-         phi(1) = zero
+         if (.not. pressure_cache%has_dirichlet_pressure) then
+            r(1) = zero
+            phi(1) = zero
+         end if
 
          do c = 1, mesh%ncells
-            if (c == 1) then
+            if (c == 1 .and. .not. pressure_cache%has_dirichlet_pressure) then
                z(c) = zero
             else
                z(c) = r(c) / max(pressure_cache%diag(c), tiny_safe)
@@ -463,7 +485,9 @@ contains
          end do
 
          pvec = z
-         pvec(1) = zero
+         if (.not. pressure_cache%has_dirichlet_pressure) then
+            pvec(1) = zero
+         end if
 
          rr = flow_global_dot_owned(flow, r, r)
          rz = flow_global_dot_owned(flow, r, z)
@@ -486,8 +510,10 @@ contains
             phi = phi + alpha * pvec
             r = r - alpha * ap
 
-            phi(1) = zero
-            r(1) = zero
+            if (.not. pressure_cache%has_dirichlet_pressure) then
+               phi(1) = zero
+               r(1) = zero
+            end if
 
             rr_new = flow_global_dot_owned(flow, r, r)
 
@@ -497,7 +523,7 @@ contains
             if (stats%pressure_residual <= params%pressure_tol) exit
 
             do c = 1, mesh%ncells
-               if (c == 1) then
+               if (c == 1 .and. .not. pressure_cache%has_dirichlet_pressure) then
                   z(c) = zero
                else
                   z(c) = r(c) / max(pressure_cache%diag(c), tiny_safe)
@@ -509,13 +535,17 @@ contains
             beta = rz_new / max(rz, tiny_safe)
 
             pvec = z + beta * pvec
-            pvec(1) = zero
+            if (.not. pressure_cache%has_dirichlet_pressure) then
+               pvec(1) = zero
+            end if
 
             rr = rr_new
             rz = rz_new
          end do
 
-         phi(1) = zero
+         if (.not. pressure_cache%has_dirichlet_pressure) then
+            phi(1) = zero
+         end if
 
       end associate
    end subroutine solve_pressure_correction
@@ -535,7 +565,7 @@ contains
       local_ax = zero
 
       do c = flow%first_cell, flow%last_cell
-         if (c == 1) then
+         if (c == 1 .and. .not. pressure_cache%has_dirichlet_pressure) then
             local_ax(c) = x(c)
             cycle
          end if
@@ -578,7 +608,11 @@ contains
             if (nb > 0) then
                phi_face = face_linear_scalar(mesh, bc, f, c, nb, phi(c), phi(nb))
             else
-               phi_face = phi(c)
+               if (boundary_pressure_type(mesh, bc, f) == bc_dirichlet) then
+                  phi_face = zero
+               else
+                  phi_face = phi(c)
+               end if
             end if
 
             grad = grad + phi_face * nvec * mesh%faces(f)%area
@@ -646,6 +680,8 @@ contains
       real(rk) :: local_outlet_area
       real(rk) :: global_outlet_area
       real(rk) :: correction_per_area
+
+      if (pressure_cache%has_dirichlet_pressure) return
 
       local_net_flux = zero
       local_outlet_area = zero
@@ -801,10 +837,11 @@ contains
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
       type(bc_set_t), intent(in) :: bc
-
       integer :: c, lf, f, nb
       real(rk) :: dist
       real(rk) :: coeff
+      integer :: local_dirichlet_flag, global_dirichlet_flag
+      integer :: ierr
 
       associate(dummy => flow%nlocal)
       end associate
@@ -830,17 +867,22 @@ contains
       pressure_cache%coeff = zero
       pressure_cache%diag = zero
 
-      do c = 1, mesh%ncells
-         if (c == 1) then
-            pressure_cache%diag(c) = one
-            cycle
-         end if
+      local_dirichlet_flag = 0
 
+      do c = 1, mesh%ncells
          do lf = 1, mesh%ncell_faces(c)
             f = mesh%cell_faces(lf, c)
             nb = face_effective_neighbor(mesh, bc, f, c)
 
-            if (nb <= 0) cycle
+            if (nb <= 0) then
+               if (boundary_pressure_type(mesh, bc, f) == bc_dirichlet) then
+                  dist = face_normal_distance(mesh, bc, f, c, 0)
+                  coeff = mesh%faces(f)%area / dist
+                  pressure_cache%diag(c) = pressure_cache%diag(c) + coeff
+                  local_dirichlet_flag = 1
+               end if
+               cycle
+            end if
 
             dist = face_normal_distance(mesh, bc, f, c, nb)
             coeff = mesh%faces(f)%area / dist
@@ -854,6 +896,9 @@ contains
             call fatal_error('flow', 'non-positive cached pressure diagonal')
          end if
       end do
+
+      call MPI_Allreduce(local_dirichlet_flag, global_dirichlet_flag, 1, MPI_INTEGER, MPI_MAX, flow%comm, ierr)
+      pressure_cache%has_dirichlet_pressure = (global_dirichlet_flag > 0)
 
       pressure_cache%initialized = .true.
    end subroutine ensure_pressure_operator_cache
@@ -1013,5 +1058,43 @@ contains
 
       if (ierr /= MPI_SUCCESS) call fatal_error('flow', trim(where)//' MPI failure')
    end subroutine check_mpi
+
+   subroutine compute_and_update_cfl(mesh, flow, params, fields, stats)
+      type(mesh_t), intent(in) :: mesh
+      type(flow_mpi_t), intent(in) :: flow
+      type(case_params_t), intent(inout) :: params
+      type(flow_fields_t), intent(in) :: fields
+      type(solver_stats_t), intent(inout) :: stats
+
+      integer :: c, lf, f
+      real(rk) :: local_cfl_rate, max_cfl_rate
+      real(rk) :: cell_outward_flux
+      integer :: ierr
+
+      local_cfl_rate = zero
+
+      do c = flow%first_cell, flow%last_cell
+         cell_outward_flux = zero
+         do lf = 1, mesh%ncell_faces(c)
+            f = mesh%cell_faces(lf, c)
+            cell_outward_flux = cell_outward_flux + abs(fields%face_flux(f))
+         end do
+         cell_outward_flux = half * cell_outward_flux / mesh%cells(c)%volume
+         if (cell_outward_flux > local_cfl_rate) then
+            local_cfl_rate = cell_outward_flux
+         end if
+      end do
+
+      call MPI_Allreduce(local_cfl_rate, max_cfl_rate, 1, MPI_DOUBLE_PRECISION, MPI_MAX, flow%comm, ierr)
+      call check_mpi(ierr, 'cfl max rate')
+
+      if (params%use_dynamic_dt) then
+         if (max_cfl_rate > tiny_safe) then
+            params%dt = params%max_cfl / max_cfl_rate
+         end if
+      end if
+
+      stats%cfl = max_cfl_rate * params%dt
+   end subroutine compute_and_update_cfl
 
 end module mod_flow_projection

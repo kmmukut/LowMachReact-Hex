@@ -15,12 +15,15 @@ module mod_input
    type, public :: case_params_t
       character(len=path_len) :: mesh_dir = "mesh_native" !< Directory containing mesh .dat files
 
-      integer :: nsteps = 100            !< Number of timesteps to run
-      real(rk) :: dt = 1.0e-3_rk         !< Timestep size [s]
-      integer :: output_interval = 10    !< Steps between VTU/diagnostic outputs
+      integer :: nsteps = 0              !< Number of timesteps to run
+      real(rk) :: dt = zero              !< Fixed timestep size [s]
+      integer :: output_interval = 1     !< Step interval for VTK/PVD output
+      logical :: use_dynamic_dt = .false.!< Whether to dynamically scale dt based on CFL
+      real(rk) :: max_cfl = 0.5_rk       !< Target maximum CFL numbers
 
       real(rk) :: rho = one              !< Constant density [kg/m^3]
       real(rk) :: nu = 1.0e-2_rk         !< Constant kinematic viscosity [m^2/s]
+      integer :: transport_update_interval = 1 !< Step interval for updating properties
 
       integer :: pressure_max_iter = 300 !< Maximum CG iterations for pressure Poisson solve
       real(rk) :: pressure_tol = 1.0e-10_rk !< Tolerance for pressure Poisson solve
@@ -123,14 +126,17 @@ contains
       type(case_params_t), intent(inout) :: params
 
       integer :: nsteps, output_interval
-      real(rk) :: dt
+      real(rk) :: dt, max_cfl
+      logical :: use_dynamic_dt
       integer :: unit_id, ios
 
-      namelist /time_input/ nsteps, dt, output_interval
+      namelist /time_input/ nsteps, dt, output_interval, use_dynamic_dt, max_cfl
 
       nsteps = params%nsteps
       dt = params%dt
       output_interval = params%output_interval
+      use_dynamic_dt = params%use_dynamic_dt
+      max_cfl = params%max_cfl
 
       call open_namelist_file(filename, unit_id, ios)
 
@@ -144,6 +150,8 @@ contains
       params%nsteps = nsteps
       params%dt = dt
       params%output_interval = output_interval
+      params%use_dynamic_dt = use_dynamic_dt
+      params%max_cfl = max_cfl
    end subroutine read_time_input
 
 
@@ -156,9 +164,10 @@ contains
       character(len=path_len) :: cantera_mech_file
       real(rk) :: background_temp
       real(rk) :: background_press
+      integer :: transport_update_interval
       integer :: unit_id, ios
 
-      namelist /fluid_input/ rho, nu, enable_cantera, cantera_mech_file, background_temp, background_press
+      namelist /fluid_input/ rho, nu, enable_cantera, cantera_mech_file, background_temp, background_press, transport_update_interval
 
       rho = params%rho
       nu = params%nu
@@ -166,6 +175,7 @@ contains
       cantera_mech_file = params%cantera_mech_file
       background_temp = params%background_temp
       background_press = params%background_press
+      transport_update_interval = params%transport_update_interval
 
       call open_namelist_file(filename, unit_id, ios)
 
@@ -182,6 +192,7 @@ contains
       params%cantera_mech_file = cantera_mech_file
       params%background_temp = background_temp
       params%background_press = background_press
+      params%transport_update_interval = transport_update_interval
    end subroutine read_fluid_input
 
 

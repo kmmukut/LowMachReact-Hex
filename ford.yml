@@ -1,0 +1,17 @@
+project: LowMach-Hex
+summary: Fortran 2008 MPI finite-volume solver for low-Mach flows.
+author: Khaled Mosharraf Mukut
+project_github: https://github.com/kmmukut/LowMach-Hex
+project_website: https://sites.google.com/kmmukut/LowMach-Hex
+src_dir: src
+output_dir: docs/html
+display: public
+  protected
+  private
+source: true
+graph: true
+search: true
+md_extensions: markdown.extensions.extra
+  markdown.extensions.codehilite
+  markdown.extensions.toc
+project_md: README.md

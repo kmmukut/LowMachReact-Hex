@@ -1,0 +1,48 @@
+&mesh_input
+  mesh_dir = "cases/lid_driven_cavity_2D/mesh_native"
+/
+
+&time_input
+  nsteps = 400000
+  dt = 2.5e-4
+  output_interval = 20000
+/
+
+&fluid_input
+  rho = 1.0
+  nu = 1.0e-2
+/
+
+&solver_input
+  pressure_max_iter = 400
+  pressure_tol = 1.0e-8
+  body_force_x = 0.0
+  body_force_y = 0.0
+  body_force_z = 0.0
+  convection_scheme = "central"
+/
+
+&boundary_input
+  n_patches = 6
+
+  patch_name = "xmin", "xmax", "ymin", "ymax", "zmin", "zmax"
+
+  patch_type = "wall", "wall", "wall", "wall", "symmetric", "symmetric"
+
+  patch_velocity_type = "no_slip", "no_slip", "no_slip", "moving_wall", "symmetric", "symmetric"
+
+  patch_pressure_type = "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
+
+  patch_u = 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+  patch_v = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_w = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+  patch_p = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+/
+
+&output_input
+  output_dir = "cases/lid_driven_cavity_2D/output"
+  write_vtu = .true.
+  write_diagnostics = .true.
+/

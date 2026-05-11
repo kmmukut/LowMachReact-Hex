@@ -1,0 +1,33 @@
+# Compilation artifacts
+*.o
+*.mod
+*.smod
+build/
+hex_lowmach_fv
+a.out
+
+# Python artifacts
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Documentation
+# (Will commit docs/html/ for GitHub Pages)
+
+
+# Simulation output
+**/output/
+*.vtu
+*.pvd
+*.csv
+*.png
+cases/**/validation/
+
+# Mesh files (often large and regeneratable)
+*.msh
+**/mesh_native/
+
+# OS/Editor artifacts
+.DS_Store
+.vscode/
+.idea/

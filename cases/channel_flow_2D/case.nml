@@ -9,6 +9,10 @@
 /
 
 &fluid_input
+  enable_cantera = .false.
+  cantera_mech_file = "gri30.yaml"
+  background_temp = 300.0
+  background_press = 101325.0
   rho = 1.0
   nu = 1.0e-2
 /
@@ -45,4 +49,7 @@
   output_dir = "cases/channel_flow_2D/output"
   write_vtu = .true.
   write_diagnostics = .true.
+/
+&species_input
+  enable_species = .false.
 /

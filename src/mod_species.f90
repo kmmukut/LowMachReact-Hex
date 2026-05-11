@@ -3,7 +3,7 @@
 !! This module implements the finite-volume transport of multiple species
 !! mass fractions using explicit time integration and upwind advection.
 module mod_species
-   use mod_kinds, only : rk, zero, one, name_len, fatal_error
+   use mod_kinds, only : rk, zero, one, fatal_error, name_len, lowercase
    use mod_mesh_types, only : mesh_t
    use mod_input, only : case_params_t
    use mod_bc, only : bc_set_t, bc_periodic, patch_type_for_face, face_effective_neighbor, boundary_species
@@ -38,8 +38,10 @@ contains
       type(case_params_t), intent(in) :: params
       type(species_fields_t), intent(inout) :: species
 
-      integer :: c, k
+      integer :: c, k, j
       real(rk) :: sum_Y
+      real(rk) :: init_mixture(params%nspecies)
+      character(len=name_len) :: target_name
 
       call finalize_species(species)
 
@@ -52,20 +54,34 @@ contains
 
       species%names = params%species_name(1:species%nspecies)
 
-      ! Initialize and normalize
-      sum_Y = zero
-      do k = 1, species%nspecies
-         sum_Y = sum_Y + params%initial_Y(k)
+      ! ------------------------------------------------------------
+      ! Name-based matching for initialization
+      ! ------------------------------------------------------------
+      init_mixture = zero
+      
+      do j = 1, params%namelist_nspecies
+         target_name = trim(lowercase(params%namelist_species_name(j)))
+         if (len_trim(target_name) == 0) cycle
+         
+         do k = 1, species%nspecies
+            if (trim(lowercase(species%names(k))) == target_name) then
+               init_mixture(k) = params%initial_Y(j)
+               exit
+            end if
+         end do
       end do
 
-      if (abs(sum_Y - one) > 1e-6_rk) then
-         call fatal_error('species', 'initial_Y mass fractions must sum to 1')
+      ! Normalize
+      sum_Y = sum(init_mixture)
+      if (sum_Y > zero) then
+         init_mixture = init_mixture / sum_Y
+      else
+         ! Fallback if nothing matched or sum was zero
+         if (species%nspecies > 0) init_mixture(1) = one
       end if
 
       do c = 1, mesh%ncells
-         do k = 1, species%nspecies
-            species%Y(k,c) = params%initial_Y(k) / sum_Y
-         end do
+         species%Y(:, c) = init_mixture
       end do
 
       species%Y_old = species%Y

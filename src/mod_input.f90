@@ -9,7 +9,7 @@ module mod_input
    private
 
    integer, parameter, public :: max_patches = 64
-   integer, parameter, public :: max_species = 16
+   integer, parameter, public :: max_species = 256
 
    !> Container for all case parameters.
    type, public :: case_params_t
@@ -53,11 +53,19 @@ module mod_input
       logical :: write_diagnostics = .true.            !< Enable diagnostics.csv output
 
       ! Species parameters
-      integer :: nspecies = 0                                     !< Number of transport species
-      character(len=name_len) :: species_name(max_species) = ""   !< Names of species
+      logical :: enable_species = .false.                         !< Master toggle for species transport
+      logical :: enable_reactions = .false.                       !< Master toggle for chemical reactions
+      integer :: nspecies = 0                                     !< Number of transport species (final)
+      character(len=name_len) :: species_name(max_species) = ""   !< Names of species (final)
       real(rk) :: species_diffusivity(max_species) = 0.0_rk       !< Constant diffusivity if Cantera disabled
       real(rk) :: initial_Y(max_species) = 0.0_rk                 !< Initial mass fractions in domain
-      logical :: enable_cantera = .false.                         !< Enable Cantera property bridge
+      
+      ! Namelist preservation for reacting discovery
+      integer :: namelist_nspecies = 0
+      character(len=name_len) :: namelist_species_name(max_species) = ""
+      
+      logical :: enable_cantera_fluid = .false.                   !< Enable Cantera for viscosity/density
+      logical :: enable_cantera_species = .false.                 !< Enable Cantera for species diffusivity
       character(len=path_len) :: cantera_mech_file = "gri30.yaml" !< Cantera mechanism file
       real(rk) :: background_temp = 300.0_rk                      !< Background temperature for properties [K]
       real(rk) :: background_press = 101325.0_rk                  !< Background pressure for properties [Pa]
@@ -144,12 +152,20 @@ contains
       type(case_params_t), intent(inout) :: params
 
       real(rk) :: rho, nu
+      logical :: enable_cantera
+      character(len=path_len) :: cantera_mech_file
+      real(rk) :: background_temp
+      real(rk) :: background_press
       integer :: unit_id, ios
 
-      namelist /fluid_input/ rho, nu
+      namelist /fluid_input/ rho, nu, enable_cantera, cantera_mech_file, background_temp, background_press
 
       rho = params%rho
       nu = params%nu
+      enable_cantera = params%enable_cantera_fluid
+      cantera_mech_file = params%cantera_mech_file
+      background_temp = params%background_temp
+      background_press = params%background_press
 
       call open_namelist_file(filename, unit_id, ios)
 
@@ -162,6 +178,10 @@ contains
 
       params%rho = rho
       params%nu = nu
+      params%enable_cantera_fluid = enable_cantera
+      params%cantera_mech_file = cantera_mech_file
+      params%background_temp = background_temp
+      params%background_press = background_press
    end subroutine read_fluid_input
 
 
@@ -303,27 +323,23 @@ contains
       character(len=*), intent(in) :: filename
       type(case_params_t), intent(inout) :: params
 
+      logical :: enable_species, enable_reactions, enable_cantera
       integer :: nspecies
       character(len=name_len) :: species_name(max_species)
       real(rk) :: species_diffusivity(max_species)
       real(rk) :: initial_Y(max_species)
-      logical :: enable_cantera
-      character(len=path_len) :: cantera_mech_file
-      real(rk) :: background_temp
-      real(rk) :: background_press
       integer :: unit_id, ios
 
-      namelist /species_input/ nspecies, species_name, species_diffusivity, initial_Y, &
-                               enable_cantera, cantera_mech_file, background_temp, background_press
+      namelist /species_input/ enable_species, enable_reactions, enable_cantera, &
+                               nspecies, species_name, species_diffusivity, initial_Y
 
+      enable_species = params%enable_species
+      enable_reactions = params%enable_reactions
+      enable_cantera = params%enable_cantera_species
       nspecies = params%nspecies
       species_name = params%species_name
       species_diffusivity = params%species_diffusivity
       initial_Y = params%initial_Y
-      enable_cantera = params%enable_cantera
-      cantera_mech_file = params%cantera_mech_file
-      background_temp = params%background_temp
-      background_press = params%background_press
 
       call open_namelist_file(filename, unit_id, ios)
 
@@ -332,20 +348,18 @@ contains
          close(unit_id)
       end if
 
-      ! If ios > 0, it might just mean the &species_input block doesn't exist.
-      ! We can treat species as optional.
       if (ios == 0) then
+         params%enable_species = enable_species
+         params%enable_reactions = enable_reactions
+         params%enable_cantera_species = enable_cantera
          params%nspecies = nspecies
          params%species_name = species_name
          params%species_diffusivity = species_diffusivity
          params%initial_Y = initial_Y
-         params%enable_cantera = enable_cantera
-         params%cantera_mech_file = cantera_mech_file
-         params%background_temp = background_temp
-         params%background_press = background_press
-      end if
-      if (ios > 0) then
-         print *, "read_species_input failed, ios = ", ios
+         
+         ! Save original namelist values
+         params%namelist_nspecies = nspecies
+         params%namelist_species_name = species_name
       end if
    end subroutine read_species_input
 

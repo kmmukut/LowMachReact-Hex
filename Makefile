@@ -222,7 +222,7 @@ $(BUILD_DIR)/mod_mpi_flow.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_type
 $(BUILD_DIR)/mod_mpi_radiation.o: $(BUILD_DIR)/mod_kinds.o
 $(BUILD_DIR)/mod_bc.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_mesh_types.o
 $(BUILD_DIR)/mod_fields.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_bc.o
-$(BUILD_DIR)/mod_flow_projection.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_bc.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_input.o
+$(BUILD_DIR)/mod_flow_projection.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_bc.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_transport_properties.o
 $(BUILD_DIR)/mod_transport_properties.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/cantera_interface.o
 $(BUILD_DIR)/mod_species.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_bc.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_flow_projection.o $(BUILD_DIR)/mod_transport_properties.o
 $(BUILD_DIR)/mod_output.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_flow_projection.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_species.o

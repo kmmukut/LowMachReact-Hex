@@ -149,7 +149,7 @@ contains
       call write_vtu_cell_scalar(unit_id, 'pressure', fields%p)
       call write_vtu_cell_scalar(unit_id, 'divergence', fields%div)
 
-      if (params%nspecies > 0) then
+      if (params%enable_species .and. params%nspecies > 0) then
          do k = 1, params%nspecies
             call write_vtu_cell_scalar(unit_id, 'Y_'//trim(params%species_name(k)), species%Y(k,:))
          end do

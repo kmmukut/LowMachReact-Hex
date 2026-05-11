@@ -15,6 +15,22 @@ static std::shared_ptr<Cantera::Transport> trans;
 
 extern "C" {
 
+    // Get number of species in mechanism
+    int cantera_get_species_count_c() {
+        if (!gas) return 0;
+        return (int)gas->nSpecies();
+    }
+
+    // Get name of species by index
+    void cantera_get_species_name_c(int k, char* name_out, int name_len) {
+        if (!gas || k < 0 || k >= (int)gas->nSpecies()) return;
+        std::string name = gas->speciesName(k);
+        // Copy and pad with spaces for Fortran
+        int len = std::min((int)name.length(), name_len);
+        for (int i = 0; i < len; ++i) name_out[i] = name[i];
+        for (int i = len; i < name_len; ++i) name_out[i] = ' ';
+    }
+
     // Initialize the Cantera mechanism
     void cantera_init_c(const char* mech_file, int nspecies, const char* species_names_flat, int name_len) {
         try {
@@ -80,7 +96,7 @@ extern "C" {
                 // Set solver species
                 for (int k = 0; k < nspecies; ++k) {
                     if (sp_map[k] >= 0) {
-                        double y_val = Y_in[k * ncells + c];
+                        double y_val = Y_in[c * nspecies + k];
                         // Ensure non-negative mass fractions
                         if (y_val < 0.0) y_val = 0.0;
                         Y_cantera[sp_map[k]] = y_val;
@@ -107,9 +123,9 @@ extern "C" {
                 // Map back to solver species array
                 for (int k = 0; k < nspecies; ++k) {
                     if (sp_map[k] >= 0) {
-                        diff_out[k * ncells + c] = diff_cantera[sp_map[k]];
+                        diff_out[c * nspecies + k] = diff_cantera[sp_map[k]];
                     } else {
-                        diff_out[k * ncells + c] = 0.0;
+                        diff_out[c * nspecies + k] = 0.0;
                     }
                 }
             }

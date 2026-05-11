@@ -11,6 +11,10 @@
 &fluid_input
   rho = 1.0
   nu = 1.0e-2
+  enable_cantera = .true.
+  cantera_mech_file = "gri30.yaml"
+  background_temp = 300.0
+  background_press = 101325.0
 /
 
 &solver_input
@@ -42,8 +46,10 @@
 /
 
 &species_input
+  enable_species = .true.
+  enable_reactions = .false.
+  enable_cantera = .true.
   nspecies = 3
-  enable_cantera = .true. 
   species_name = "CO2", "H2O", "CO"
   species_diffusivity = 1.0e-2, 1.5e-2, 1.2e-2
   initial_Y = 0.2, 0.3, 0.5

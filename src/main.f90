@@ -43,10 +43,12 @@ program lowmach_react_hex
    call radiation_mpi_initialize(rad_mpi, MPI_COMM_WORLD)
    call build_bc_set(mesh, params, bc)
    call initialize_fields(mesh, params, bc, fields)
-   call initialize_species(mesh, params, species)
    call initialize_transport(mesh, params, transport)
+   if (params%enable_species) then
+      call initialize_species(mesh, params, species)
+   end if
 
-   if (flow_mpi%rank == 0) then
+   if (flow_mpi%rank == 0 .and. params%enable_species) then
       print *, "species: ", species%nspecies
    end if
 
@@ -69,13 +71,15 @@ program lowmach_react_hex
    end if
 
    do step = 1, params%nsteps
-      if (params%nspecies > 0) then
+      if (params%enable_species) then
          call update_transport_properties(mesh, params, species%Y, transport)
       else
          call update_transport_properties(mesh, params, transport=transport)
       end if
-      call advance_projection_step(mesh, flow_mpi, bc, params, fields, stats)
-      call advance_species_transport(mesh, flow_mpi, bc, params, fields, species, transport)
+      call advance_projection_step(mesh, flow_mpi, bc, params, transport, fields, stats)
+      if (params%enable_species) then
+         call advance_species_transport(mesh, flow_mpi, bc, params, fields, species, transport)
+      end if
       time = time + params%dt
 
       if (mod(step, params%output_interval) == 0 .or. step == params%nsteps) then
@@ -91,7 +95,9 @@ program lowmach_react_hex
    end do
 
    call finalize_transport(transport)
-   call finalize_species(species)
+   if (params%enable_species) then
+      call finalize_species(species)
+   end if
    call finalize_fields(fields)
    call finalize_bc_set(bc)
    call radiation_mpi_finalize(rad_mpi)

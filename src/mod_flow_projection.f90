@@ -14,6 +14,7 @@ module mod_flow_projection
    use mod_bc, only : bc_set_t, bc_periodic, bc_neumann, patch_type_for_face, &
                       boundary_velocity, face_effective_neighbor
    use mod_fields, only : flow_fields_t
+   use mod_transport_properties, only : transport_properties_t
    implicit none
 
    private
@@ -84,11 +85,12 @@ contains
    !! @param params Case configuration parameters.
    !! @param fields Flow fields to update.
    !! @param stats Solver statistics to populate.
-   subroutine advance_projection_step(mesh, flow, bc, params, fields, stats)
+   subroutine advance_projection_step(mesh, flow, bc, params, transport, fields, stats)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(inout) :: flow
       type(bc_set_t), intent(in) :: bc
       type(case_params_t), intent(in) :: params
+      type(transport_properties_t), intent(in) :: transport
       type(flow_fields_t), intent(inout) :: fields
       type(solver_stats_t), intent(out) :: stats
 
@@ -110,7 +112,7 @@ contains
          ! ------------------------------------------------------------
          ! 1. Explicit momentum RHS using old pressure gradient.
          ! ------------------------------------------------------------
-         call compute_momentum_rhs(mesh, flow, bc, params, fields%u, fields%p, local_vec)
+         call compute_momentum_rhs(mesh, flow, bc, params, transport, fields%u, fields%p, local_vec)
          call flow_allreduce_global_vector(flow, local_vec, momentum_rhs)
 
          ! ------------------------------------------------------------
@@ -210,11 +212,12 @@ contains
    end subroutine advance_ab2
 
 
-   subroutine compute_momentum_rhs(mesh, flow, bc, params, u, p, local_rhs)
+   subroutine compute_momentum_rhs(mesh, flow, bc, params, transport, u, p, local_rhs)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
       type(bc_set_t), intent(in) :: bc
       type(case_params_t), intent(in) :: params
+      type(transport_properties_t), intent(in) :: transport
       real(rk), intent(in) :: u(:,:)
       real(rk), intent(in) :: p(:)
       real(rk), intent(out) :: local_rhs(:,:)
@@ -224,7 +227,7 @@ contains
       real(rk) :: uf(3), ub(3), advected(3)
       real(rk) :: un_area
       real(rk) :: conv(3), diff(3), gradp(3)
-      real(rk) :: dist
+      real(rk) :: dist, diff_face
       logical :: use_central
 
       use_central = .false.
@@ -278,7 +281,13 @@ contains
 
             conv = conv + un_area * advected
 
-            diff = diff + params%nu * mesh%faces(f)%area * (ub - u(:, c)) / dist
+            if (nb > 0) then
+               diff_face = half * (transport%nu(c) + transport%nu(nb))
+            else
+               diff_face = transport%nu(c)
+            end if
+
+            diff = diff + diff_face * mesh%faces(f)%area * (ub - u(:, c)) / dist
          end do
 
          local_rhs(:, c) = -conv / mesh%cells(c)%volume + &

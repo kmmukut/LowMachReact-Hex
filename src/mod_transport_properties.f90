@@ -28,6 +28,18 @@ module mod_transport_properties
    !> C-Binding stub for the future Cantera bridge.
    !! The implementation of this will eventually reside in a C++ library.
    interface
+      function cantera_get_species_count_c() bind(c, name="cantera_get_species_count_c")
+         use iso_c_binding, only : c_int
+         integer(c_int) :: cantera_get_species_count_c
+      end function cantera_get_species_count_c
+
+      subroutine cantera_get_species_name_c(k, name_out, name_len) bind(c, name="cantera_get_species_name_c")
+         use iso_c_binding, only : c_int, c_char
+         integer(c_int), value :: k
+         character(kind=c_char), intent(out) :: name_out(*)
+         integer(c_int), value :: name_len
+      end subroutine cantera_get_species_name_c
+
       subroutine cantera_init_c(mech_file, nspecies, species_names_flat, name_len) bind(c, name="cantera_init_c")
          use iso_c_binding, only : c_char, c_int
          character(kind=c_char), intent(in) :: mech_file(*)
@@ -57,8 +69,12 @@ contains
    !! @param transport Transport property data structure to initialize.
    subroutine initialize_transport(mesh, params, transport)
       type(mesh_t), intent(in) :: mesh
-      type(case_params_t), intent(in) :: params
+      type(case_params_t), intent(inout) :: params
       type(transport_properties_t), intent(inout) :: transport
+
+      if (params%enable_cantera_fluid .or. params%enable_cantera_species) then
+         call initialize_cantera_wrapper(params)
+      end if
 
       allocate(transport%rho(mesh%ncells))
       allocate(transport%mu(mesh%ncells))
@@ -74,10 +90,6 @@ contains
       transport%mu = zero
       transport%nu = zero
       transport%lambda = zero
-
-      if (params%enable_cantera) then
-         call initialize_cantera_wrapper(params)
-      end if
    end subroutine initialize_transport
 
    !> Wrapper to pack strings and call cantera_init_c.
@@ -85,19 +97,38 @@ contains
    !! @param params Case configuration parameters containing mechanism file and species names.
    subroutine initialize_cantera_wrapper(params)
       use iso_c_binding, only : c_char, c_null_char
-      type(case_params_t), intent(in) :: params
+      type(case_params_t), intent(inout) :: params
       character(kind=c_char, len=len(params%cantera_mech_file)+1) :: c_mech_file
-      character(kind=c_char, len=len(params%species_name(1))*params%nspecies) :: c_names_flat
-      integer :: k, n_len
+      character(kind=c_char), allocatable :: c_names_flat(:)
+      integer :: k, n_len, c_nsp
 
       c_mech_file = trim(params%cantera_mech_file) // c_null_char
-      c_names_flat = ""
+      
+      ! Initial dummy call to setup mechanism
+      call cantera_init_c(c_mech_file, 0, "", 0)
+
+      if (params%enable_reactions) then
+         ! Automatic Mode: Inherit all species from Cantera
+         c_nsp = cantera_get_species_count_c()
+         params%nspecies = c_nsp
+         n_len = len(params%species_name(1))
+         do k = 1, params%nspecies
+            call cantera_get_species_name_c(k-1, params%species_name(k), n_len)
+         end do
+      end if
+
+      ! Re-initialize with the finalized species list
       n_len = len(params%species_name(1))
+      allocate(c_names_flat(n_len * params%nspecies))
+      c_names_flat = " "
       do k = 1, params%nspecies
-         c_names_flat((k-1)*n_len+1:k*n_len) = params%species_name(k)
+         do c_nsp = 1, n_len
+            c_names_flat((k-1)*n_len + c_nsp) = params%species_name(k)(c_nsp:c_nsp)
+         end do
       end do
 
       call cantera_init_c(c_mech_file, params%nspecies, c_names_flat, n_len)
+      deallocate(c_names_flat)
    end subroutine initialize_cantera_wrapper
 
    !> Deallocate transport property arrays.
@@ -136,7 +167,7 @@ contains
       ! Constant density is assumed for the incompressible formulation.
       transport%rho = params%rho
       
-      if (params%enable_cantera) then
+      if (params%enable_cantera_fluid .or. params%enable_cantera_species) then
          ! Build temperature and pressure arrays
          allocate(T_arr(mesh%ncells))
          allocate(P_arr(mesh%ncells))
@@ -157,13 +188,24 @@ contains
             call fatal_error('cantera', 'Y array not provided to update_transport_properties but cantera is enabled')
          end if
 
-         ! Update nu from Cantera's mu
-         transport%nu = transport%mu / transport%rho
+         ! Apply overrides if specific Cantera features are disabled
+         if (.not. params%enable_cantera_fluid) then
+            transport%nu = params%nu
+            transport%mu = params%rho * params%nu
+         else
+            transport%nu = transport%mu / transport%rho
+         end if
+
+         if (.not. params%enable_cantera_species .and. params%nspecies > 0) then
+            do k = 1, params%nspecies
+               transport%diffusivity(k, :) = params%species_diffusivity(k)
+            end do
+         end if
          
          deallocate(T_arr)
          deallocate(P_arr)
       else
-         ! Phase 1: Constant uniform properties
+         ! Constant uniform properties
          transport%nu = params%nu
          transport%mu = params%rho * params%nu
          

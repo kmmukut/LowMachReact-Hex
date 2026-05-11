@@ -128,7 +128,7 @@ contains
       c_names_flat = " "
       do k = 1, params%nspecies
          do c_nsp = 1, n_len
-            c_names_flat((k-1)*n_len + c_nsp) = params%species_name(k)(c_nsp:c_nsp)
+            c_names_flat((k-1)*n_len + c_nsp) = char(ichar(params%species_name(k)(c_nsp:c_nsp)))
          end do
       end do
 

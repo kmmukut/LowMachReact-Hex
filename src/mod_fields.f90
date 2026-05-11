@@ -75,10 +75,8 @@ contains
    !! @param params Case parameters.
    !! @param bc Boundary condition set.
    !! @param fields Flow fields structure to initialize.
-   subroutine initialize_fields(mesh, params, bc, fields)
+   subroutine initialize_fields(mesh, fields)
       type(mesh_t), intent(in) :: mesh
-      type(case_params_t), intent(in) :: params
-      type(bc_set_t), intent(in) :: bc
       type(flow_fields_t), intent(inout) :: fields
 
       ! v1 starts from rest. Boundary motion and body force enter through

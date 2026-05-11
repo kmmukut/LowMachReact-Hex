@@ -4,8 +4,8 @@
 #include <memory>
 
 // Cantera headers
-#include "cantera/core.h"
-#include "cantera/transport.h"
+#include <cantera/core.h>
+#include <cantera/transport/TransportFactory.h>
 #include <algorithm>
 
 // Global pointer to the Cantera solution
@@ -26,9 +26,9 @@ extern "C" {
         if (!gas || k < 0 || k >= (int)gas->nSpecies()) return;
         std::string name = gas->speciesName(k);
         // Copy and pad with spaces for Fortran
-        int len = std::min((int)name.length(), name_len);
-        for (int i = 0; i < len; ++i) name_out[i] = name[i];
-        for (int i = len; i < name_len; ++i) name_out[i] = ' ';
+        size_t len = std::min(name.length(), (size_t)name_len);
+        for (size_t i = 0; i < len; ++i) name_out[i] = name[i];
+        for (size_t i = len; i < (size_t)name_len; ++i) name_out[i] = ' ';
     }
 
     // Initialize the Cantera mechanism
@@ -68,21 +68,21 @@ extern "C" {
         }
 
         try {
-            int cantera_nsp = gas->nSpecies();
+            int cantera_nsp = (int)gas->nSpecies();
             std::vector<double> Y_cantera(cantera_nsp, 0.0);
             std::vector<double> diff_cantera(cantera_nsp, 0.0);
 
             // Get mapping between solver species and Cantera species
             std::vector<int> sp_map(nspecies, -1);
-            int bath_gas_index = gas->speciesIndex("N2"); // Default bath gas
+            int bath_gas_index = (int)gas->speciesIndex("N2"); // Default bath gas
 
             for (int k = 0; k < nspecies; ++k) {
                 std::string sp_name(species_names_flat + k * name_len, name_len);
                 sp_name.erase(sp_name.find_last_not_of(" ") + 1);
                 
-                int c_idx = gas->speciesIndex(sp_name);
+                size_t c_idx = gas->speciesIndex(sp_name);
                 if (c_idx != Cantera::npos) {
-                    sp_map[k] = c_idx;
+                    sp_map[k] = (int)c_idx;
                 } else {
                     std::cerr << "Cantera Bridge: Species " << sp_name << " not found in mechanism!" << std::endl;
                 }

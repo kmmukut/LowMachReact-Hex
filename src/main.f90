@@ -42,7 +42,7 @@ program lowmach_react_hex
    call flow_mpi_initialize(mesh, flow_mpi, MPI_COMM_WORLD)
    call radiation_mpi_initialize(rad_mpi, MPI_COMM_WORLD)
    call build_bc_set(mesh, params, bc)
-   call initialize_fields(mesh, params, bc, fields)
+   call initialize_fields(mesh, fields)
    call initialize_transport(mesh, params, transport)
    if (params%enable_species) then
       call initialize_species(mesh, params, species)

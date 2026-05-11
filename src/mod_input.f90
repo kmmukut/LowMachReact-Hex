@@ -237,7 +237,7 @@ contains
       real(rk) :: patch_w(max_patches)
       real(rk) :: patch_p(max_patches)
       real(rk) :: patch_dpdn(max_patches)
-      real(rk) :: patch_Y(max_species, max_patches)
+      real(rk), save :: patch_Y(max_species, max_patches) = zero
       integer :: unit_id, ios, i
 
       namelist /boundary_input/ n_patches, patch_name, patch_type, &
@@ -325,9 +325,9 @@ contains
 
       logical :: enable_species, enable_reactions, enable_cantera
       integer :: nspecies
-      character(len=name_len) :: species_name(max_species)
-      real(rk) :: species_diffusivity(max_species)
-      real(rk) :: initial_Y(max_species)
+      character(len=name_len), save :: species_name(max_species) = ""
+      real(rk), save :: species_diffusivity(max_species) = zero
+      real(rk), save :: initial_Y(max_species) = zero
       integer :: unit_id, ios
 
       namelist /species_input/ enable_species, enable_reactions, enable_cantera, &

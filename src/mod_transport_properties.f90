@@ -4,7 +4,7 @@
 !! viscosity, and species diffusivity. It acts as an isolation layer 
 !! between the flow/species solvers and the future Cantera C++ bridge.
 module mod_transport_properties
-   use mod_kinds, only : rk, zero, fatal_error
+   use mod_kinds, only : rk, zero, one, fatal_error
    use mod_mesh_types, only : mesh_t
    use mod_input, only : case_params_t
 
@@ -115,6 +115,11 @@ contains
          do k = 1, params%nspecies
             call cantera_get_species_name_c(k-1, params%species_name(k), n_len)
          end do
+      else if (params%enable_cantera_fluid .and. params%nspecies == 0) then
+         ! Pure Fluid Mode: Default to the first species in the mechanism
+         params%nspecies = 1
+         n_len = len(params%species_name(1))
+         call cantera_get_species_name_c(0, params%species_name(1), n_len)
       end if
 
       ! Re-initialize with the finalized species list
@@ -161,7 +166,7 @@ contains
       real(rk), intent(in), optional :: Y(:,:)
       type(transport_properties_t), intent(inout) :: transport
       integer :: k, n_len
-      real(rk), allocatable :: T_arr(:), P_arr(:)
+      real(rk), allocatable :: T_arr(:), P_arr(:), Y_pure(:,:)
       character(kind=c_char, len=len(params%species_name(1))*params%nspecies) :: c_names_flat
 
       ! Constant density is assumed for the incompressible formulation.
@@ -185,7 +190,13 @@ contains
                                             Y, transport%mu, transport%diffusivity, &
                                             c_names_flat, n_len)
          else
-            call fatal_error('cantera', 'Y array not provided to update_transport_properties but cantera is enabled')
+            ! Pure Fluid Mode: Pass dummy Y=1.0 for the single background species
+            allocate(Y_pure(1, mesh%ncells))
+            Y_pure = one
+            call cantera_update_transport_c(mesh%ncells, T_arr, P_arr, params%nspecies, &
+                                            Y_pure, transport%mu, transport%diffusivity, &
+                                            c_names_flat, n_len)
+            deallocate(Y_pure)
          end if
 
          ! Apply overrides if specific Cantera features are disabled

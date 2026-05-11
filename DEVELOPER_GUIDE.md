@@ -34,6 +34,13 @@ The current solver should be described as a **laminar incompressible / low-Mach-
 
 ---
 
+## Branching strategy
+
+- `main`: Stable releases and production-ready code.
+- `dev`: Primary development branch. All feature development and bug fixes start here.
+
+---
+
 ## Non-negotiable rules
 
 - Keep Fortran 2008 compatibility unless explicitly asked otherwise.

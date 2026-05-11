@@ -1,0 +1,50 @@
+&mesh_input
+  mesh_dir = "cases/lid_driven_cavity/mesh_native"
+/
+
+&time_input
+  nsteps = 10000
+  dt = 2.5e-4
+  output_interval = 500
+/
+
+&fluid_input
+  rho = 1.0
+  nu = 1.0e-2
+/
+
+&solver_input
+  pressure_max_iter = 400
+  pressure_tol = 1.0e-6
+  body_force_x = 0.0
+  body_force_y = 0.0
+  body_force_z = 0.0
+  convection_scheme = "central"
+/
+
+&boundary_input
+  n_patches = 6
+  patch_name = "xmin", "xmax", "ymin", "ymax", "zmin", "zmax"
+  patch_type = "wall", "wall", "wall", "wall", "wall", "wall"
+  patch_species_type = "zero_gradient", "zero_gradient", "zero_gradient", "dirichlet", "zero_gradient", "zero_gradient"
+  patch_u = 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
+  patch_v = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_w = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_Y(1, 4) = 0.5
+  patch_Y(2, 4) = 0.4
+  patch_Y(3, 4) = 0.1
+/
+
+&output_input
+  output_dir = "cases/lid_driven_cavity/output"
+  write_vtu = .true.
+  write_diagnostics = .true.
+/
+
+&species_input
+  nspecies = 3
+  enable_cantera = .true. 
+  species_name = "CO2", "H2O", "CO"
+  species_diffusivity = 1.0e-2, 1.5e-2, 1.2e-2
+  initial_Y = 0.2, 0.3, 0.5
+/

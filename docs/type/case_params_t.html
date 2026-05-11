@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="description" content="Fortran 2008 MPI finite-volume solver for low-Mach flows.">
+    <meta name="author" content="Khaled Mosharraf Mukut" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>case_params_t &ndash; LowMachReact-Hex </title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+    <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script src="../js/jquery-2.1.3.min.js"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">LowMachReact-Hex </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="dropdown hidden-xs visible-sm visible-md hidden-lg">
+              <a href="#" class="dropdown-toggle"
+              data-toggle="dropdown" role="button"
+              aria-haspopup="true"
+     aria-expanded="false">Contents <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+            <li><a href="../lists/files.html">Source Files</a></li>
+            <li><a href="../lists/modules.html">Modules</a></li>
+            <li><a href="../lists/procedures.html">Procedures</a></li>
+                   <li><a href="../lists/types.html">Derived Types</a></li>
+            <li><a href="../program/lowmach_react_hex.html">Program</a></li>
+       
+            </ul>
+        
+            </li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/files.html">Source Files</a></li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/modules.html">Modules</a></li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/procedures.html">Procedures</a></li>
+                             <li class="visible-xs hidden-sm visible-lg"><a href="../lists/types.html">Derived Types</a></li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../program/lowmach_react_hex.html">Program</a></li>
+          </ul>
+        <form action="../search.html" class="navbar-form navbar-right" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+        </div>
+<!--
+        <button type="submit" class="btn btn-default">Submit</button>
+-->
+        </form>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+  <div class="row">
+    <h1>case_params_t
+    <small>Derived Type</small>
+    </h1>
+    <div class="row">
+  <div class="col-lg-12">
+<div class="well well-sm">
+  <ul class="list-inline" style="margin-bottom:0px;display:inline">
+     <li><i class="fa fa-list-ol"></i>
+       <a data-toggle="tooltip"
+    data-placement="bottom" data-html="true"
+    title="<p>25.2% of total for derived types.</p>Including implementation: 35 statements, 25.2% of total for derived types.">35 statements</a>
+     </li> 
+    <li><i class="fa fa-code"></i><a href="../src/mod_input.f90"> Source File</a></li>
+  </ul>
+  <ol class="breadcrumb in-well text-right">
+     <li><a href='../sourcefile/mod_input.f90.html'>mod_input.f90</a></li>
+     <li><a href='../module/mod_input.html'>mod_input</a></li>
+     <li class="active">case_params_t</li>
+  </ol>
+</div>
+</div>
+</div>
+<script>
+  $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+  })
+</script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+    <div id="sidebar">
+  <h3>Contents</h3>
+ 
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#vars-0">Variables</a></h3></div>
+  <div id="vars-0" class="panel-collapse collapse">
+    <div class="list-group">
+      <a class="list-group-item" href="../type/case_params_t.html#variable-mesh_dir">mesh_dir</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-nsteps">nsteps</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-dt">dt</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-output_interval">output_interval</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-rho">rho</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-nu">nu</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-pressure_max_iter">pressure_max_iter</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-pressure_tol">pressure_tol</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-body_force">body_force</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-convection_scheme">convection_scheme</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-n_patches">n_patches</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_name">patch_name</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_type">patch_type</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_velocity_type">patch_velocity_type</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_pressure_type">patch_pressure_type</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_u">patch_u</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_v">patch_v</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_w">patch_w</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_p">patch_p</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_dpdn">patch_dpdn</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_species_type">patch_species_type</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_y">patch_Y</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-output_dir">output_dir</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-write_vtu">write_vtu</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-write_diagnostics">write_diagnostics</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-nspecies">nspecies</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-species_name">species_name</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-species_diffusivity">species_diffusivity</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-initial_y">initial_Y</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_cantera">enable_cantera</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-cantera_mech_file">cantera_mech_file</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-background_temp">background_temp</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-background_press">background_press</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+      <h2>type, public :: case_params_t</h2>
+    <p>Container for all case parameters.</p>
+    <br>
+
+    <section class="visible-xs visible-sm hidden-md">
+      <h3>Contents</h3>
+ 
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#vars-1">Variables</a></h3></div>
+  <div id="vars-1" class="panel-collapse collapse">
+    <div class="list-group">
+      <a class="list-group-item" href="../type/case_params_t.html#variable-mesh_dir">mesh_dir</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-nsteps">nsteps</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-dt">dt</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-output_interval">output_interval</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-rho">rho</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-nu">nu</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-pressure_max_iter">pressure_max_iter</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-pressure_tol">pressure_tol</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-body_force">body_force</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-convection_scheme">convection_scheme</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-n_patches">n_patches</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_name">patch_name</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_type">patch_type</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_velocity_type">patch_velocity_type</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_pressure_type">patch_pressure_type</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_u">patch_u</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_v">patch_v</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_w">patch_w</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_p">patch_p</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_dpdn">patch_dpdn</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_species_type">patch_species_type</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-patch_y">patch_Y</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-output_dir">output_dir</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-write_vtu">write_vtu</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-write_diagnostics">write_diagnostics</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-nspecies">nspecies</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-species_name">species_name</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-species_diffusivity">species_diffusivity</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-initial_y">initial_Y</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_cantera">enable_cantera</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-cantera_mech_file">cantera_mech_file</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-background_temp">background_temp</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-background_press">background_press</a>
+    </div>
+  </div>
+</div>
+
+    </section>
+    <br class="visible-xs visible-sm hidden-md">
+
+    <section>
+    <h2>Components</h2>
+    <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Visibility</th><th>Attributes</th><th></th><th>Name</th><th></th><th>Initial</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" id="variable-mesh_dir"></span>character(len=path_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>mesh_dir</strong></td><td> =</td><td>"mesh_native"</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-nsteps"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>nsteps</strong></td><td> =</td><td>100</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-dt"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>dt</strong></td><td> =</td><td>1.0e-3_rk</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-output_interval"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>output_interval</strong></td><td> =</td><td>10</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-rho"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>rho</strong></td><td> =</td><td>one</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-nu"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>nu</strong></td><td> =</td><td>1.0e-2_rk</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-pressure_max_iter"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>pressure_max_iter</strong></td><td> =</td><td>300</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-pressure_tol"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>pressure_tol</strong></td><td> =</td><td>1.0e-10_rk</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-body_force"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>body_force</strong>(3)</td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-convection_scheme"></span>character(len=name_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>convection_scheme</strong></td><td> =</td><td>"upwind"</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-n_patches"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>n_patches</strong></td><td> =</td><td>0</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_name"></span>character(len=name_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_name</strong>(max_patches)</td><td> =</td><td>""</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_type"></span>character(len=name_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_type</strong>(max_patches)</td><td> =</td><td>""</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_velocity_type"></span>character(len=name_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_velocity_type</strong>(max_patches)</td><td> =</td><td>""</td><td><p>Stage 2 boundary condition split.
+These are optional in case.nml. If left blank, mod_bc can fall back
+to the legacy patch_type behavior.</p></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_pressure_type"></span>character(len=name_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_pressure_type</strong>(max_patches)</td><td> =</td><td>""</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_u"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_u</strong>(max_patches)</td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_v"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_v</strong>(max_patches)</td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_w"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_w</strong>(max_patches)</td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_p"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_p</strong>(max_patches)</td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_dpdn"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_dpdn</strong>(max_patches)</td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_species_type"></span>character(len=name_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_species_type</strong>(max_patches)</td><td> =</td><td>""</td><td><p>Stage 3B species boundary conditions</p></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-patch_y"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>patch_Y</strong>(max_species,max_patches)</td><td> =</td><td>zero</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-output_dir"></span>character(len=path_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>output_dir</strong></td><td> =</td><td>"output"</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-write_vtu"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>write_vtu</strong></td><td> =</td><td>.true.</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-write_diagnostics"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>write_diagnostics</strong></td><td> =</td><td>.true.</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-nspecies"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>nspecies</strong></td><td> =</td><td>0</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-species_name"></span>character(len=name_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>species_name</strong>(max_species)</td><td> =</td><td>""</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-species_diffusivity"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>species_diffusivity</strong>(max_species)</td><td> =</td><td>0.0_rk</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-initial_y"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>initial_Y</strong>(max_species)</td><td> =</td><td>0.0_rk</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-enable_cantera"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>enable_cantera</strong></td><td> =</td><td>.false.</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-cantera_mech_file"></span>character(len=path_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>cantera_mech_file</strong></td><td> =</td><td>"gri30.yaml"</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-background_temp"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>background_temp</strong></td><td> =</td><td>300.0_rk</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-background_press"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>background_press</strong></td><td> =</td><td>101325.0_rk</td><td></td>
+</tr>
+</tbody>
+</table>
+
+    </section>
+    <br>
+    
+    
+    
+    
+    
+    </div>
+  </div>
+
+    <hr>    
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+      <div class="row">
+        <div class="col-xs-6 col-md-6"><p>LowMachReact-Hex was developed by Khaled Mosharraf Mukut<br>&copy; 2026 
+</p>
+        </div>
+        <div class="col-xs-6 col-md-6">
+          <p class="text-right">
+            Documentation generated by 
+            <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+          </p>
+        </div>
+      </div>
+      <br>
+      </div> <!-- /container -->    
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- MathJax JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+        jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+        extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script src="../tipuesearch/tipuesearch_content.js"></script>
+    <script src="../tipuesearch/tipuesearch_set.js"></script>
+    <script src="../tipuesearch/tipuesearch.js"></script>
+    
+  </body>
+</html>

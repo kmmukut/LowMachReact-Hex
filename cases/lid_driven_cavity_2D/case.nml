@@ -3,9 +3,11 @@
 /
 
 &time_input
-  nsteps = 400000
+  nsteps = 10000
   dt = 2.5e-4
-  output_interval = 20000
+  output_interval = 500
+  use_dynamic_dt = .false.
+  max_cfl = 0.5
 /
 
 &fluid_input

@@ -57,9 +57,10 @@ Visualization files are written to the `output/` directory of the case. Open `fl
 
 ## Documentation
 
+*   **[Live Documentation](https://kmmukut.github.io/LowMachReact-Hex)**: Full API reference, call graphs, and search.
 *   **[Developer Guide](DEVELOPER_GUIDE.md)**: Strict rules, MPI architecture, and non-negotiable design principles.
-*   **[Architecture](docs/architecture.md)**: Detailed split of responsibilities and data structures.
-*   **[Numerics](docs/numerics.md)**: Mathematical discretization and solver details.
+*   **[Architecture](doc_src/architecture.md)**: Detailed split of responsibilities and data structures.
+*   **[Numerics](doc_src/numerics.md)**: Mathematical discretization and solver details.
 
 To generate the full API documentation using FORD:
 ```bash

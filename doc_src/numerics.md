@@ -25,9 +25,9 @@ A fractional-step projection method is used for pressure-velocity coupling.
     where $\mathbf{R}$ represents the sum of convective, diffusive, and body force terms.
 
 2.  **Pressure Poisson Solve:**
-    The pressure correction $\phi$ is found by solving:
+    The pressure correction potential $\phi = p^{n+1} - p^n$ is found by solving:
     $$ \nabla^2 \phi = \frac{\rho}{\Delta t} \nabla \cdot \mathbf{u}^* $$
-    This equation is solved using a matrix-free **Conjugate Gradient (CG)** method.
+    This system is solved using a **Preconditioned Conjugate Gradient (PCG)** method with a diagonal (Jacobi) preconditioner. The Laplacian operator is applied in a matrix-free manner using cached geometric coefficients.
 
 3.  **Correction Step:**
     Finally, the velocity and pressure are updated:
@@ -55,7 +55,10 @@ By tracking the maximum outward flux ratio across the domain, the solver dynamic
 
 *   **Matrix-Free:** The Laplacian operator is applied directly without storing the full sparse matrix.
 *   **Caching:** To optimize performance, neighbor IDs and geometric coefficients ($A_{face}/d_{normal}$) are cached during initialization.
-*   **Null-Space Removal:** For purely Neumann systems (e.g., closed cavity), the pressure is pinned at cell 1 to ensure a unique solution.
+*   **Boundary Handling:** 
+    *   **Dirichlet (Inlet/Outlet):** Supported for both velocity and pressure. Pressure Dirichlet boundaries remove the matrix null space.
+    *   **Neumann (Wall/Symmetry):** Zero-gradient conditions for pressure.
+    *   **Null-Space Removal:** For purely Neumann systems (e.g., closed cavity), the pressure is pinned at cell 1 to ensure a unique solution.
 
 ## Numerical Stability and Convection Schemes
 

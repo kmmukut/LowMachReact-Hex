@@ -27,10 +27,10 @@ module mod_flow_projection
    use mod_kinds, only : rk, zero, one, half, tiny_safe, fatal_error
    use mod_input, only : case_params_t
    use mod_mesh_types, only : mesh_t
-   use mod_mpi_flow, only : flow_mpi_t, flow_allreduce_global_vector, &
-                            flow_allreduce_global_scalar, flow_allgather_owned_scalar, &
-                            flow_allgather_owned_vector, flow_allgather_owned_v4, &
-                            flow_global_dot_owned, flow_global_dots_owned, flow_global_max_owned
+   use mod_mpi_flow, only : flow_mpi_t, flow_exchange_cell_scalar, &
+                            flow_exchange_cell_matrix, flow_exchange_face_scalar, &
+                            flow_global_dot_owned, flow_global_two_dots_owned, &
+                            flow_global_max_owned
    use mod_bc, only : bc_set_t, bc_periodic, bc_neumann, bc_dirichlet, &
                       patch_type_for_face, boundary_velocity, &
                       face_effective_neighbor, boundary_pressure_type, &
@@ -47,7 +47,11 @@ module mod_flow_projection
    !! Populated at the end of every timestep to monitor convergence 
    !! and physical integrity (e.g., mass balance, energy decay).
    type, public :: solver_stats_t
-      integer :: pressure_iterations = 0 !< Number of iterations taken by the PCG solver.
+      integer :: pressure_iterations = 0 !< Number of iterations taken by the most recent PCG solve.
+      integer :: pressure_iterations_total = 0 !< Cumulative PCG iterations over all pressure solves.
+      integer :: pressure_iterations_max = 0 !< Maximum PCG iterations used by any pressure solve.
+      integer :: pressure_solve_count = 0 !< Number of pressure solves completed.
+      real(rk) :: pressure_iterations_avg = zero !< Average PCG iterations per pressure solve.
       real(rk) :: pressure_residual = zero !< Final $L_2$ residual norm of the Poisson system.
       real(rk) :: max_divergence = zero    !< Maximum local velocity divergence $\nabla \cdot \mathbf{u}$ [1/s].
       real(rk) :: rms_divergence = zero    !< Root-mean-square divergence across the domain.
@@ -67,6 +71,7 @@ module mod_flow_projection
    type :: pressure_operator_cache_t
       logical :: initialized = .false.      !< Initialization toggle.
       logical :: has_dirichlet_pressure = .false. !< True if at least one patch has a fixed pressure.
+      logical :: has_neumann_outlet = .false. !< True if at least one boundary patch can absorb flux imbalance.
       integer :: ncells = 0                 !< Number of cells.
       integer :: max_faces = 0              !< Max faces per cell.
       integer, allocatable :: nb(:,:)       !< Neighbor indices for each cell face.
@@ -85,7 +90,6 @@ module mod_flow_projection
 
       real(rk), allocatable :: local_vec(:,:)      !< Local momentum RHS.
       real(rk), allocatable :: local_vec_star(:,:) !< Local intermediate velocity.
-      real(rk), allocatable :: momentum_rhs(:,:)   !< Global momentum RHS.
       real(rk), allocatable :: local_scalar(:)     !< Local divergence scalar.
       real(rk), allocatable :: rhs_poisson(:)      !< Source term for Poisson solve.
       real(rk), allocatable :: local_face_flux(:)  !< Face fluxes on owned faces.
@@ -130,49 +134,71 @@ contains
       type(solver_stats_t), intent(inout) :: stats
 
       integer :: c
+      integer, save :: projection_step_counter = 0
+      logical :: do_projection_diagnostics
+
+      projection_step_counter = projection_step_counter + 1
+      do_projection_diagnostics = (mod(projection_step_counter, params%output_interval) == 0) .or. &
+                                  (projection_step_counter == params%nsteps)
 
       call ensure_projection_workspace(mesh)
       call ensure_pressure_operator_cache(mesh, flow, bc)
 
       associate( &
          local_vec => projection_work%local_vec, &
-         momentum_rhs => projection_work%momentum_rhs, &
          local_scalar => projection_work%local_scalar, &
          rhs_poisson => projection_work%rhs_poisson, &
          local_face_flux => projection_work%local_face_flux, &
          local_vec_star => projection_work%local_vec_star, &
          predicted_face_flux => projection_work%predicted_face_flux)
 
-         fields%u_old = fields%u
-
          ! 1. Predictor: Compute Explicit momentum RHS and Advance intermediate velocity u*
+         call profiler_start('Projection_Momentum_RHS')
          call compute_momentum_rhs(mesh, flow, bc, params, transport, fields%u, fields%p, local_vec)
+         call profiler_stop('Projection_Momentum_RHS')
          
          ! 2. Advance intermediate velocity u* locally
          ! This uses the PREVIOUS fields%rhs_old and the CURRENT local_vec
+         call profiler_start('Projection_AB2')
          call advance_ab2(mesh, flow, params, fields, local_vec, local_vec_star)
+         call profiler_stop('Projection_AB2')
          
          ! Store current RHS for next step (AB2)
          ! rhs_old is effectively partitioned; each rank only needs its owned cell values.
          fields%rhs_old = local_vec
          fields%rhs_old_valid = .true.
 
-         ! Synchronize global u_star field using efficient Allgather
-         call flow_allgather_owned_vector(flow, local_vec_star, fields%u_star)
+         fields%u_star = local_vec_star
+
+         call profiler_start('Projection_Predict_Flux')
+
+         call profiler_start('PredictFlux_Exchange_UStar')
+         call flow_exchange_cell_matrix(flow, fields%u_star)
+         call profiler_stop('PredictFlux_Exchange_UStar')
 
          ! 3. Interpolate predicted cell velocity to intermediate face fluxes
-         call compute_predicted_face_flux(mesh, flow, bc, fields%u_star, local_face_flux)
-         call flow_allreduce_global_scalar(flow, local_face_flux, predicted_face_flux)
+         call profiler_start('PredictFlux_Compute')
+         call compute_predicted_face_flux(mesh, flow, bc, fields%u_star, predicted_face_flux)
+         call profiler_stop('PredictFlux_Compute')
 
          ! 3b. Balance mass at open boundaries to prevent drift in closed-loop systems
+         call profiler_start('PredictFlux_Balance')
          call balance_neumann_outlet_flux(mesh, flow, bc, predicted_face_flux)
+         call profiler_stop('PredictFlux_Balance')
+
+         call profiler_start('PredictFlux_Exchange_Face')
+         call flow_exchange_face_scalar(flow, predicted_face_flux)
+         call profiler_stop('PredictFlux_Exchange_Face')
+
+         call profiler_stop('Projection_Predict_Flux')
 
          ! 4. Construct the Poisson RHS: b = -rho/dt * div(u*)
+         call profiler_start('Projection_Poisson_RHS')
          call compute_flux_divergence(mesh, flow, predicted_face_flux, local_scalar)
-         call flow_allgather_owned_scalar(flow, local_scalar, fields%div)
+         fields%div = local_scalar
 
          rhs_poisson = zero
-         do c = 1, mesh%ncells
+         do c = flow%first_cell, flow%last_cell
             rhs_poisson(c) = -params%rho / params%dt * &
                              fields%div(c) * mesh%cells(c)%volume
          end do
@@ -182,25 +208,49 @@ contains
             rhs_poisson(1) = zero
          end if
          fields%phi = zero
+         call profiler_stop('Projection_Poisson_RHS')
 
          ! Solve Laplacian system for potential phi
+         call profiler_start('Projection_PCG')
          call solve_pressure_correction(mesh, flow, bc, params, rhs_poisson, fields%phi, stats)
+         call profiler_stop('Projection_PCG')
 
          ! 5. Update Pressure: p(n+1) = p(n) + phi
-         fields%p = fields%p + fields%phi
+         call profiler_start('Projection_Pressure_Update')
+         do c = flow%first_cell, flow%last_cell
+            fields%p(c) = fields%p(c) + fields%phi(c)
+         end do
          if (.not. pressure_cache%has_dirichlet_pressure) then
             fields%p(1) = zero
          end if
+         call flow_exchange_cell_scalar(flow, fields%p)
+         call profiler_stop('Projection_Pressure_Update')
 
          ! 6. Correct face fluxes and cell-centered velocity locally
+         call profiler_start('Projection_Correction')
          call correct_face_flux(mesh, flow, bc, params, predicted_face_flux, fields%phi, local_face_flux)
+         fields%face_flux = local_face_flux
+         call flow_exchange_face_scalar(flow, fields%face_flux)
          call correct_cell_velocity(mesh, flow, bc, params, fields%u_star, fields%phi, local_vec)
 
-         ! 7. Synchronize corrections across the global mesh using fused V4 gather
-         call flow_allreduce_global_scalar(flow, local_face_flux, fields%face_flux)
-         call flow_allgather_owned_v4(flow, local_vec, local_scalar, fields%u, fields%div)
+         ! 7. Keep velocity ghosts current for the next predictor/species step.
+         fields%u = local_vec
+         call flow_exchange_cell_matrix(flow, fields%u)
 
-         call compute_flow_diagnostics(mesh, flow, bc, params, fields, stats)
+         ! Divergence is only needed for diagnostics/output, so avoid computing
+         ! and exchanging it on non-output steps.
+         if (do_projection_diagnostics) then
+            call compute_flux_divergence(mesh, flow, fields%face_flux, local_scalar)
+            fields%div = local_scalar
+            call flow_exchange_cell_scalar(flow, fields%div)
+         end if
+         call profiler_stop('Projection_Correction')
+
+         if (do_projection_diagnostics) then
+            call profiler_start('Projection_Diagnostics')
+            call compute_flow_diagnostics(mesh, flow, bc, params, fields, stats)
+            call profiler_stop('Projection_Diagnostics')
+         end if
 
       end associate
    end subroutine advance_projection_step
@@ -371,22 +421,21 @@ contains
 
 
    !> Linearly interpolates cell-centered intermediate velocity to mesh faces.
-   subroutine compute_predicted_face_flux(mesh, flow, bc, ustar, local_flux)
+   subroutine compute_predicted_face_flux(mesh, flow, bc, ustar, face_flux)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
       type(bc_set_t), intent(in) :: bc
       real(rk), intent(in) :: ustar(:,:)
-      real(rk), intent(out) :: local_flux(:)
+      real(rk), intent(out) :: face_flux(:)
 
-      integer :: f, owner, nb
+      integer :: i, f, owner, nb
       real(rk) :: uf(3), ub(3)
 
-      local_flux = zero
+      face_flux = zero
 
-      do f = 1, mesh%nfaces
+      do i = 1, size(flow%owned_faces)
+         f = flow%owned_faces(i)
          owner = mesh%faces(f)%owner
-
-         if (.not. flow%owned(owner)) cycle
 
          nb = face_effective_neighbor(mesh, bc, f, owner)
 
@@ -397,44 +446,43 @@ contains
             uf = ub
          end if
 
-         local_flux(f) = dot_product(uf, mesh%faces(f)%normal) * mesh%faces(f)%area
+         face_flux(f) = dot_product(uf, mesh%faces(f)%normal) * mesh%faces(f)%area
       end do
    end subroutine compute_predicted_face_flux
 
 
    !> Corrects face fluxes using the pressure potential gradient.
-   subroutine correct_face_flux(mesh, flow, bc, params, predicted_flux, phi, local_flux)
+   subroutine correct_face_flux(mesh, flow, bc, params, predicted_flux, phi, face_flux)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
       type(bc_set_t), intent(in) :: bc
       type(case_params_t), intent(in) :: params
       real(rk), intent(in) :: predicted_flux(:)
       real(rk), intent(in) :: phi(:)
-      real(rk), intent(out) :: local_flux(:)
+      real(rk), intent(out) :: face_flux(:)
 
-      integer :: f, owner, nb
+      integer :: i, f, owner, nb
       real(rk) :: dist
 
-      local_flux = zero
+      face_flux = zero
 
-      do f = 1, mesh%nfaces
+      do i = 1, size(flow%owned_faces)
+         f = flow%owned_faces(i)
          owner = mesh%faces(f)%owner
-
-         if (.not. flow%owned(owner)) cycle
 
          nb = face_effective_neighbor(mesh, bc, f, owner)
 
-         local_flux(f) = predicted_flux(f)
+         face_flux(f) = predicted_flux(f)
 
          if (nb > 0) then
             dist = face_normal_distance(mesh, bc, f, owner, nb)
 
-            local_flux(f) = predicted_flux(f) - params%dt / params%rho * &
+            face_flux(f) = predicted_flux(f) - params%dt / params%rho * &
                             mesh%faces(f)%area * (phi(nb) - phi(owner)) / dist
          else
             if (boundary_pressure_type(mesh, bc, f) == bc_dirichlet) then
                dist = face_normal_distance(mesh, bc, f, owner, 0)
-               local_flux(f) = predicted_flux(f) - params%dt / params%rho * &
+               face_flux(f) = predicted_flux(f) - params%dt / params%rho * &
                                mesh%faces(f)%area * (zero - phi(owner)) / dist
             end if
          end if
@@ -501,17 +549,26 @@ contains
          ap => projection_work%ap, &
          local_ap => projection_work%local_ap)
 
-         call pressure_matvec(mesh, flow, bc, phi, local_ap)
-         call flow_allgather_owned_scalar(flow, local_ap, ap)
+         r = zero
+         z = zero
+         pvec = zero
+         local_ap = zero
 
-         r = rhs - ap
+         ! The projection driver resets phi to zero before every pressure solve.
+         ! Therefore A*phi is exactly zero for the initial PCG residual, so avoid
+         ! one unnecessary halo exchange and pressure matvec per timestep.
+         local_ap = zero
+
+         do c = flow%first_cell, flow%last_cell
+            r(c) = rhs(c)
+         end do
 
          if (.not. pressure_cache%has_dirichlet_pressure) then
             r(1) = zero
             phi(1) = zero
          end if
 
-         do c = 1, mesh%ncells
+         do c = flow%first_cell, flow%last_cell
             if (c == 1 .and. .not. pressure_cache%has_dirichlet_pressure) then
                z(c) = zero
             else
@@ -520,10 +577,8 @@ contains
          end do
           
          block
-            real(rk) :: batch_a(mesh%ncells, 2), batch_b(mesh%ncells, 2), res(2)
-            batch_a(:, 1) = r; batch_b(:, 1) = r
-            batch_a(:, 2) = r; batch_b(:, 2) = z
-            call flow_global_dots_owned(flow, 2, batch_a, batch_b, res)
+            real(rk) :: res(2)
+            call flow_global_two_dots_owned(flow, r, r, r, z, res)
             rr = res(1); rz = res(2)
          end block
 
@@ -538,24 +593,29 @@ contains
          do iter = 1, params%pressure_max_iter
             if (stats%pressure_residual <= params%pressure_tol) exit
 
+            ! a. matvec: q = A * p
+            call flow_exchange_cell_scalar(flow, pvec)
             call pressure_matvec(mesh, flow, bc, pvec, local_ap)
-            call flow_allgather_owned_scalar(flow, local_ap, ap)
 
-            pap = flow_global_dot_owned(flow, pvec, ap)
+            ! b. step length: alpha = (r, z) / (p, A*p)
+            pap = flow_global_dot_owned(flow, pvec, local_ap)
 
             if (abs(pap) <= tiny_safe) exit
 
             alpha = rz / pap
 
-            phi = phi + alpha * pvec
-            r = r - alpha * ap
+            ! c. update solution and residual: phi = phi + alpha*p, r = r - alpha*q
+            do c = flow%first_cell, flow%last_cell
+               phi(c) = phi(c) + alpha * pvec(c)
+               r(c) = r(c) - alpha * local_ap(c)
+            end do
 
             if (.not. pressure_cache%has_dirichlet_pressure) then
                phi(1) = zero
                r(1) = zero
             end if
 
-            do c = 1, mesh%ncells
+            do c = flow%first_cell, flow%last_cell
                if (c == 1 .and. .not. pressure_cache%has_dirichlet_pressure) then
                   z(c) = zero
                else
@@ -564,10 +624,8 @@ contains
             end do
 
             block
-               real(rk) :: batch_a(mesh%ncells, 2), batch_b(mesh%ncells, 2), res(2)
-               batch_a(:, 1) = r; batch_b(:, 1) = r
-               batch_a(:, 2) = r; batch_b(:, 2) = z
-               call flow_global_dots_owned(flow, 2, batch_a, batch_b, res)
+               real(rk) :: res(2)
+               call flow_global_two_dots_owned(flow, r, r, r, z, res)
                rr_new = res(1); rz_new = res(2)
             end block
 
@@ -578,7 +636,9 @@ contains
 
             beta = rz_new / max(rz, tiny_safe)
 
-            pvec = z + beta * pvec
+            do c = flow%first_cell, flow%last_cell
+               pvec(c) = z(c) + beta * pvec(c)
+            end do
             if (.not. pressure_cache%has_dirichlet_pressure) then
                pvec(1) = zero
             end if
@@ -590,6 +650,16 @@ contains
          if (.not. pressure_cache%has_dirichlet_pressure) then
             phi(1) = zero
          end if
+
+         ! Accumulate pressure-solver iteration diagnostics.
+         ! pressure_iterations remains the most recent solve count.
+         stats%pressure_solve_count = stats%pressure_solve_count + 1
+         stats%pressure_iterations_total = stats%pressure_iterations_total + stats%pressure_iterations
+         stats%pressure_iterations_max = max(stats%pressure_iterations_max, stats%pressure_iterations)
+         stats%pressure_iterations_avg = real(stats%pressure_iterations_total, rk) / &
+                                         max(real(stats%pressure_solve_count, rk), one)
+
+         call flow_exchange_cell_scalar(flow, phi)
 
       end associate
    end subroutine solve_pressure_correction
@@ -740,6 +810,11 @@ contains
 
       if (pressure_cache%has_dirichlet_pressure) return
 
+      ! If the case has no Neumann outlet faces, there is nothing to balance.
+      ! This avoids two unnecessary MPI_Allreduce calls per timestep for closed
+      ! domains such as lid-driven cavity.
+      if (.not. pressure_cache%has_neumann_outlet) return
+
       local_net_flux = zero
       local_outlet_area = zero
 
@@ -784,7 +859,6 @@ contains
 
          btype = patch_type_for_face(mesh, bc, f)
          if (btype /= bc_neumann) cycle
-
          owner = mesh%faces(f)%owner
          if (.not. flow%owned(owner)) cycle
 
@@ -837,7 +911,6 @@ contains
 
       allocate(projection_work%local_vec(3, mesh%ncells))
       allocate(projection_work%local_vec_star(3, mesh%ncells))
-      allocate(projection_work%momentum_rhs(3, mesh%ncells))
       allocate(projection_work%local_scalar(mesh%ncells))
       allocate(projection_work%rhs_poisson(mesh%ncells))
       allocate(projection_work%local_face_flux(mesh%nfaces))
@@ -851,7 +924,6 @@ contains
 
       projection_work%local_vec = zero
       projection_work%local_vec_star = zero
-      projection_work%momentum_rhs = zero
       projection_work%local_scalar = zero
       projection_work%rhs_poisson = zero
       projection_work%local_face_flux = zero
@@ -871,7 +943,6 @@ contains
    subroutine finalize_flow_projection_workspace()
       if (allocated(projection_work%local_vec)) deallocate(projection_work%local_vec)
       if (allocated(projection_work%local_vec_star)) deallocate(projection_work%local_vec_star)
-      if (allocated(projection_work%momentum_rhs)) deallocate(projection_work%momentum_rhs)
       if (allocated(projection_work%local_scalar)) deallocate(projection_work%local_scalar)
       if (allocated(projection_work%rhs_poisson)) deallocate(projection_work%rhs_poisson)
       if (allocated(projection_work%local_face_flux)) deallocate(projection_work%local_face_flux)
@@ -892,8 +963,11 @@ contains
       if (allocated(pressure_cache%diag)) deallocate(pressure_cache%diag)
 
       pressure_cache%initialized = .false.
+      pressure_cache%has_dirichlet_pressure = .false.
+      pressure_cache%has_neumann_outlet = .false.
       pressure_cache%ncells = 0
       pressure_cache%max_faces = 0
+
    end subroutine finalize_flow_projection_workspace
 
 
@@ -921,6 +995,7 @@ contains
       pressure_cache%nb = 0
       pressure_cache%coeff = zero
       pressure_cache%diag = zero
+      pressure_cache%has_neumann_outlet = .false.
 
       local_dirichlet_flag = 0
 
@@ -930,6 +1005,10 @@ contains
             nb = face_effective_neighbor(mesh, bc, f, c)
 
             if (nb <= 0) then
+               if (patch_type_for_face(mesh, bc, f) == bc_neumann) then
+                  pressure_cache%has_neumann_outlet = .true.
+               end if
+
                if (boundary_pressure_type(mesh, bc, f) == bc_dirichlet) then
                   dist = face_normal_distance(mesh, bc, f, c, 0)
                   coeff = mesh%faces(f)%area / dist

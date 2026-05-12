@@ -16,7 +16,7 @@ module mod_species
    use mod_input, only : case_params_t
    use mod_bc, only : bc_set_t, bc_periodic, patch_type_for_face, face_effective_neighbor, boundary_species
    use mod_fields, only : flow_fields_t
-   use mod_mpi_flow, only : flow_mpi_t, flow_allgather_owned_scalar
+   use mod_mpi_flow, only : flow_mpi_t, flow_exchange_cell_matrix
    use mod_flow_projection, only : face_normal_distance
    use mod_transport_properties, only : transport_properties_t
    implicit none
@@ -135,9 +135,9 @@ contains
 
       real(rk), allocatable :: dY(:), diff_flux(:), adv_flux(:), Y_face_lin(:)
       real(rk) :: flux, face_area, dist, sum_diff_flux
-      real(rk) :: Y_owner, Y_neighbor, Y_face
+      real(rk) :: Y_cell, Y_other, Y_face
       real(rk) :: diff_face
-      integer :: c, f, fid, owner, neighbor
+      integer :: c, f, fid, neighbor
       integer :: k
       real(rk) :: sum_Y
       logical :: is_dirichlet
@@ -157,9 +157,11 @@ contains
 
          do f = 1, mesh%ncell_faces(c)
             fid = mesh%cell_faces(f,c)
-            flux = fields%face_flux(fid) ! Oriented outward for owner
-
-            owner = mesh%faces(fid)%owner
+            if (mesh%faces(fid)%owner == c) then
+               flux = fields%face_flux(fid)
+            else
+               flux = -fields%face_flux(fid)
+            end if
             neighbor = face_effective_neighbor(mesh, bc, fid, c)
 
             face_area = mesh%faces(fid)%area
@@ -167,20 +169,21 @@ contains
 
             sum_diff_flux = zero
             do k = 1, species%nspecies
-               Y_owner = species%Y_old(k, owner)
+               Y_cell = species%Y_old(k, c)
                
                if (neighbor == 0) then
-                  call boundary_species(mesh, bc, fid, k, Y_owner, Y_neighbor, is_dirichlet)
+                  call boundary_species(mesh, bc, fid, k, Y_cell, Y_other, is_dirichlet)
                else
-                  Y_neighbor = species%Y_old(k, neighbor)
+                  Y_other = species%Y_old(k, neighbor)
                   is_dirichlet = .true.
                end if
 
-               ! 1. Advective flux using Upwind discretization
+               ! 1. Advective flux using Upwind discretization.
+               ! flux is oriented outward from the current cell.
                if (flux > zero) then
-                  Y_face = Y_owner
+                  Y_face = Y_cell
                else
-                  Y_face = Y_neighbor
+                  Y_face = Y_other
                end if
                adv_flux(k) = -flux * Y_face
 
@@ -188,15 +191,15 @@ contains
                diff_flux(k) = zero
                if (neighbor /= 0 .or. is_dirichlet) then
                   if (neighbor == 0) then
-                     diff_face = transport%diffusivity(k, owner)
+                     diff_face = transport%diffusivity(k, c)
                   else
-                     diff_face = 0.5_rk * (transport%diffusivity(k, owner) + transport%diffusivity(k, neighbor))
+                     diff_face = 0.5_rk * (transport%diffusivity(k, c) + transport%diffusivity(k, neighbor))
                   end if
-                  diff_flux(k) = diff_face * (Y_neighbor - Y_owner) / dist * face_area
+                  diff_flux(k) = diff_face * (Y_other - Y_cell) / dist * face_area
                end if
                
                sum_diff_flux = sum_diff_flux + diff_flux(k)
-               Y_face_lin(k) = 0.5_rk * (Y_owner + Y_neighbor)
+               Y_face_lin(k) = 0.5_rk * (Y_cell + Y_other)
             end do
 
             ! 3. Apply Correction Velocity to ensure mass conservation: sum(j_k) = 0
@@ -228,31 +231,14 @@ contains
       end do
 
       deallocate(dY)
+      deallocate(diff_flux)
+      deallocate(adv_flux)
+      deallocate(Y_face_lin)
 
-      ! Synchronize updated species fields across all MPI ranks
-      call flow_allgather_owned_species(flow, species)
+      ! Synchronize updated species ghosts for the next transport/property step.
+      call flow_exchange_cell_matrix(flow, species%Y)
 
    end subroutine advance_species_transport
 
-
-   !> Coordinates the gathering of species mass fractions from all ranks.
-   !!
-   !! Since the solver uses a replicated mesh (full geometry on each rank), 
-   !! this routine ensures that updates computed on Rank $N$ for its owned 
-   !! cells are propagated to all other ranks.
-   subroutine flow_allgather_owned_species(flow, species)
-      type(flow_mpi_t), intent(inout) :: flow
-      type(species_fields_t), intent(inout) :: species
-      real(rk), allocatable :: local_Y(:), global_Y(:)
-      integer :: k
-      
-      allocate(local_Y(size(species%Y, 2)), global_Y(size(species%Y, 2)))
-      do k = 1, species%nspecies
-         local_Y = species%Y(k,:)
-         call flow_allgather_owned_scalar(flow, local_Y, global_Y)
-         species%Y(k,:) = global_Y
-      end do
-      deallocate(local_Y, global_Y)
-   end subroutine flow_allgather_owned_species
 
 end module mod_species

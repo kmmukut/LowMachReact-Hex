@@ -53,6 +53,10 @@ The solver uses a standard Fortran Namelist format. The file is divided into sev
 *   **`write_vtu`**: Boolean. Enable/disable volume output.
 *   **`write_diagnostics`**: Boolean. Enable/disable `diagnostics.csv`.
 
+### `&profiling_input`
+*   **`enable_profiling`**: Boolean. Enable or disable the hierarchical MPI-aware profiler.
+*   **`nested_profiling`**: Boolean. If true, the terminal report will include an inclusive nested call tree.
+
 ---
 
 ## 2. Preparing Input Files

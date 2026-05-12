@@ -26,7 +26,7 @@ program lowmach_react_hex
                            advance_species_transport
    use mod_transport_properties, only : transport_properties_t, initialize_transport, &
                                         finalize_transport, update_transport_properties
-   use mod_profiler, only : profiler_start, profiler_stop, profiler_report
+   use mod_profiler, only : profiler_start, profiler_stop, profiler_report, profiler_configure
    implicit none
 
    type(case_params_t) :: params    !< Parsed simulation parameters.
@@ -40,27 +40,39 @@ program lowmach_react_hex
    type(transport_properties_t) :: transport !< Physical properties (rho, mu, Dk).
 
    character(len=256) :: case_file
-   integer :: step
+   integer :: step, ierr, world_rank
+   logical :: do_output_step
    real(rk) :: time, t0
 
-   ! 1. Initialize MPI and start the simulation timer.
+   ! 1. Initialize MPI and read runtime configuration.
    call mpi_flow_startup()
+   call MPI_Comm_rank(MPI_COMM_WORLD, world_rank, ierr)
+   if (ierr /= MPI_SUCCESS) call fatal_error('main', 'MPI_Comm_rank failed')
+
    t0 = real(mpi_wtime(), rk)
+
+   call get_case_filename(case_file)
+   call read_case_params(trim(case_file), params)
+   call profiler_configure(params%enable_profiling, params%nested_profiling)
+
+   if (world_rank == 0) then
+      write(output_unit,'(a,l1,a,l1)') 'profiling config: enable=', &
+         params%enable_profiling, ' nested=', params%nested_profiling
+   end if
+
    call profiler_start('Total_Simulation')
 
    ! 2. Setup simulation environment and read input data.
-   call get_case_filename(case_file)
-   call read_case_params(trim(case_file), params)
    call read_native_mesh(trim(params%mesh_dir), mesh)
    
    ! 3. Initialize parallel contexts.
-   call flow_mpi_initialize(mesh, flow_mpi, MPI_COMM_WORLD)
+   call initialize_transport(mesh, params, transport)
+   call flow_mpi_initialize(mesh, flow_mpi, MPI_COMM_WORLD, max(4, params%nspecies))
    call radiation_mpi_initialize(rad_mpi, MPI_COMM_WORLD)
    
    ! 4. Prepare physical fields and BCs.
    call build_bc_set(mesh, params, bc)
    call initialize_fields(mesh, fields)
-   call initialize_transport(mesh, params, transport)
    if (params%enable_species) then
       call initialize_species(mesh, params, species)
    end if
@@ -91,16 +103,24 @@ program lowmach_react_hex
 
    ! 7. Main Time-Stepping Loop
    do step = 1, params%nsteps
-      ! A. Adaptive time-stepping (optional).
-      call compute_and_update_cfl(mesh, flow_mpi, params, fields, stats)
+      do_output_step = (mod(step, params%output_interval) == 0) .or. step == params%nsteps
+
+      ! A. Adaptive time-stepping / CFL diagnostics.
+      ! Dynamic dt requires CFL every step. For fixed-dt runs, compute CFL only
+      ! when diagnostics are written.
+      if (params%use_dynamic_dt .or. do_output_step) then
+         call profiler_start('CFL_Update')
+         call compute_and_update_cfl(mesh, flow_mpi, params, fields, stats)
+         call profiler_stop('CFL_Update')
+      end if
 
       ! B. Dynamic physical properties update via Cantera.
       if (mod(step-1, params%transport_update_interval) == 0 .or. step == 1) then
          call profiler_start('Chemistry_Cantera')
          if (params%enable_species) then
-            call update_transport_properties(mesh, params, species%Y, transport)
+            call update_transport_properties(mesh, flow_mpi, params, species%Y, transport)
          else
-            call update_transport_properties(mesh, params, transport=transport)
+            call update_transport_properties(mesh, flow_mpi, params, transport=transport)
          end if
          call profiler_stop('Chemistry_Cantera')
       end if
@@ -120,7 +140,7 @@ program lowmach_react_hex
       time = time + params%dt
 
       ! E. Periodic Output and Diagnostics.
-      if (mod(step, params%output_interval) == 0 .or. step == params%nsteps) then
+      if (do_output_step) then
          stats%wall_time = real(mpi_wtime(), rk) - t0
          call profiler_start('Flow_Diagnostics')
          call compute_global_observables(mesh, flow_mpi, fields, species, transport, stats)

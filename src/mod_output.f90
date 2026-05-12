@@ -8,7 +8,8 @@ module mod_output
    use mod_kinds, only : rk, zero, path_len, fatal_error
    use mod_input, only : case_params_t
    use mod_mesh_types, only : mesh_t
-   use mod_mpi_flow, only : flow_mpi_t
+   use mod_mpi_flow, only : flow_mpi_t, flow_gather_owned_scalar_root, &
+                            flow_gather_owned_matrix_root
    use mod_fields, only : flow_fields_t
    use mod_flow_projection, only : solver_stats_t
    use mod_species, only : species_fields_t
@@ -53,7 +54,10 @@ contains
       filename = trim(params%output_dir)//'/diagnostics.csv'
       open(newunit=unit_id, file=trim(filename), status='replace', action='write')
 
-      write(unit_id,'(a)') 'step,time,dt,max_divergence,rms_divergence,net_boundary_flux,kinetic_energy,pressure_iterations,pressure_residual,cfl,wall_time,max_velocity,total_mass,min_species_y'
+      write(unit_id,'(a)') 'step,time,dt,max_divergence,rms_divergence,net_boundary_flux,'// &
+                           'kinetic_energy,pressure_iterations,pressure_iterations_total,'// &
+                           'pressure_iterations_max,pressure_iterations_avg,pressure_solve_count,'// &
+                           'pressure_residual,cfl,wall_time,max_velocity,total_mass,min_species_y'
 
       close(unit_id)
    end subroutine write_diagnostics_header
@@ -75,11 +79,16 @@ contains
       filename = trim(params%output_dir)//'/diagnostics.csv'
       open(newunit=unit_id, file=trim(filename), status='old', position='append', action='write')
 
-      write(unit_id,'(i0,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,i0,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8)') &
+      write(unit_id,'(i0,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,'// &
+                    'i0,a,i0,a,i0,a,es16.8,a,i0,a,es16.8,a,es16.8,a,es16.8,a,'// &
+                    'es16.8,a,es16.8,a,es16.8)') &
             step, ',', time, ',', params%dt, ',', stats%max_divergence, ',', &
             stats%rms_divergence, ',', stats%net_boundary_flux, ',', &
-            stats%kinetic_energy, ',', stats%pressure_iterations, ',', stats%pressure_residual, ',', &
-            stats%cfl, ',', stats%wall_time, ',', stats%max_velocity, ',', stats%total_mass, ',', stats%min_species_y
+            stats%kinetic_energy, ',', stats%pressure_iterations, ',', &
+            stats%pressure_iterations_total, ',', stats%pressure_iterations_max, ',', &
+            stats%pressure_iterations_avg, ',', stats%pressure_solve_count, ',', &
+            stats%pressure_residual, ',', stats%cfl, ',', stats%wall_time, ',', &
+            stats%max_velocity, ',', stats%total_mass, ',', stats%min_species_y
 
       close(unit_id)
    end subroutine write_diagnostics_row
@@ -121,7 +130,7 @@ contains
    !! - Species Mass Fractions (Cell Scalars, if enabled)
    subroutine write_vtu_unstructured(params, flow, mesh, fields, species, step)
       type(case_params_t), intent(in) :: params
-      type(flow_mpi_t), intent(in) :: flow
+      type(flow_mpi_t), intent(inout) :: flow
       type(mesh_t), intent(in) :: mesh
       type(flow_fields_t), intent(in) :: fields
       type(species_fields_t), intent(in) :: species
@@ -130,8 +139,30 @@ contains
       integer :: unit_id
       integer :: p, c, n, k
       character(len=path_len + 64) :: filename
+      real(rk), allocatable :: out_u(:,:), out_p(:), out_div(:), out_Y(:,:)
 
-      if (flow%rank /= 0 .or. .not. params%write_vtu) return
+      if (.not. params%write_vtu) return
+
+      allocate(out_u(3, mesh%ncells))
+      allocate(out_p(mesh%ncells))
+      allocate(out_div(mesh%ncells))
+
+      call flow_gather_owned_matrix_root(flow, fields%u, out_u)
+      call flow_gather_owned_scalar_root(flow, fields%p, out_p)
+      call flow_gather_owned_scalar_root(flow, fields%div, out_div)
+
+      if (params%enable_species .and. params%nspecies > 0) then
+         allocate(out_Y(params%nspecies, mesh%ncells))
+         call flow_gather_owned_matrix_root(flow, species%Y, out_Y)
+      end if
+
+      if (flow%rank /= 0) then
+         if (allocated(out_u)) deallocate(out_u)
+         if (allocated(out_p)) deallocate(out_p)
+         if (allocated(out_div)) deallocate(out_div)
+         if (allocated(out_Y)) deallocate(out_Y)
+         return
+      end if
 
       call validate_hex_connectivity(mesh)
 
@@ -160,21 +191,21 @@ contains
 
       write(unit_id,'(a)') '        <DataArray type="Float64" Name="velocity" NumberOfComponents="3" format="ascii">'
       do c = 1, mesh%ncells
-         write(unit_id,'(3(es24.16,1x))') fields%u(1,c), fields%u(2,c), fields%u(3,c)
+         write(unit_id,'(3(es24.16,1x))') out_u(1,c), out_u(2,c), out_u(3,c)
       end do
       write(unit_id,'(a)') '        </DataArray>'
 
-      call write_vtu_cell_scalar(unit_id, 'pressure', fields%p)
-      call write_vtu_cell_scalar(unit_id, 'divergence', fields%div)
+      call write_vtu_cell_scalar(unit_id, 'pressure', out_p)
+      call write_vtu_cell_scalar(unit_id, 'divergence', out_div)
 
       if (params%enable_species .and. params%nspecies > 0) then
          do k = 1, params%nspecies
-            call write_vtu_cell_scalar(unit_id, 'Y_'//trim(params%species_name(k)), species%Y(k,:))
+            call write_vtu_cell_scalar(unit_id, 'Y_'//trim(params%species_name(k)), out_Y(k,:))
          end do
 
          write(unit_id,'(a)') '        <DataArray type="Float64" Name="sum_Y" format="ascii">'
          do c = 1, mesh%ncells
-            write(unit_id,'(es24.16)') sum(species%Y(:,c))
+            write(unit_id,'(es24.16)') sum(out_Y(:,c))
          end do
          write(unit_id,'(a)') '        </DataArray>'
       end if
@@ -223,6 +254,11 @@ contains
       write(unit_id,'(a)') '</VTKFile>'
 
       close(unit_id)
+
+      deallocate(out_u)
+      deallocate(out_p)
+      deallocate(out_div)
+      if (allocated(out_Y)) deallocate(out_Y)
    end subroutine write_vtu_unstructured
 
 
@@ -265,6 +301,11 @@ contains
 
    contains
 
+      !> Appends a Dataset entry to the PVD collection file.
+      !!
+      !! @param unit_id The file unit for the .pvd file.
+      !! @param step_id The current simulation time step index.
+      !! @param time_value The simulation time at this step.
       subroutine write_dataset_line(unit_id, step_id, time_value)
          integer, intent(in) :: unit_id
          integer, intent(in) :: step_id

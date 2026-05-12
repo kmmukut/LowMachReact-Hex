@@ -152,6 +152,8 @@ contains
    !> Converts a case-insensitive string to its corresponding internal BC type ID.
    !!
    !! @param text String representation (e.g., "Wall", "Periodic", "Dirichlet").
+   !!       Supports legacy aliases: "fixed_value" (Dirichlet), "zero_gradient" (Neumann), 
+   !!       "no_slip" (Wall), "slip" (Symmetry).
    !! @result The integer type ID (e.g., `bc_wall`).
    integer function parse_bc_type(text) result(type_id)
       character(len=*), intent(in) :: text
@@ -161,13 +163,13 @@ contains
 
       key = trim(lowercase(text))
       select case (trim(key))
-      case ('wall')
+      case ('wall', 'no_slip', 'moving_wall')
          type_id = bc_wall
-      case ('symmetry', 'symmetric')
+      case ('symmetry', 'symmetric', 'slip')
          type_id = bc_symmetry
       case ('periodic')
          type_id = bc_periodic
-      case ('dirichlet')
+      case ('dirichlet', 'fixed_value')
          type_id = bc_dirichlet
       case ('neumann', 'zero_gradient')
          type_id = bc_neumann

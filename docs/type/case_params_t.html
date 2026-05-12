@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title="<p>27.9% of total for derived types.</p>Including implementation: 43 statements, 27.9% of total for derived types.">43 statements</a>
+    title="<p>23.1% of total for derived types.</p>Including implementation: 45 statements, 23.1% of total for derived types.">45 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_input.f90"> Source File</a></li>
   </ul>
@@ -158,6 +158,8 @@
       <a class="list-group-item" href="../type/case_params_t.html#variable-cantera_mech_file">cantera_mech_file</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-background_temp">background_temp</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-background_press">background_press</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_profiling">enable_profiling</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-nested_profiling">nested_profiling</a>
     </div>
   </div>
 </div>
@@ -222,6 +224,8 @@ by the various solver modules.</p>
       <a class="list-group-item" href="../type/case_params_t.html#variable-cantera_mech_file">cantera_mech_file</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-background_temp">background_temp</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-background_press">background_press</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_profiling">enable_profiling</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-nested_profiling">nested_profiling</a>
     </div>
   </div>
 </div>
@@ -438,6 +442,16 @@ by the various solver modules.</p>
   <td><span class="anchor" id="variable-background_press"></span>real(kind=rk),</td>
 <td>public</td>  <td></td><td>::</td>
   <td><strong>background_press</strong></td><td> =</td><td>101325.0_rk</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-enable_profiling"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>enable_profiling</strong></td><td> =</td><td>.true.</td><td><p>@name Profiling Controls</p></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-nested_profiling"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>nested_profiling</strong></td><td> =</td><td>.true.</td><td></td>
 </tr>
 </tbody>
 </table>

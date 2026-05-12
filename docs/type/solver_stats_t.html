@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title="<p> 8.4% of total for derived types.</p>Including implementation: 13 statements,  8.4% of total for derived types.">13 statements</a>
+    title="<p> 8.7% of total for derived types.</p>Including implementation: 17 statements,  8.7% of total for derived types.">17 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_flow_projection.f90"> Source File</a></li>
   </ul>
@@ -118,6 +118,10 @@
   <div id="vars-0" class="panel-collapse collapse">
     <div class="list-group">
       <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_iterations">pressure_iterations</a>
+      <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_iterations_total">pressure_iterations_total</a>
+      <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_iterations_max">pressure_iterations_max</a>
+      <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_solve_count">pressure_solve_count</a>
+      <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_iterations_avg">pressure_iterations_avg</a>
       <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_residual">pressure_residual</a>
       <a class="list-group-item" href="../type/solver_stats_t.html#variable-max_divergence">max_divergence</a>
       <a class="list-group-item" href="../type/solver_stats_t.html#variable-rms_divergence">rms_divergence</a>
@@ -151,6 +155,10 @@ and physical integrity (e.g., mass balance, energy decay).</p>
   <div id="vars-1" class="panel-collapse collapse">
     <div class="list-group">
       <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_iterations">pressure_iterations</a>
+      <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_iterations_total">pressure_iterations_total</a>
+      <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_iterations_max">pressure_iterations_max</a>
+      <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_solve_count">pressure_solve_count</a>
+      <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_iterations_avg">pressure_iterations_avg</a>
       <a class="list-group-item" href="../type/solver_stats_t.html#variable-pressure_residual">pressure_residual</a>
       <a class="list-group-item" href="../type/solver_stats_t.html#variable-max_divergence">max_divergence</a>
       <a class="list-group-item" href="../type/solver_stats_t.html#variable-rms_divergence">rms_divergence</a>
@@ -177,6 +185,26 @@ and physical integrity (e.g., mass balance, energy decay).</p>
   <td><span class="anchor" id="variable-pressure_iterations"></span>integer,</td>
 <td>public</td>  <td></td><td>::</td>
   <td><strong>pressure_iterations</strong></td><td> =</td><td>0</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-pressure_iterations_total"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>pressure_iterations_total</strong></td><td> =</td><td>0</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-pressure_iterations_max"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>pressure_iterations_max</strong></td><td> =</td><td>0</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-pressure_solve_count"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>pressure_solve_count</strong></td><td> =</td><td>0</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-pressure_iterations_avg"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>pressure_iterations_avg</strong></td><td> =</td><td>zero</td><td></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-pressure_residual"></span>real(kind=rk),</td>

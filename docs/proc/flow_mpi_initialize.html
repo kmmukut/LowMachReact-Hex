@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 2.5% of total for procedures.">29 statements</a>
+    title=" 2.2% of total for procedures.">38 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_mpi_flow.f90"> Source File</a></li>
   </ul>
@@ -120,7 +120,7 @@
     </div>
     
     <div class="col-md-9" id='text'>
-    <h2>public subroutine flow_mpi_initialize(mesh, flow, comm_parent)</h2>
+    <h2>public subroutine flow_mpi_initialize(mesh, flow, comm_parent, max_gather_components)</h2>
     
 
     <p>Sets up domain decomposition for a given mesh.</p>
@@ -151,6 +151,12 @@ using a contiguous block decomposition.</p>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>comm_parent</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-max_gather_components"></span>integer,</td>
+<td>intent(in),</td>
+  <td>optional</td>  <td></td><td>::</td>
+  <td><strong>max_gather_components</strong></td><td></td>
 </tr>
 </tbody>
 </table>
@@ -193,27 +199,27 @@ using a contiguous block decomposition.</p>
 <path fill="none" stroke="#000000" d="M81.13,-87.75C98.83,-96.25 122.86,-107.61 144.27,-117.14 147.22,-118.45 150.28,-119.78 153.36,-121.12"/>
 <polygon fill="#000000" stroke="#000000" points="151.86,-124.28 162.43,-124.98 154.61,-117.84 151.86,-124.28"/>
 </g>
-<!-- mpi_comm_size -->
+<!-- mpi_comm_dup -->
 <g id="proc~~flow_mpi_initialize~~CallsGraph_node3" class="node">
-<title>mpi_comm_size</title>
+<title>mpi_comm_dup</title>
 <polygon fill="#777777" stroke="#777777" points="243.54,-108.27 147.27,-108.27 147.27,-84 243.54,-84 243.54,-108.27"/>
-<text xml:space="preserve" text-anchor="middle" x="195.4" y="-92.54" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_size</text>
+<text xml:space="preserve" text-anchor="middle" x="195.4" y="-92.54" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_dup</text>
 </g>
-<!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_size -->
+<!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_dup -->
 <g id="proc~~flow_mpi_initialize~~CallsGraph_edge2" class="edge">
-<title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_size</title>
+<title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_dup</title>
 <path fill="none" stroke="#000000" d="M108.58,-83.19C117.43,-84.53 126.64,-85.92 135.61,-87.27"/>
 <polygon fill="#000000" stroke="#000000" points="134.89,-90.7 145.3,-88.73 135.93,-83.78 134.89,-90.7"/>
 </g>
-<!-- mpi_comm_dup -->
+<!-- mpi_comm_size -->
 <g id="proc~~flow_mpi_initialize~~CallsGraph_node4" class="node">
-<title>mpi_comm_dup</title>
+<title>mpi_comm_size</title>
 <polygon fill="#777777" stroke="#777777" points="243.54,-66.27 147.27,-66.27 147.27,-42 243.54,-42 243.54,-66.27"/>
-<text xml:space="preserve" text-anchor="middle" x="195.4" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_dup</text>
+<text xml:space="preserve" text-anchor="middle" x="195.4" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_size</text>
 </g>
-<!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_dup -->
-<g id="proc~~flow_mpi_initialize~~CallsGraph_edge4" class="edge">
-<title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_dup</title>
+<!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_size -->
+<g id="proc~~flow_mpi_initialize~~CallsGraph_edge3" class="edge">
+<title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_size</title>
 <path fill="none" stroke="#000000" d="M108.58,-67.08C117.43,-65.74 126.64,-64.35 135.61,-63"/>
 <polygon fill="#000000" stroke="#000000" points="135.93,-66.49 145.3,-61.54 134.89,-59.57 135.93,-66.49"/>
 </g>
@@ -224,7 +230,7 @@ using a contiguous block decomposition.</p>
 <text xml:space="preserve" text-anchor="middle" x="195.4" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_rank</text>
 </g>
 <!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_rank -->
-<g id="proc~~flow_mpi_initialize~~CallsGraph_edge3" class="edge">
+<g id="proc~~flow_mpi_initialize~~CallsGraph_edge4" class="edge">
 <title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_rank</title>
 <path fill="none" stroke="#000000" d="M81.13,-62.52C98.83,-54.02 122.86,-42.66 144.27,-33.13 147.22,-31.82 150.28,-30.49 153.36,-29.15"/>
 <polygon fill="#000000" stroke="#000000" points="154.61,-32.43 162.43,-25.29 151.86,-25.99 154.61,-32.43"/>

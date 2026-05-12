@@ -15,6 +15,7 @@ module mod_transport_properties
    use mod_kinds, only : rk, zero, one, fatal_error
    use mod_mesh_types, only : mesh_t
    use mod_input, only : case_params_t
+   use mod_mpi_flow, only : flow_mpi_t, flow_exchange_cell_scalar, flow_exchange_cell_matrix
 
    implicit none
    private
@@ -175,28 +176,43 @@ contains
    !! the uniform constant values defined in `params`.
    !!
    !! @param mesh The computational mesh.
+   !! @param flow MPI decomposition and halo metadata.
    !! @param params Simulation parameters and background conditions.
    !! @param Y Optional input mass fractions (ncells, nspecies).
    !! @param transport The property container to update.
-   subroutine update_transport_properties(mesh, params, Y, transport)
+   subroutine update_transport_properties(mesh, flow, params, Y, transport)
       use iso_c_binding, only : c_char
+      use mod_profiler, only : profiler_start, profiler_stop
       type(mesh_t), intent(in) :: mesh
+      type(flow_mpi_t), intent(inout) :: flow
       type(case_params_t), intent(in) :: params
       real(rk), intent(in), optional :: Y(:,:)
       type(transport_properties_t), intent(inout) :: transport
-      integer :: k, n_len
-      real(rk), allocatable :: T_arr(:), P_arr(:), Y_pure(:,:)
+      integer :: c, k, i, n_len, nloc
+      real(rk), allocatable :: T_arr(:), P_arr(:), Y_local(:,:), Y_pure(:,:)
+      real(rk), allocatable :: mu_local(:), diff_local(:,:)
       character(kind=c_char, len=len(params%species_name(1))*params%nspecies) :: c_names_flat
+
+      if (mesh%ncells /= size(transport%rho)) then
+         call fatal_error('transport', 'transport field size does not match mesh')
+      end if
 
       ! Constant density is assumed for the standard incompressible solver mode.
       transport%rho = params%rho
       
       if (params%enable_cantera_fluid .or. params%enable_cantera_species) then
-         ! Build local Temperature and Pressure arrays for the bridge call
-         allocate(T_arr(mesh%ncells))
-         allocate(P_arr(mesh%ncells))
+         call profiler_start('Transport_Setup')
+
+         ! Build owned-cell Temperature and Pressure arrays for the bridge call.
+         nloc = flow%nlocal
+         allocate(T_arr(nloc))
+         allocate(P_arr(nloc))
+         allocate(mu_local(nloc))
+         allocate(diff_local(max(1, params%nspecies), nloc))
          T_arr = params%background_temp
          P_arr = params%background_press
+         mu_local = zero
+         diff_local = zero
 
          c_names_flat = ""
          n_len = len(params%species_name(1))
@@ -205,35 +221,86 @@ contains
          end do
 
          if (present(Y)) then
-            call cantera_update_transport_c(mesh%ncells, T_arr, P_arr, params%nspecies, &
-                                            Y, transport%mu, transport%diffusivity, &
+            allocate(Y_local(max(1, params%nspecies), nloc))
+            do i = 1, nloc
+               c = flow%first_cell + i - 1
+               do k = 1, params%nspecies
+                  Y_local(k, i) = Y(k, c)
+               end do
+            end do
+
+            call profiler_stop('Transport_Setup')
+            call profiler_start('Transport_Cantera_Call')
+            call cantera_update_transport_c(nloc, T_arr, P_arr, params%nspecies, &
+                                            Y_local, mu_local, diff_local, &
                                             c_names_flat, n_len)
+            call profiler_stop('Transport_Cantera_Call')
+
+            call profiler_start('Transport_Cleanup')
+            deallocate(Y_local)
+            call profiler_stop('Transport_Cleanup')
          else
             ! Case where species are not yet initialized: pass pure background gas (Y=1.0)
-            allocate(Y_pure(1, mesh%ncells))
+            allocate(Y_pure(max(1, params%nspecies), nloc))
             Y_pure = one
-            call cantera_update_transport_c(mesh%ncells, T_arr, P_arr, params%nspecies, &
-                                            Y_pure, transport%mu, transport%diffusivity, &
+            call profiler_stop('Transport_Setup')
+            call profiler_start('Transport_Cantera_Call')
+            call cantera_update_transport_c(nloc, T_arr, P_arr, params%nspecies, &
+                                            Y_pure, mu_local, diff_local, &
                                             c_names_flat, n_len)
+            call profiler_stop('Transport_Cantera_Call')
+
+            call profiler_start('Transport_Cleanup')
             deallocate(Y_pure)
+            call profiler_stop('Transport_Cleanup')
          end if
+
+         call profiler_start('Transport_Unpack')
+         do i = 1, nloc
+            c = flow%first_cell + i - 1
+            transport%mu(c) = mu_local(i)
+            do k = 1, params%nspecies
+               transport%diffusivity(k, c) = diff_local(k, i)
+            end do
+         end do
+         call profiler_stop('Transport_Unpack')
+
+         call profiler_start('Transport_Exchange')
 
          ! Apply partial overrides (e.g., if viscosity is constant but diffusivity is dynamic)
          if (.not. params%enable_cantera_fluid) then
             transport%nu = params%nu
             transport%mu = params%rho * params%nu
          else
-            transport%nu = transport%mu / transport%rho
+            do c = flow%first_cell, flow%last_cell
+               transport%nu(c) = transport%mu(c) / transport%rho(c)
+            end do
+            call profiler_start('Transport_Exchange_Mu')
+            call flow_exchange_cell_scalar(flow, transport%mu)
+            call profiler_stop('Transport_Exchange_Mu')
+
+            call profiler_start('Transport_Exchange_Nu')
+            call flow_exchange_cell_scalar(flow, transport%nu)
+            call profiler_stop('Transport_Exchange_Nu')
          end if
 
          if (.not. params%enable_cantera_species .and. params%nspecies > 0) then
             do k = 1, params%nspecies
                transport%diffusivity(k, :) = params%species_diffusivity(k)
             end do
+         else if (params%nspecies > 0) then
+            call profiler_start('Transport_Exchange_Diff')
+            call flow_exchange_cell_matrix(flow, transport%diffusivity)
+            call profiler_stop('Transport_Exchange_Diff')
          end if
+         call profiler_stop('Transport_Exchange')
          
+         call profiler_start('Transport_Cleanup')
          deallocate(T_arr)
          deallocate(P_arr)
+         deallocate(mu_local)
+         deallocate(diff_local)
+         call profiler_stop('Transport_Cleanup')
       else
          ! Constant Fallback Mode
          transport%nu = params%nu

@@ -9,6 +9,7 @@
 !! - **`boundary_input`**: Mapping of BC types and values to mesh patches.
 !! - **`species_input`**: Multi-species transport and chemical mechanism selection.
 !! - **`output_input`**: Control over VTK and diagnostic file generation.
+!! - **`profiling_input`**: Control over profiling enable/disable and nested reporting.
 module mod_input
    use mod_kinds, only : rk, zero, one, name_len, path_len, fatal_error, lowercase
    implicit none
@@ -87,6 +88,10 @@ module mod_input
       character(len=path_len) :: cantera_mech_file = "gri30.yaml" !< Path to YAML/CTI mechanism file.
       real(rk) :: background_temp = 300.0_rk                      !< Fixed temperature for property evaluation [K].
       real(rk) :: background_press = 101325.0_rk                  !< Fixed pressure for property evaluation [Pa].
+
+      !> @name Profiling Controls
+      logical :: enable_profiling = .true.                       !< Enable wall-clock profiling.
+      logical :: nested_profiling = .true.                       !< If true, print nested profiling tree.
    end type case_params_t
 
    public :: read_case_params
@@ -111,6 +116,7 @@ contains
       call read_boundary_input(filename, params)
       call read_species_input(filename, params)
       call read_output_input(filename, params)
+      call read_profiling_input(filename, params)
       call validate_params(params)
    end subroutine read_case_params
 
@@ -322,6 +328,99 @@ contains
       params%patch_dpdn = patch_dpdn
       params%patch_Y = patch_Y
    end subroutine read_boundary_input
+
+
+   !> Reads the `&profiling_input` block.
+   !!
+   !! This parser is intentionally explicit because profiling is optional and
+   !! should be robust to block ordering in case.nml.
+   subroutine read_profiling_input(filename, params)
+      character(len=*), intent(in) :: filename
+      type(case_params_t), intent(inout) :: params
+
+      character(len=512) :: line
+      character(len=256) :: key, value
+      integer :: unit_id, ios, eqpos, comment_pos, comma_pos
+      logical :: in_block, found_block
+
+      in_block = .false.
+      found_block = .false.
+
+      open(newunit=unit_id, file=trim(filename), status='old', action='read', iostat=ios)
+      if (ios /= 0) return
+
+      do
+         read(unit_id, '(a)', iostat=ios) line
+         if (ios /= 0) exit
+
+         comment_pos = index(line, '!')
+         if (comment_pos > 0) line = line(:comment_pos-1)
+
+         line = adjustl(line)
+         if (len_trim(line) == 0) cycle
+
+         if (.not. in_block) then
+            if (index(lowercase(line), '&profiling_input') == 1) then
+               in_block = .true.
+               found_block = .true.
+            end if
+            cycle
+         end if
+
+         if (index(line, '/') > 0) exit
+
+         eqpos = index(line, '=')
+         if (eqpos <= 0) cycle
+
+         key = trim(adjustl(lowercase(line(:eqpos-1))))
+         value = trim(adjustl(lowercase(line(eqpos+1:))))
+
+         comma_pos = index(value, ',')
+         if (comma_pos > 0) value = value(:comma_pos-1)
+         value = trim(value)
+
+         select case (trim(key))
+         case ('enable_profiling')
+            call parse_logical_value(value, params%enable_profiling, 'enable_profiling')
+         case ('nested_profiling')
+            call parse_logical_value(value, params%nested_profiling, 'nested_profiling')
+         case default
+            call fatal_error('input', 'unknown variable in &profiling_input: '//trim(key))
+         end select
+      end do
+
+      close(unit_id)
+
+      if (found_block .and. in_block .and. ios /= 0) then
+         call fatal_error('input', 'unterminated &profiling_input block')
+      end if
+
+   contains
+
+      !> Parses a string representation of a logical value into a Fortran logical.
+      !!
+      !! Supports common formats like '.true.', 'true', 't', and their false counterparts.
+      !!
+      !! @param value_text The string to parse.
+      !! @param output_value The resulting logical value.
+      !! @param field_name The name of the field being parsed (used for error reporting).
+      subroutine parse_logical_value(value_text, output_value, field_name)
+         character(len=*), intent(in) :: value_text
+         logical, intent(out) :: output_value
+         character(len=*), intent(in) :: field_name
+
+         select case (trim(value_text))
+         case ('.true.', 'true', 't', '.t.')
+            output_value = .true.
+         case ('.false.', 'false', 'f', '.f.')
+            output_value = .false.
+         case default
+            call fatal_error('input', 'invalid logical for '//trim(field_name)//': '//trim(value_text))
+         end select
+      end subroutine parse_logical_value
+
+   end subroutine read_profiling_input
+
 
 
    !> Reads the `&output_input` namelist block.

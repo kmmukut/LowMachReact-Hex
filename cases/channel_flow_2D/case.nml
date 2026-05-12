@@ -1,3 +1,6 @@
+! LowMachReact-Hex Case Configuration File
+! =========================================
+
 &mesh_input
   mesh_dir = "cases/channel_flow_2D/mesh_native"
 /
@@ -11,12 +14,13 @@
 /
 
 &fluid_input
+  rho = 1.0
+  nu = 1.0e-2
+  
   enable_cantera = .false.
   cantera_mech_file = "gri30.yaml"
   background_temp = 300.0
   background_press = 101325.0
-  rho = 1.0
-  nu = 1.0e-2
 /
 
 &solver_input
@@ -30,19 +34,16 @@
 
 &boundary_input
   n_patches = 6
-
   patch_name = "xmin", "xmax", "ymin", "ymax", "zmin", "zmax"
-
+  
   patch_type = "periodic", "periodic", "wall", "wall", "symmetric", "symmetric"
-
+  
   patch_velocity_type = "periodic", "periodic", "no_slip", "no_slip", "symmetric", "symmetric"
-
   patch_pressure_type = "periodic", "periodic", "zero_gradient", "zero_gradient", "symmetric", "symmetric"
-
+  
   patch_u = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_v = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_w = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-
   patch_p = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 /
@@ -52,6 +53,14 @@
   write_vtu = .true.
   write_diagnostics = .true.
 /
+
 &species_input
   enable_species = .false.
+  enable_reactions = .false.
+  enable_cantera = .false.
+/
+
+&profiling_input
+  enable_profiling = .true.
+  nested_profiling = .true.
 /

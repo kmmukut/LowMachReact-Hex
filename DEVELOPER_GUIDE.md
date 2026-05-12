@@ -11,10 +11,11 @@ The solver currently simulates low-Mach flow using a fractional-step projection 
 *   **Momentum Predictor**: Explicit AB2/Forward-Euler advection and diffusion.
 *   **Pressure Poisson Solve**: Matrix-free Conjugate Gradient using distance-weighted face interpolation.
 *   **Scale-on-Demand Species**: Dynamic, memory-safe multi-species transport with formal mass conservation via **Correction Velocity**.
-*   **Cantera Integration**: Decoupled, on-the-fly transport property evaluation.
+*   **Open Boundary Support**: Handles Dirichlet velocity inlets and Neumann pressure outlets.
+*   **Numerical Robustness**: Corrected flux interpolation for nonuniform hexahedral grids.
 
-> [!WARNING]
-> **Open Boundary Limitations:** The pressure Poisson matrix is strictly built using zero-gradient boundary conditions. The resulting null space is removed by artificially pinning the pressure at cell 1. Therefore, simulating open domains (e.g., pressure-driven pipe flow with Dirichlet inlets/outlets) is currently unsupported. The code is strictly limited to closed (cavity) or purely periodic flows.
+> [!NOTE]
+> **Pressure Pinning:** In purely periodic or closed (wall-bounded) domains, the pressure matrix has a null space (constant pressure shift). The solver automatically identifies these cases and pins the pressure at cell 1 to ensure convergence. In cases with at least one Dirichlet pressure boundary, pinning is disabled.
 
 Current baseline:
 
@@ -100,12 +101,19 @@ where:
 - `D_k` is species diffusivity (constant or Cantera-derived)
 - `body_force` is used to drive periodic channel flow
 
-The current code does not yet solve:
+---
 
-- energy / temperature (energy equation)
-- variable density (full low-Mach coupling)
-- chemical reactions (source terms)
-- true reacting low-Mach divergence constraint
+## Mathematical Foundation: Projection Method
+
+The solver uses a semi-implicit fractional-step method to decouple velocity and pressure:
+
+1.  **Predictor Step**: Compute an intermediate velocity $\mathbf{u}^*$ by advancing the momentum equation explicitly, excluding the new pressure gradient.
+    $$\frac{\mathbf{u}^* - \mathbf{u}^n}{\Delta t} = -(\mathbf{u}^n \cdot \nabla) \mathbf{u}^n + \nu \nabla^2 \mathbf{u}^n + \mathbf{f}$$
+2.  **Poisson Equation**: Solve for the pressure potential $\phi = p^{n+1} - p^n$ to enforce the divergence-free constraint.
+    $$\nabla^2 \phi = \frac{\rho}{\Delta t} \nabla \cdot \mathbf{u}^*$$
+3.  **Corrector Step**: Update the velocity and pressure fields.
+    $$\mathbf{u}^{n+1} = \mathbf{u}^* - \frac{\Delta t}{\rho} \nabla \phi$$
+    $$p^{n+1} = p^n + \phi$$
 
 ---
 

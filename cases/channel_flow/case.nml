@@ -1,74 +1,93 @@
+! LowMachReact-Hex Case Configuration File
+! =========================================
+
 &mesh_input
+  ! Path to the directory containing the native hexahedral mesh files.
+  ! Expected files: points.dat, cells.dat, faces.dat, neighbor.dat, periodic.dat
   mesh_dir = "cases/channel_flow/mesh_native"
 /
 
 &time_input
-  nsteps = 5000
-  dt = 1.0e-3
-  output_interval = 100
-  use_dynamic_dt = .false.
-  max_cfl = 0.5
+  ! Simulation control parameters
+  nsteps = 300000        ! Total number of timesteps to run.
+  dt = 5.0e-4           ! Time step size [s].
+  output_interval = 30000 ! Frequency of VTK output (steps).
+  use_dynamic_dt = .false. ! Maintain max_cfl by scaling dt.
+  max_cfl = 0.5         ! Target CFL for stability.
 /
 
 &fluid_input
-  rho = 1.0
-  nu = 1.0e-2
+  ! Global fluid properties
+  rho = 1.0             ! Constant density [kg/m^3].
+  nu = 1.0e-2           ! Constant kinematic viscosity [m^2/s].
+  
+  ! Cantera integration for mixture properties (viscosity, density)
+  enable_cantera = .false. 
+  cantera_mech_file = "gri30.yaml" ! Mechanism for property calculation.
+  background_temp = 300.0        ! Fixed temperature for property evaluation [K].
+  background_press = 101325.0    ! Fixed pressure for property evaluation [Pa].
+  
+  transport_update_interval = 10 ! Re-evaluate properties every N steps.
 /
 
 &solver_input
-  pressure_max_iter = 500
-  pressure_tol = 1.0e-7
-  body_force_x = 1.0e-3
+  ! Pressure Poisson solver configuration (PCG)
+  pressure_max_iter = 300  ! Maximum iterations per pressure solve.
+  pressure_tol = 1.0e-8    ! Relative residual convergence tolerance.
+  
+  ! Body forces / Source terms
+  body_force_x = 1.0e-3    ! Constant acceleration in X [m/s^2].
   body_force_y = 0.0
   body_force_z = 0.0
-  convection_scheme = "central"
+  
+  convection_scheme = "central" ! "upwind" (stable) or "central" (accurate).
 /
 
 &boundary_input
+  ! Mapping of BCs to mesh patches
   n_patches = 6
-
   patch_name = "xmin", "xmax", "ymin", "ymax", "zmin", "zmax"
-
+  
+  ! Master patch types: wall, symmetric, periodic, dirichlet, neumann
   patch_type = "periodic", "periodic", "wall", "wall", "periodic", "periodic"
-
+  
+  ! Field-specific overrides (velocity and pressure)
   patch_velocity_type = "periodic", "periodic", "no_slip", "no_slip", "periodic", "periodic"
-
   patch_pressure_type = "periodic", "periodic", "zero_gradient", "zero_gradient", "periodic", "periodic"
-
+  
+  ! Boundary values
   patch_u = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_v = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_w = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-
   patch_p = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
-  patch_species_type = "periodic", "periodic", "zero_gradient", "zero_gradient", "periodic", "periodic"
-
-
-!!! Example boundary implementation
+  ! Species overrides
   ! patch_species_type = "periodic", "periodic", "dirichlet", "dirichlet", "periodic", "periodic"
   ! patch_Y(1, 3) = 0.5
-  ! patch_Y(2, 3) = 0.4
-  ! patch_Y(3, 3) = 0.1
-  ! patch_Y(1, 4) = 0.2
-  ! patch_Y(2, 4) = 0.3
-  ! patch_Y(3, 4) = 0.5
-
 /
 
 &output_input
+  ! Results and diagnostics
   output_dir = "cases/channel_flow/output"
-  write_vtu = .true.
-  write_diagnostics = .true.
+  write_vtu = .true.         ! Generate .vtu files for Paraview.
+  write_diagnostics = .true. ! Generate diagnostics.csv for monitoring.
 /
 
 &species_input
+  ! Multi-species transport configuration
+  enable_species = .false.   ! Set to .true. to solve species equations.
+  enable_reactions = .false. ! Set to .true. for chemical source terms.
+  enable_cantera = .false.   ! Use Cantera for species diffusivities.
+  
   nspecies = 3
   species_name = "CO2", "H2O", "CO"
   species_diffusivity = 1.0e-2, 1.5e-2, 1.2e-2
   initial_Y = 0.2, 0.3, 0.5
-  enable_cantera = .true.
-  cantera_mech_file = "gri30.yaml"
-  background_temp = 300.0
-  background_press = 101325.0
+/
+
+&profiling_input
+  ! Performance monitoring
+  enable_profiling = .true.
+  nested_profiling = .true. ! Print detailed kernel tree.
 /

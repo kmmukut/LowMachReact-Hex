@@ -1,3 +1,6 @@
+! LowMachReact-Hex Case Configuration File
+! =========================================
+
 &mesh_input
   mesh_dir = "cases/lid_driven_cavity/mesh_native"
 /
@@ -5,7 +8,7 @@
 &time_input
   nsteps = 10000
   dt = 2.5e-4
-  output_interval = 500
+  output_interval = 1000
   use_dynamic_dt = .false.
   max_cfl = 0.5
 /
@@ -13,8 +16,11 @@
 &fluid_input
   rho = 1.0
   nu = 1.0e-2
-  ! Cantera fluid props (viscosity) disabled — keep constant nu for Re=100 validation
+  
   enable_cantera = .false.
+  cantera_mech_file = "gri30.yaml"
+  background_temp = 300.0
+  background_press = 101325.0
 /
 
 &solver_input
@@ -29,14 +35,24 @@
 &boundary_input
   n_patches = 6
   patch_name = "xmin", "xmax", "ymin", "ymax", "zmin", "zmax"
+  
+  ! Standard 3D Lid-Driven Cavity setup
   patch_type = "wall", "wall", "wall", "wall", "wall", "wall"
-  patch_species_type = "zero_gradient", "zero_gradient", "zero_gradient", "dirichlet", "zero_gradient", "zero_gradient"
+  
+  patch_velocity_type = "no_slip", "no_slip", "no_slip", "moving_wall", "no_slip", "no_slip"
+  patch_pressure_type = "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
+  
   patch_u = 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
   patch_v = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_w = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-  patch_Y(1, 4) = 0.5
-  patch_Y(2, 4) = 0.4
-  patch_Y(3, 4) = 0.1
+  patch_p = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+  ! Example species injection at the top wall
+  ! patch_species_type = "zero_gradient", "zero_gradient", "zero_gradient", "dirichlet", "zero_gradient", "zero_gradient"
+  ! patch_Y(1, 4) = 0.5
+  ! patch_Y(2, 4) = 0.4
+  ! patch_Y(3, 4) = 0.1
 /
 
 &output_input
@@ -46,11 +62,17 @@
 /
 
 &species_input
-  enable_species = .true.
+  enable_species = .false.
   enable_reactions = .false.
-  enable_cantera = .true.
+  enable_cantera = .false.
+  
   nspecies = 3
   species_name = "CO2", "H2O", "CO"
   species_diffusivity = 1.0e-2, 1.5e-2, 1.2e-2
   initial_Y = 0.2, 0.3, 0.5
+/
+
+&profiling_input
+  enable_profiling = .true.
+  nested_profiling = .true.
 /

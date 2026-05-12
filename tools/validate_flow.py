@@ -13,7 +13,7 @@ Examples:
 
 Channel:
   python tools/validate_flow.py channel \
-    --vtu cases/channel_flow/output/flow_081000.vtu \
+    --vtu cases/channel_flow/output/flow_001000.vtu \
     --nu 1.0e-2 \
     --body-force-x 1.0e-3 \
     --ymin 0.0 \
@@ -23,7 +23,7 @@ Channel:
 
 Cavity:
   python tools/validate_flow.py cavity \
-    --vtu cases/lid_driven_cavity/output/flow_002000.vtu \
+    --vtu cases/lid_driven_cavity/output/flow_010000.vtu \
     --re 100 \
     --plot
 """

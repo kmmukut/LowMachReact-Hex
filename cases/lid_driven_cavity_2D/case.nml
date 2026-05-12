@@ -1,9 +1,13 @@
+! LowMachReact-Hex Case Configuration File
+! =========================================
+
 &mesh_input
+  ! Path to the directory containing the native hexahedral mesh files.
   mesh_dir = "cases/lid_driven_cavity_2D/mesh_native"
 /
 
 &time_input
-  nsteps = 5000
+  nsteps = 10000
   dt = 2.5e-4
   output_interval = 500
   use_dynamic_dt = .false.
@@ -11,12 +15,13 @@
 /
 
 &fluid_input
+  rho = 1.0
+  nu = 1.0e-2
+  
   enable_cantera = .false.
   cantera_mech_file = "gri30.yaml"
   background_temp = 300.0
   background_press = 101325.0
-  rho = 1.0
-  nu = 1.0e-2
 /
 
 &solver_input
@@ -30,19 +35,17 @@
 
 &boundary_input
   n_patches = 6
-
   patch_name = "xmin", "xmax", "ymin", "ymax", "zmin", "zmax"
-
+  
+  ! Standard 2D Lid-Driven Cavity setup
   patch_type = "wall", "wall", "wall", "wall", "symmetric", "symmetric"
-
+  
   patch_velocity_type = "no_slip", "no_slip", "no_slip", "moving_wall", "symmetric", "symmetric"
-
-  patch_pressure_type = "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
-
+  patch_pressure_type = "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "symmetric", "symmetric"
+  
   patch_u = 0.0, 0.0, 0.0, 1.0, 0.0, 0.0
   patch_v = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_w = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-
   patch_p = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 /
@@ -52,6 +55,14 @@
   write_vtu = .true.
   write_diagnostics = .true.
 /
+
 &species_input
   enable_species = .false.
+  enable_reactions = .false.
+  enable_cantera = .false.
+/
+
+&profiling_input
+  enable_profiling = .true.
+  nested_profiling = .true.
 /

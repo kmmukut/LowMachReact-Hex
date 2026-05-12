@@ -1,49 +1,50 @@
+! LowMachReact-Hex Case Configuration File
+! =========================================
+
 &mesh_input
   mesh_dir = "cases/rectangle_2D/mesh_native"
 /
 
 &time_input
   nsteps = 1000
-  dt = 1.0e-3
+  dt = 2.5e-4
   output_interval = 100
   use_dynamic_dt = .false.
   max_cfl = 0.5
 /
 
 &fluid_input
+  rho = 1.0
+  nu = 1.0e-2
+  
   enable_cantera = .false.
   cantera_mech_file = "gri30.yaml"
   background_temp = 300.0
   background_press = 101325.0
-  rho = 1.0
-  nu = 1.0e-2
 /
 
 &solver_input
   pressure_max_iter = 2000
   pressure_tol = 1.0e-8
-
   body_force_x = 0.0
   body_force_y = 0.0
   body_force_z = 0.0
-
   convection_scheme = "central"
 /
 
 &boundary_input
   n_patches = 5
-
   patch_name = "inlet", "outlet", "wall", "zmin", "zmax"
-
+  
+  ! Open boundary flow case (Velocity Inlet / Floating Pressure)
   patch_type = "dirichlet", "neumann", "wall", "symmetric", "symmetric"
-
+  
   patch_velocity_type = "fixed_value", "zero_gradient", "no_slip", "symmetric", "symmetric"
   patch_pressure_type = "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
-
+  
   patch_u = 10.0, 0.0, 0.0, 0.0, 0.0
-  patch_v = 0, 0.0, 0.0, 0.0, 0.0
+  patch_v = 0.0, 0.0, 0.0, 0.0, 0.0
   patch_w = 0.0, 0.0, 0.0, 0.0, 0.0
-
   patch_p = 0.0, 0.0, 0.0, 0.0, 0.0
   patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0
 /
@@ -53,6 +54,14 @@
   write_vtu = .true.
   write_diagnostics = .true.
 /
+
 &species_input
   enable_species = .false.
+  enable_reactions = .false.
+  enable_cantera = .false.
+/
+
+&profiling_input
+  enable_profiling = .true.
+  nested_profiling = .true.
 /

@@ -137,43 +137,37 @@ contains
       integer, intent(in) :: step
 
       integer :: unit_id
-      integer :: p, c, n, k
-      character(len=path_len + 64) :: filename
-      real(rk), allocatable :: out_u(:,:), out_p(:), out_div(:), out_Y(:,:)
+      integer :: p, c, n, m, k, n_owned
+      character(len=path_len + 64) :: filename, local_filename
+      integer, allocatable :: owned_indices(:)
 
       if (.not. params%write_vtu) return
 
-      allocate(out_u(3, mesh%ncells))
-      allocate(out_p(mesh%ncells))
-      allocate(out_div(mesh%ncells))
+      ! Count owned cells and collect their indices
+      n_owned = 0
+      do c = 1, mesh%ncells
+         if (flow%owned(c)) n_owned = n_owned + 1
+      end do
 
-      call flow_gather_owned_matrix_root(flow, fields%u, out_u)
-      call flow_gather_owned_scalar_root(flow, fields%p, out_p)
-      call flow_gather_owned_scalar_root(flow, fields%div, out_div)
+      allocate(owned_indices(n_owned))
+      n_owned = 0
+      do c = 1, mesh%ncells
+         if (flow%owned(c)) then
+            n_owned = n_owned + 1
+            owned_indices(n_owned) = c
+         end if
+      end do
 
-      if (params%enable_species .and. params%nspecies > 0) then
-         allocate(out_Y(params%nspecies, mesh%ncells))
-         call flow_gather_owned_matrix_root(flow, species%Y, out_Y)
-      end if
-
-      if (flow%rank /= 0) then
-         if (allocated(out_u)) deallocate(out_u)
-         if (allocated(out_p)) deallocate(out_p)
-         if (allocated(out_div)) deallocate(out_div)
-         if (allocated(out_Y)) deallocate(out_Y)
-         return
-      end if
-
-      call validate_hex_connectivity(mesh)
-
-      write(filename,'(a,"/flow_",i6.6,".vtu")') trim(params%output_dir), step
+      ! Every rank writes its own piece file
+      write(local_filename,'("flow_",i6.6,"_P",i4.4,".vtu")') step, flow%rank
+      filename = trim(params%output_dir)//'/'//trim(local_filename)
       open(newunit=unit_id, file=trim(filename), status='replace', action='write')
 
       write(unit_id,'(a)') '<?xml version="1.0"?>'
       write(unit_id,'(a)') '<VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian">'
       write(unit_id,'(a)') '  <UnstructuredGrid>'
       write(unit_id,'(a,i0,a,i0,a)') '    <Piece NumberOfPoints="', mesh%npoints, &
-                                      '" NumberOfCells="', mesh%ncells, '">'
+                                      '" NumberOfCells="', n_owned, '">'
 
       ! ------------------------------------------------------------
       ! Correct XML VTK Piece order:
@@ -190,29 +184,49 @@ contains
       write(unit_id,'(a)') '      <CellData Scalars="pressure" Vectors="velocity">'
 
       write(unit_id,'(a)') '        <DataArray type="Float64" Name="velocity" NumberOfComponents="3" format="ascii">'
-      do c = 1, mesh%ncells
-         write(unit_id,'(3(es24.16,1x))') out_u(1,c), out_u(2,c), out_u(3,c)
+      do n = 1, n_owned
+         c = owned_indices(n)
+         write(unit_id,'(3(es24.16,1x))') fields%u(1,c), fields%u(2,c), fields%u(3,c)
       end do
       write(unit_id,'(a)') '        </DataArray>'
 
-      call write_vtu_cell_scalar(unit_id, 'pressure', out_p)
-      call write_vtu_cell_scalar(unit_id, 'divergence', out_div)
+      write(unit_id,'(a,a,a)') '        <DataArray type="Float64" Name="pressure" format="ascii">'
+      do n = 1, n_owned
+         c = owned_indices(n)
+         write(unit_id,'(es24.16)') fields%p(c)
+      end do
+      write(unit_id,'(a)') '        </DataArray>'
+
+      write(unit_id,'(a,a,a)') '        <DataArray type="Float64" Name="divergence" format="ascii">'
+      do n = 1, n_owned
+         c = owned_indices(n)
+         write(unit_id,'(es24.16)') fields%div(c)
+      end do
+      write(unit_id,'(a)') '        </DataArray>'
 
       if (params%enable_species .and. params%nspecies > 0) then
          do k = 1, params%nspecies
-            call write_vtu_cell_scalar(unit_id, 'Y_'//trim(params%species_name(k)), out_Y(k,:))
+            write(unit_id,'(a,a,a)') '        <DataArray type="Float64" Name="Y_', &
+               trim(params%species_name(k)), '" format="ascii">'
+            do n = 1, n_owned
+               c = owned_indices(n)
+               write(unit_id,'(es24.16)') species%Y(k,c)
+            end do
+            write(unit_id,'(a)') '        </DataArray>'
          end do
 
          write(unit_id,'(a)') '        <DataArray type="Float64" Name="sum_Y" format="ascii">'
-         do c = 1, mesh%ncells
-            write(unit_id,'(es24.16)') sum(out_Y(:,c))
+         do n = 1, n_owned
+            c = owned_indices(n)
+            write(unit_id,'(es24.16)') sum(species%Y(:,c))
          end do
          write(unit_id,'(a)') '        </DataArray>'
       end if
 
       ! Helpful debug scalar so you can color by cell_id in ParaView.
       write(unit_id,'(a)') '        <DataArray type="Int32" Name="cell_id" format="ascii">'
-      do c = 1, mesh%ncells
+      do n = 1, n_owned
+         c = owned_indices(n)
          write(unit_id,'(i0)') c
       end do
       write(unit_id,'(a)') '        </DataArray>'
@@ -230,19 +244,20 @@ contains
       write(unit_id,'(a)') '      <Cells>'
 
       write(unit_id,'(a)') '        <DataArray type="Int32" Name="connectivity" format="ascii">'
-      do c = 1, mesh%ncells
-         write(unit_id,'(8(i0,1x))') (mesh%cells(c)%nodes(n) - 1, n = 1, 8)
+      do n = 1, n_owned
+         c = owned_indices(n)
+         write(unit_id,'(8(i0,1x))') (mesh%cells(c)%nodes(m) - 1, m = 1, 8)
       end do
       write(unit_id,'(a)') '        </DataArray>'
 
       write(unit_id,'(a)') '        <DataArray type="Int32" Name="offsets" format="ascii">'
-      do c = 1, mesh%ncells
-         write(unit_id,'(i0)') 8 * c
+      do n = 1, n_owned
+         write(unit_id,'(i0)') 8 * n
       end do
       write(unit_id,'(a)') '        </DataArray>'
 
       write(unit_id,'(a)') '        <DataArray type="UInt8" Name="types" format="ascii">'
-      do c = 1, mesh%ncells
+      do n = 1, n_owned
          write(unit_id,'(i0)') 12
       end do
       write(unit_id,'(a)') '        </DataArray>'
@@ -255,11 +270,63 @@ contains
 
       close(unit_id)
 
-      deallocate(out_u)
-      deallocate(out_p)
-      deallocate(out_div)
-      if (allocated(out_Y)) deallocate(out_Y)
+      deallocate(owned_indices)
+
+      ! Rank 0 writes the master PVTU file
+      if (flow%rank == 0) then
+         call write_pvtu_master(params, flow, step)
+      end if
    end subroutine write_vtu_unstructured
+
+
+   !> Writes the master Parallel VTK file (.pvtu) that links the rank pieces.
+   subroutine write_pvtu_master(params, flow, step)
+      type(case_params_t), intent(in) :: params
+      type(flow_mpi_t), intent(in) :: flow
+      integer, intent(in) :: step
+
+      integer :: unit_id, r, k
+      character(len=path_len + 64) :: filename
+      character(len=64) :: piece_name
+
+      write(filename,'(a,"/flow_",i6.6,".pvtu")') trim(params%output_dir), step
+      open(newunit=unit_id, file=trim(filename), status='replace', action='write')
+
+      write(unit_id,'(a)') '<?xml version="1.0"?>'
+      write(unit_id,'(a)') '<VTKFile type="PUnstructuredGrid" version="0.1" byte_order="LittleEndian">'
+      write(unit_id,'(a)') '  <PUnstructuredGrid GhostLevel="0">'
+
+      write(unit_id,'(a)') '    <PPointData>'
+      write(unit_id,'(a)') '    </PPointData>'
+
+      write(unit_id,'(a)') '    <PCellData Scalars="pressure" Vectors="velocity">'
+      write(unit_id,'(a)') '      <PDataArray type="Float64" Name="velocity" NumberOfComponents="3" format="ascii"/>'
+      write(unit_id,'(a)') '      <PDataArray type="Float64" Name="pressure" format="ascii"/>'
+      write(unit_id,'(a)') '      <PDataArray type="Float64" Name="divergence" format="ascii"/>'
+      if (params%enable_species .and. params%nspecies > 0) then
+         do k = 1, params%nspecies
+            write(unit_id,'(a,a,a)') '      <PDataArray type="Float64" Name="Y_', &
+               trim(params%species_name(k)), '" format="ascii"/>'
+         end do
+         write(unit_id,'(a)') '      <PDataArray type="Float64" Name="sum_Y" format="ascii"/>'
+      end if
+      write(unit_id,'(a)') '      <PDataArray type="Int32" Name="cell_id" format="ascii"/>'
+      write(unit_id,'(a)') '    </PCellData>'
+
+      write(unit_id,'(a)') '    <PPoints>'
+      write(unit_id,'(a)') '      <PDataArray type="Float64" NumberOfComponents="3" format="ascii"/>'
+      write(unit_id,'(a)') '    </PPoints>'
+
+      do r = 0, flow%nprocs - 1
+         write(piece_name,'("flow_",i6.6,"_P",i4.4,".vtu")') step, r
+         write(unit_id,'(a,a,a)') '    <Piece Source="', trim(piece_name), '"/>'
+      end do
+
+      write(unit_id,'(a)') '  </PUnstructuredGrid>'
+      write(unit_id,'(a)') '</VTKFile>'
+
+      close(unit_id)
+   end subroutine write_pvtu_master
 
 
    !> Writes a PVD collection file to allow ParaView to load time-series data.
@@ -313,7 +380,7 @@ contains
 
          character(len=32) :: time_text
 
-         write(vtu_name,'("flow_",i6.6,".vtu")') step_id
+         write(vtu_name,'("flow_",i6.6,".pvtu")') step_id
          write(time_text,'(es16.8)') time_value
          time_text = adjustl(time_text)
 

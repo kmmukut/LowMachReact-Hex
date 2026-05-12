@@ -6,9 +6,9 @@
 /
 
 &time_input
-  nsteps = 1000
+  nsteps = 10000
   dt = 2.5e-4
-  output_interval = 100
+  output_interval = 1000
   use_dynamic_dt = .false.
   max_cfl = 0.5
 /

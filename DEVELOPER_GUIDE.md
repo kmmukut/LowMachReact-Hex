@@ -4,19 +4,31 @@
 
 This repository is a Fortran 2008 MPI finite-volume solver (LowMachReact-Hex) for laminar incompressible / low-Mach-style flow on hexahedral meshes.
 
+## Current Baseline Architecture
+
+The solver currently simulates low-Mach flow using a fractional-step projection method:
+
+*   **Momentum Predictor**: Explicit AB2/Forward-Euler advection and diffusion.
+*   **Pressure Poisson Solve**: Matrix-free Conjugate Gradient using distance-weighted face interpolation.
+*   **Scale-on-Demand Species**: Dynamic, memory-safe multi-species transport with formal mass conservation via **Correction Velocity**.
+*   **Cantera Integration**: Decoupled, on-the-fly transport property evaluation.
+
+> [!WARNING]
+> **Open Boundary Limitations:** The pressure Poisson matrix is strictly built using zero-gradient boundary conditions. The resulting null space is removed by artificially pinning the pressure at cell 1. Therefore, simulating open domains (e.g., pressure-driven pipe flow with Dirichlet inlets/outlets) is currently unsupported. The code is strictly limited to closed (cavity) or purely periodic flows.
+
 Current baseline:
 
 - Cell-centered finite-volume flow solver.
 - Projection method with corrected conservative face fluxes.
 - Conservative face-flux divergence diagnostic.
 - Scale-on-Demand Species Transport:
-  - Supports 0 to 256+ species with dynamic allocation.
-  - Implements **Correction Velocity** for strict mass conservation with varying diffusivities.
-  - Automatic discovery from Cantera mechanisms.
-  - Name-based initialization from namelist.
-- Cantera 3.x Property Integration:
-  - Decoupled viscosity/density and diffusivity toggles.
-  - Modern C++ bridge with character-set robustness.
+  - **`mod_species`**: Manages the transport of passive scalars ($Y_k$). Supports **Scale-on-Demand** architecture with dynamic allocation for 0 to 256+ species. Implements a **Correction Velocity** (diffusive flux correction) to ensure strict mass conservation when using different species diffusivities ($D_k$).
+- **`mod_transport_properties`**: Abstracts property evaluation. It provides a bridge to the **Cantera 3.x C++ API** for dynamic evaluation of viscosity and species diffusivity. Features include:
+    - **Automatic Mechanism Discovery**: Automatically identifies all species from a `.yaml` mechanism when `enable_reactions` is active.
+    - **Decoupled Control**: Independent toggles for Cantera-calculated fluid properties (viscosity/density) and species transport properties (diffusivity).
+    - **Name-Based Initialization**: Maps namelist-provided mass fractions to the correct indices in complex mechanisms at runtime.
+- **`mod_profiler`**: A hierarchical performance profiling module used to track execution time for critical kernels and MPI communication. It provides a terminal summary at the end of each simulation.
+- **`mod_bc`**: A unified boundary condition manager that supports field-specific types (Velocity, Pressure, Species) for every patch.
 - VTU/PVD output working.
 - Stage 2 boundary-condition split:
   - legacy `patch_type`
@@ -64,9 +76,7 @@ The current solver should be described as a **laminar incompressible / low-Mach-
 
 ---
 
-## Current governing equations
-
-The current flow solver represents incompressible, constant-density, laminar Navier-Stokes:
+The current flow solver represents incompressible, constant-density, laminar Navier-Stokes with species transport:
 
 $$
 \nabla \cdot \mathbf{u} = 0
@@ -76,24 +86,26 @@ $$
 \frac{\partial \mathbf{u}}{\partial t} + \nabla \cdot (\mathbf{u} \mathbf{u}) = -\frac{1}{\rho} \nabla p + \nu \nabla^2 \mathbf{u} + \mathbf{f}_{body}
 $$
 
+$$
+\frac{\partial Y_k}{\partial t} + \nabla \cdot (\mathbf{u} Y_k) = \nabla \cdot (D_k \nabla Y_k)
+$$
+
 where:
 
 - `u` is velocity
 - `p` is pressure
+- `Y_k` are species mass fractions
 - `rho` is constant density
-- `nu` is constant kinematic viscosity
+- `nu` is kinematic viscosity (constant or Cantera-derived)
+- `D_k` is species diffusivity (constant or Cantera-derived)
 - `body_force` is used to drive periodic channel flow
 
 The current code does not yet solve:
 
-- species transport
-- energy / temperature
-- variable density
-- chemical reactions
-- full compressible Navier-Stokes
+- energy / temperature (energy equation)
+- variable density (full low-Mach coupling)
+- chemical reactions (source terms)
 - true reacting low-Mach divergence constraint
-
-The current code should not be described as a validated reacting-flow solver.
 
 ---
 

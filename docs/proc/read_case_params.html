@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 1.2% of total for procedures.">12 statements</a>
+    title=" 1.0% of total for procedures.">12 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_input.f90"> Source File</a></li>
   </ul>
@@ -123,22 +123,24 @@
     <h2>public subroutine read_case_params(filename, params)</h2>
     
 
-    <p>Read all parameters from a namelist file.</p>
-<p>@param filename Path to the case.nml file.
-@param params Parameters structure to populate.</p>
+    <p>Orchestrates the reading of all namelist blocks from the configuration file.</p>
+<p>Performs a sequential read of all expected namelist groups and 
+triggers a final validation pass to ensure physical consistency.</p>
+<p>@param filename Path to the <code>.nml</code> file (usually <code>case.nml</code>).
+@param params Container to be populated with parsed values.</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-filename"></span>character(len=*),</td>
+  <td><span class="anchor" id="variable-filename~2"></span>character(len=*),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>filename</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-params"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
+  <td><span class="anchor" id="variable-params~13"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
 <td>intent(inout)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>params</strong></td><td></td>

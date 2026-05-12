@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title="<p> 7.9% of total for derived types.</p>Including implementation: 11 statements,  7.9% of total for derived types.">11 statements</a>
+    title="<p> 7.1% of total for derived types.</p>Including implementation: 11 statements,  7.1% of total for derived types.">11 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_mesh_types.f90"> Source File</a></li>
   </ul>
@@ -121,7 +121,9 @@
     
     <div class="col-md-9" id='text'>
       <h2>type, public :: face_t</h2>
-    <p>Mesh face data structure.</p>
+    <p>Mesh face data structure.
+Faces are the primary entities for flux calculation. Each face is 
+associated with an 'owner' and potentially a 'neighbor' cell.</p>
 <br>    <div class="panel panel-default">
       <div class="panel-heading">
   <h3 class="panel-title">Inherited by</h3>

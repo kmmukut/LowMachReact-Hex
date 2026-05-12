@@ -130,6 +130,7 @@ LDFLAGS := \
 
 F_SRCS := \
   $(SRC_DIR)/mod_kinds.f90 \
+  $(SRC_DIR)/mod_profiler.f90 \
   $(SRC_DIR)/mod_input.f90 \
   $(SRC_DIR)/mod_mesh_types.f90 \
   $(SRC_DIR)/mod_mesh_io.f90 \
@@ -218,15 +219,16 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 $(BUILD_DIR)/mod_input.o: $(BUILD_DIR)/mod_kinds.o
 $(BUILD_DIR)/mod_mesh_types.o: $(BUILD_DIR)/mod_kinds.o
 $(BUILD_DIR)/mod_mesh_io.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o
-$(BUILD_DIR)/mod_mpi_flow.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o
+$(BUILD_DIR)/mod_mpi_flow.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_profiler.o
 $(BUILD_DIR)/mod_mpi_radiation.o: $(BUILD_DIR)/mod_kinds.o
 $(BUILD_DIR)/mod_bc.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_mesh_types.o
 $(BUILD_DIR)/mod_fields.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_bc.o
-$(BUILD_DIR)/mod_flow_projection.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_bc.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_transport_properties.o
+$(BUILD_DIR)/mod_flow_projection.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_bc.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_transport_properties.o $(BUILD_DIR)/mod_profiler.o
 $(BUILD_DIR)/mod_transport_properties.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/cantera_interface.o
 $(BUILD_DIR)/mod_species.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_bc.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_flow_projection.o $(BUILD_DIR)/mod_transport_properties.o
 $(BUILD_DIR)/mod_output.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_flow_projection.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_species.o
-$(BUILD_DIR)/main.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mesh_io.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_mpi_radiation.o $(BUILD_DIR)/mod_bc.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_flow_projection.o $(BUILD_DIR)/mod_transport_properties.o $(BUILD_DIR)/mod_species.o $(BUILD_DIR)/mod_output.o
+$(BUILD_DIR)/mod_profiler.o: $(BUILD_DIR)/mod_kinds.o
+$(BUILD_DIR)/main.o: $(BUILD_DIR)/mod_kinds.o $(BUILD_DIR)/mod_input.o $(BUILD_DIR)/mod_mesh_types.o $(BUILD_DIR)/mod_mesh_io.o $(BUILD_DIR)/mod_mpi_flow.o $(BUILD_DIR)/mod_mpi_radiation.o $(BUILD_DIR)/mod_bc.o $(BUILD_DIR)/mod_fields.o $(BUILD_DIR)/mod_flow_projection.o $(BUILD_DIR)/mod_transport_properties.o $(BUILD_DIR)/mod_species.o $(BUILD_DIR)/mod_output.o $(BUILD_DIR)/mod_profiler.o
 
 # ============================================================================
 # Convenience build targets

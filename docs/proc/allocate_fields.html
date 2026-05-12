@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 2.1% of total for procedures.">22 statements</a>
+    title=" 1.9% of total for procedures.">22 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_fields.f90"> Source File</a></li>
   </ul>
@@ -123,16 +123,18 @@
     <h2>public subroutine allocate_fields(mesh, fields)</h2>
     
 
-    <p>Allocate all flow field arrays.</p>
-<p>@param mesh Mesh data structure for sizing.
-@param fields Flow fields structure to allocate.</p>
+    <p>Dynamically allocates all arrays within the flow fields container.</p>
+<p>Sizing is determined by the number of cells and faces in the provided mesh.
+All fields are initialized to zero upon allocation.</p>
+<p>@param mesh The mesh structure defining the domain size.
+@param fields The container to be allocated.</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-mesh~7"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~9"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>

@@ -57,16 +57,41 @@ By tracking the maximum outward flux ratio across the domain, the solver dynamic
 *   **Caching:** To optimize performance, neighbor IDs and geometric coefficients ($A_{face}/d_{normal}$) are cached during initialization.
 *   **Null-Space Removal:** For purely Neumann systems (e.g., closed cavity), the pressure is pinned at cell 1 to ensure a unique solution.
 
+## Numerical Stability and Convection Schemes
+
+The choice of convection scheme is critical for the stability of the solver, particularly as the flow accelerates or the viscosity decreases.
+
+### Central vs. Upwind Schemes
+
+*   **Central Difference (2nd Order):** Theoretically more accurate but numerically non-dissipative. It is susceptible to "wiggles" or checkerboard oscillations when the local mesh resolution is insufficient.
+*   **Upwind Difference (1st Order):** Highly stable and naturally dissipative, but introduces "numerical diffusion" which can smear out sharp gradients.
+
+### The Grid Peclet Number ($Pe$)
+
+The stability of the `central` scheme is governed by the local **Grid Peclet Number**:
+$$ Pe_{grid} = \frac{|\mathbf{u}| \Delta x}{\nu} $$
+For the central scheme to remain stable and avoid unphysical oscillations, the cell-centered discretization generally requires $Pe_{grid} \le 2$. 
+
+### Circumventing Instability
+
+When a simulation "blows up" using the central scheme (as observed in the `open_channel` case once velocities increased), several strategies can be employed:
+
+1.  **Upwind Convection:** Switching `convection_scheme = "upwind"` provides the necessary numerical dissipation to stabilize the solver at high Peclet numbers.
+2.  **Mesh Refinement:** Reducing $\Delta x$ lowers the local Peclet number, potentially allowing the central scheme to remain stable.
+3.  **Artificial Dissipation:** Adding a small amount of numerical viscosity (or using flux-limited schemes like TVD/WENO) can provide stability without the full accuracy loss of 1st-order upwind.
+4.  **Time-Step Control:** While CFL control handles the temporal stability, spatial stability (like the Peclet limit) is a property of the discretization itself.
+
 ## Species Transport
 
 *   **Stability:** Species are advanced using explicit upwind advection to ensure boundedness ($0 \le Y_k \le 1$).
 *   **Conservation:** Diffusive fluxes are corrected using a **Correction Velocity** (or diffusive flux correction) to ensure that the net mass flux summed over all species is identically zero ($\sum J_{diff, k} = 0$). After the explicit update, mass fractions are renormalized such that $\sum Y_k = 1$ to maintain consistency and eliminate minor truncation errors.
 *   **Diffusivity:** Can be specified as a constant per-species or evaluated dynamically through the **Cantera** bridge.
 
-## Conservation Diagnostics
+## Conservation and Performance Diagnostics
 
-The solver monitors several diagnostics to ensure stability and convergence:
+The solver monitors several diagnostics to ensure stability, convergence, and performance:
 *   **Max/RMS Divergence:** Monitors the residual of the continuity equation.
 *   **Net Boundary Flux:** Verifies global mass conservation.
 *   **Kinetic Energy:** Tracks the physical energy evolution of the flow.
 *   **CFL Number:** Tracks the active global maximum CFL over the domain.
+*   **Performance Profiling:** Hierarchical timing of kernels (e.g., `Pressure_Solve`, `Flow_Transport`, `MPI_Communication`) to identify computational bottlenecks.

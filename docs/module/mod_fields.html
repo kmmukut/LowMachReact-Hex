@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 2.6% of total for modules and submodules.">62 statements</a>
+    title=" 2.4% of total for modules and submodules.">60 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_fields.f90"> Source File</a></li>
   </ul>
@@ -136,9 +136,15 @@
     </div>
     
     <div class="col-md-9" id='text'>
-    <p>Core flow solver field containers.</p>
-<p>This module defines the data structure for cell-centered and face-centered
-flow variables (velocity, pressure, fluxes, etc.).</p>
+    <p>Allocation and management of primary flow variables (U, P, Fluxes).</p>
+<p>This module acts as the central repository for all physical fields associated 
+with the fluid flow. It handles the allocation, initialization, and 
+deallocation of cell-centered and face-centered variables.</p>
+<p>The fields are designed to support the <strong>Fractional-Step Projection Method</strong>:
+1. <strong><code>u</code></strong>: The soluable, divergence-free velocity field at the new time level.
+2. <strong><code>u_star</code></strong>: The intermediate predicted velocity (contains advection and diffusion).
+3. <strong><code>phi</code></strong>: The scalar potential used to project <code>u_star</code> onto a divergence-free space.
+4. <strong><code>face_flux</code></strong>: The mass/volume flux at cell faces, used for conservative transport.</p>
 <br>        <div class="panel panel-default">
       <div class="panel-heading">
   <h3 class="panel-title">Uses</h3>
@@ -146,9 +152,9 @@ flow variables (velocity, pressure, fluxes, etc.).</p>
       <ul class="list-group">
       <li class="list-group-item">
   <ul class="list-inline">
-    <li><a href='../module/mod_input.html'>mod_input</a></li>
     <li><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></li>
     <li><a href='../module/mod_bc.html'>mod_bc</a></li>
+    <li><a href='../module/mod_input.html'>mod_input</a></li>
     <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
   </ul>
       </li>
@@ -170,40 +176,25 @@ flow variables (velocity, pressure, fluxes, etc.).</p>
 <polygon fill="none" stroke="black" points="532.83,-101.39 463.56,-101.39 463.56,-77.12 532.83,-77.12 532.83,-101.39"/>
 <text xml:space="preserve" text-anchor="middle" x="498.19" y="-85.66" font-family="Helvetica,sans-Serif" font-size="10.50">mod_fields</text>
 </g>
-<!-- module~mod_input -->
-<g id="module~~mod_fields~~UsesGraph_node2" class="node">
-<title>module~mod_input</title>
-<g id="a_module~~mod_fields~~UsesGraph_node2"><a xlink:href=".././module/mod_input.html" xlink:title="mod_input">
-<polygon fill="#337ab7" stroke="#337ab7" points="319.56,-141.39 251.79,-141.39 251.79,-117.12 319.56,-117.12 319.56,-141.39"/>
-<text xml:space="preserve" text-anchor="middle" x="285.68" y="-125.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_input</text>
-</a>
-</g>
-</g>
-<!-- module~mod_fields&#45;&gt;module~mod_input -->
-<g id="module~~mod_fields~~UsesGraph_edge1" class="edge">
-<title>module~mod_fields&#45;&gt;module~mod_input</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M463.12,-100.71C451.9,-104.17 439.28,-107.71 427.56,-110.26 395.69,-117.16 359.19,-122 331.33,-125.07"/>
-<polygon fill="#000000" stroke="#000000" points="331.03,-121.58 321.46,-126.11 331.77,-128.54 331.03,-121.58"/>
-</g>
 <!-- module~mod_mesh_types -->
-<g id="module~~mod_fields~~UsesGraph_node3" class="node">
+<g id="module~~mod_fields~~UsesGraph_node2" class="node">
 <title>module~mod_mesh_types</title>
-<g id="a_module~~mod_fields~~UsesGraph_node3"><a xlink:href=".././module/mod_mesh_types.html" xlink:title="mod_mesh_types">
-<polygon fill="#337ab7" stroke="#337ab7" points="337.56,-61.39 233.79,-61.39 233.79,-37.12 337.56,-37.12 337.56,-61.39"/>
-<text xml:space="preserve" text-anchor="middle" x="285.68" y="-45.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_mesh_types</text>
+<g id="a_module~~mod_fields~~UsesGraph_node2"><a xlink:href=".././module/mod_mesh_types.html" xlink:title="mod_mesh_types">
+<polygon fill="#337ab7" stroke="#337ab7" points="337.56,-141.39 233.79,-141.39 233.79,-117.12 337.56,-117.12 337.56,-141.39"/>
+<text xml:space="preserve" text-anchor="middle" x="285.68" y="-125.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_mesh_types</text>
 </a>
 </g>
 </g>
 <!-- module~mod_fields&#45;&gt;module~mod_mesh_types -->
-<g id="module~~mod_fields~~UsesGraph_edge2" class="edge">
+<g id="module~~mod_fields~~UsesGraph_edge1" class="edge">
 <title>module~mod_fields&#45;&gt;module~mod_mesh_types</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M399.56,-9.26C384.69,-5.35 349.34,-19.3 322.12,-31.78"/>
-<polygon fill="#000000" stroke="#000000" points="320.72,-28.58 313.15,-35.99 323.69,-34.91 320.72,-28.58"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M463.12,-100.71C451.9,-104.17 439.28,-107.71 427.56,-110.26 402.16,-115.76 373.81,-119.95 349.24,-122.98"/>
+<polygon fill="#000000" stroke="#000000" points="348.9,-119.5 339.38,-124.15 349.73,-126.45 348.9,-119.5"/>
 </g>
 <!-- module~mod_bc -->
-<g id="module~~mod_fields~~UsesGraph_node4" class="node">
+<g id="module~~mod_fields~~UsesGraph_node3" class="node">
 <title>module~mod_bc</title>
-<g id="a_module~~mod_fields~~UsesGraph_node4"><a xlink:href=".././module/mod_bc.html" xlink:title="mod_bc">
+<g id="a_module~~mod_fields~~UsesGraph_node3"><a xlink:href=".././module/mod_bc.html" xlink:title="mod_bc">
 <polygon fill="#337ab7" stroke="#337ab7" points="427.56,-101.39 373.56,-101.39 373.56,-77.12 427.56,-77.12 427.56,-101.39"/>
 <text xml:space="preserve" text-anchor="middle" x="400.56" y="-85.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_bc</text>
 </a>
@@ -214,6 +205,21 @@ flow variables (velocity, pressure, fluxes, etc.).</p>
 <title>module~mod_fields&#45;&gt;module~mod_bc</title>
 <path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M463.21,-89.26C455.51,-89.26 447.28,-89.26 439.43,-89.26"/>
 <polygon fill="#000000" stroke="#000000" points="439.44,-85.76 429.44,-89.26 439.44,-92.76 439.44,-85.76"/>
+</g>
+<!-- module~mod_input -->
+<g id="module~~mod_fields~~UsesGraph_node4" class="node">
+<title>module~mod_input</title>
+<g id="a_module~~mod_fields~~UsesGraph_node4"><a xlink:href=".././module/mod_input.html" xlink:title="mod_input">
+<polygon fill="#337ab7" stroke="#337ab7" points="319.56,-61.39 251.79,-61.39 251.79,-37.12 319.56,-37.12 319.56,-61.39"/>
+<text xml:space="preserve" text-anchor="middle" x="285.68" y="-45.66" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_input</text>
+</a>
+</g>
+</g>
+<!-- module~mod_fields&#45;&gt;module~mod_input -->
+<g id="module~~mod_fields~~UsesGraph_edge2" class="edge">
+<title>module~mod_fields&#45;&gt;module~mod_input</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M399.56,-9.26C384.69,-5.35 349.34,-19.3 322.12,-31.78"/>
+<polygon fill="#000000" stroke="#000000" points="320.72,-28.58 313.15,-35.99 323.69,-34.91 320.72,-28.58"/>
 </g>
 <!-- module~mod_kinds -->
 <g id="module~~mod_fields~~UsesGraph_node5" class="node">
@@ -231,35 +237,35 @@ flow variables (velocity, pressure, fluxes, etc.).</p>
 <path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M399.56,-9.26C327.84,9.6 304.08,-4.63 233.79,-28.26 218.53,-33.39 202.98,-42.2 190.49,-50.35"/>
 <polygon fill="#000000" stroke="#000000" points="188.76,-47.29 182.45,-55.8 192.69,-53.09 188.76,-47.29"/>
 </g>
-<!-- module~mod_input&#45;&gt;module~mod_kinds -->
+<!-- module~mod_mesh_types&#45;&gt;module~mod_kinds -->
 <g id="module~~mod_fields~~UsesGraph_edge5" class="edge">
-<title>module~mod_input&#45;&gt;module~mod_kinds</title>
+<title>module~mod_mesh_types&#45;&gt;module~mod_kinds</title>
 <path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M259.49,-116.68C242.19,-108.04 218.98,-96.45 199.84,-86.89"/>
 <polygon fill="#000000" stroke="#000000" points="201.55,-83.83 191.04,-82.49 198.42,-90.09 201.55,-83.83"/>
 </g>
-<!-- module~mod_mesh_types&#45;&gt;module~mod_kinds -->
+<!-- module~mod_bc&#45;&gt;module~mod_mesh_types -->
 <g id="module~~mod_fields~~UsesGraph_edge6" class="edge">
-<title>module~mod_mesh_types&#45;&gt;module~mod_kinds</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M233.37,-57.8C225.32,-59.14 217.05,-60.51 209.16,-61.83"/>
-<polygon fill="#000000" stroke="#000000" points="208.72,-58.35 199.43,-63.45 209.87,-65.26 208.72,-58.35"/>
+<title>module~mod_bc&#45;&gt;module~mod_mesh_types</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M373.09,-98.63C361.06,-102.9 346.47,-108.07 332.73,-112.94"/>
+<polygon fill="#000000" stroke="#000000" points="331.64,-109.61 323.38,-116.25 333.97,-116.21 331.64,-109.61"/>
 </g>
 <!-- module~mod_bc&#45;&gt;module~mod_input -->
-<g id="module~~mod_fields~~UsesGraph_edge8" class="edge">
-<title>module~mod_bc&#45;&gt;module~mod_input</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M373.09,-98.63C360.42,-103.12 344.91,-108.62 330.55,-113.71"/>
-<polygon fill="#000000" stroke="#000000" points="329.53,-110.36 321.28,-117 331.87,-116.95 329.53,-110.36"/>
-</g>
-<!-- module~mod_bc&#45;&gt;module~mod_mesh_types -->
 <g id="module~~mod_fields~~UsesGraph_edge7" class="edge">
-<title>module~mod_bc&#45;&gt;module~mod_mesh_types</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M373.09,-79.88C361.06,-75.61 346.47,-70.44 332.73,-65.57"/>
-<polygon fill="#000000" stroke="#000000" points="333.97,-62.3 323.38,-62.26 331.64,-68.9 333.97,-62.3"/>
+<title>module~mod_bc&#45;&gt;module~mod_input</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M373.09,-79.88C360.42,-75.39 344.91,-69.89 330.55,-64.8"/>
+<polygon fill="#000000" stroke="#000000" points="331.87,-61.56 321.28,-61.52 329.53,-68.16 331.87,-61.56"/>
 </g>
 <!-- module~mod_bc&#45;&gt;module~mod_kinds -->
-<g id="module~~mod_fields~~UsesGraph_edge9" class="edge">
+<g id="module~~mod_fields~~UsesGraph_edge8" class="edge">
 <title>module~mod_bc&#45;&gt;module~mod_kinds</title>
 <path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M373.51,-87.04C333.98,-83.68 258.32,-77.24 209.7,-73.1"/>
 <polygon fill="#000000" stroke="#000000" points="210.03,-69.62 199.77,-72.26 209.44,-76.59 210.03,-69.62"/>
+</g>
+<!-- module~mod_input&#45;&gt;module~mod_kinds -->
+<g id="module~~mod_fields~~UsesGraph_edge9" class="edge">
+<title>module~mod_input&#45;&gt;module~mod_kinds</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M251.53,-54.77C238.37,-56.96 223.05,-59.52 208.96,-61.86"/>
+<polygon fill="#000000" stroke="#000000" points="208.77,-58.34 199.48,-63.44 209.92,-65.25 208.77,-58.34"/>
 </g>
 <!-- iso_fortran_env -->
 <g id="module~~mod_fields~~UsesGraph_node6" class="node">
@@ -352,135 +358,113 @@ flow variables (velocity, pressure, fluxes, etc.).</p>
 <!-- Generated by graphviz version 14.1.2 (20260126.1125)
  -->
 <!-- Title: module~~mod_fields~~UsedByGraph Pages: 1 -->
-<svg id="modulemod_fieldsUsedByGraph" width="614pt" height="186pt"
- viewBox="0.00 0.00 614.00 186.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="module~~mod_fields~~UsedByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 181.85)">
+<svg id="modulemod_fieldsUsedByGraph" width="614pt" height="107pt"
+ viewBox="0.00 0.00 614.00 107.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~mod_fields~~UsedByGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 103.36)">
 <title>module~~mod_fields~~UsedByGraph</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-181.85 609.85,-181.85 609.85,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-103.36 609.85,-103.36 609.85,4 -4,4"/>
 <!-- module~mod_fields -->
 <g id="module~~mod_fields~~UsedByGraph_node1" class="node">
 <title>module~mod_fields</title>
-<polygon fill="none" stroke="black" points="69.27,-104.27 0,-104.27 0,-80 69.27,-80 69.27,-104.27"/>
-<text xml:space="preserve" text-anchor="middle" x="34.63" y="-88.54" font-family="Helvetica,sans-Serif" font-size="10.50">mod_fields</text>
+<polygon fill="none" stroke="black" points="69.27,-74.85 0,-74.85 0,-50.58 69.27,-50.58 69.27,-74.85"/>
+<text xml:space="preserve" text-anchor="middle" x="34.63" y="-59.12" font-family="Helvetica,sans-Serif" font-size="10.50">mod_fields</text>
 </g>
 <!-- module~mod_flow_projection -->
 <g id="module~~mod_fields~~UsedByGraph_node2" class="node">
 <title>module~mod_flow_projection</title>
 <g id="a_module~~mod_fields~~UsedByGraph_node2"><a xlink:href=".././module/mod_flow_projection.html" xlink:title="mod_flow_projection">
-<polygon fill="#337ab7" stroke="#337ab7" points="226.29,-104.27 105.27,-104.27 105.27,-80 226.29,-80 226.29,-104.27"/>
-<text xml:space="preserve" text-anchor="middle" x="165.78" y="-88.54" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_flow_projection</text>
+<polygon fill="#337ab7" stroke="#337ab7" points="226.29,-94.85 105.27,-94.85 105.27,-70.58 226.29,-70.58 226.29,-94.85"/>
+<text xml:space="preserve" text-anchor="middle" x="165.78" y="-79.12" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_flow_projection</text>
 </a>
 </g>
 </g>
 <!-- module~mod_flow_projection&#45;&gt;module~mod_fields -->
 <g id="module~~mod_fields~~UsedByGraph_edge1" class="edge">
 <title>module~mod_flow_projection&#45;&gt;module~mod_fields</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M105.12,-92.14C97.05,-92.14 88.87,-92.14 81.1,-92.14"/>
-<polygon fill="#000000" stroke="#000000" points="81.19,-88.64 71.19,-92.14 81.19,-95.64 81.19,-88.64"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M105.12,-73.48C96.95,-72.21 88.68,-70.93 80.82,-69.71"/>
+<polygon fill="#000000" stroke="#000000" points="81.59,-66.29 71.17,-68.22 80.52,-73.21 81.59,-66.29"/>
 </g>
-<!-- module~mod_output -->
+<!-- program~lowmach_react_hex -->
 <g id="module~~mod_fields~~UsedByGraph_node3" class="node">
-<title>module~mod_output</title>
-<g id="a_module~~mod_fields~~UsedByGraph_node3"><a xlink:href=".././module/mod_output.html" xlink:title="mod_output">
-<polygon fill="#337ab7" stroke="#337ab7" points="340.18,-142.27 264.91,-142.27 264.91,-118 340.18,-118 340.18,-142.27"/>
-<text xml:space="preserve" text-anchor="middle" x="302.55" y="-126.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_output</text>
+<title>program~lowmach_react_hex</title>
+<g id="a_module~~mod_fields~~UsedByGraph_node3"><a xlink:href=".././program/lowmach_react_hex.html" xlink:title="lowmach_react_hex">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="605.85,-73.85 490.08,-73.85 490.08,-49.58 605.85,-49.58 605.85,-73.85"/>
+<text xml:space="preserve" text-anchor="middle" x="547.96" y="-58.12" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lowmach_react_hex</text>
 </a>
 </g>
 </g>
-<!-- module~mod_output&#45;&gt;module~mod_fields -->
+<!-- program~lowmach_react_hex&#45;&gt;module~mod_fields -->
 <g id="module~~mod_fields~~UsedByGraph_edge2" class="edge">
-<title>module~mod_output&#45;&gt;module~mod_fields</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M281.3,-142.61C255.18,-157.19 208.2,-178.34 166.78,-170.13"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M164.78,-170.13C122.82,-161.82 81.83,-132.37 57.66,-112.13"/>
-<polygon fill="#000000" stroke="#000000" points="59.96,-109.5 50.1,-105.62 55.39,-114.8 59.96,-109.5"/>
+<title>program~lowmach_react_hex&#45;&gt;module~mod_fields</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M529.16,-49.34C505.12,-33.67 460.35,-8.06 417.44,-2.72"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M415.44,-2.72C347.38,5.76 329.89,-10.12 262.29,-21.72 219.45,-29.07 210.12,-39.43 166.78,-42.72"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M164.78,-42.72C136.73,-44.49 105.59,-49.23 80.91,-53.65"/>
+<polygon fill="#000000" stroke="#000000" points="80.4,-50.19 71.2,-55.44 81.67,-57.07 80.4,-50.19"/>
 </g>
-<!-- module~mod_output&#45;&gt;module~mod_flow_projection -->
-<g id="module~~mod_fields~~UsedByGraph_edge7" class="edge">
-<title>module~mod_output&#45;&gt;module~mod_flow_projection</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M264.72,-119.75C251.56,-116.04 236.42,-111.77 222.04,-107.72"/>
-<polygon fill="#000000" stroke="#000000" points="223.27,-104.43 212.69,-105.08 221.37,-111.16 223.27,-104.43"/>
+<!-- program~lowmach_react_hex&#45;&gt;module~mod_flow_projection -->
+<g id="module~~mod_fields~~UsedByGraph_edge6" class="edge">
+<title>program~lowmach_react_hex&#45;&gt;module~mod_flow_projection</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M495.56,-74.28C482.11,-77.3 467.6,-80.34 454.08,-82.72 369.9,-97.49 347.53,-102.93 262.29,-96.72 254.45,-96.15 246.28,-95.31 238.16,-94.34"/>
+<polygon fill="#000000" stroke="#000000" points="238.62,-90.87 228.25,-93.06 237.73,-97.81 238.62,-90.87"/>
 </g>
 <!-- module~mod_species -->
 <g id="module~~mod_fields~~UsedByGraph_node4" class="node">
 <title>module~mod_species</title>
 <g id="a_module~~mod_fields~~UsedByGraph_node4"><a xlink:href=".././module/mod_species.html" xlink:title="mod_species">
-<polygon fill="#337ab7" stroke="#337ab7" points="342.81,-24.27 262.29,-24.27 262.29,0 342.81,0 342.81,-24.27"/>
-<text xml:space="preserve" text-anchor="middle" x="302.55" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_species</text>
+<polygon fill="#337ab7" stroke="#337ab7" points="342.81,-54.85 262.29,-54.85 262.29,-30.58 342.81,-30.58 342.81,-54.85"/>
+<text xml:space="preserve" text-anchor="middle" x="302.55" y="-39.12" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_species</text>
 </a>
 </g>
-</g>
-<!-- module~mod_species&#45;&gt;module~mod_fields -->
-<g id="module~~mod_fields~~UsedByGraph_edge3" class="edge">
-<title>module~mod_species&#45;&gt;module~mod_fields</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M264.15,-24.72C237.3,-33.4 200.12,-44.66 166.78,-52.13"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M164.78,-52.13C136.38,-58.5 105.19,-68.09 80.58,-76.28"/>
-<polygon fill="#000000" stroke="#000000" points="79.56,-72.93 71.2,-79.44 81.79,-79.56 79.56,-72.93"/>
-</g>
-<!-- module~mod_species&#45;&gt;module~mod_flow_projection -->
-<g id="module~~mod_fields~~UsedByGraph_edge8" class="edge">
-<title>module~mod_species&#45;&gt;module~mod_flow_projection</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M282.18,-24.54C275.78,-28.75 268.66,-33.56 262.29,-38.13 245.83,-49.96 243.71,-55.77 226.29,-66.14 221.08,-69.23 215.44,-72.18 209.77,-74.89"/>
-<polygon fill="#000000" stroke="#000000" points="208.65,-71.56 201.01,-78.89 211.56,-77.92 208.65,-71.56"/>
-</g>
-<!-- module~mod_output~2 -->
-<g id="module~~mod_fields~~UsedByGraph_node5" class="node">
-<title>module~mod_output~2</title>
-<g id="a_module~~mod_fields~~UsedByGraph_node5"><a xlink:href=".././module/mod_output~2.html" xlink:title="mod_output">
-<polygon fill="#337ab7" stroke="#337ab7" points="454.08,-64.27 378.81,-64.27 378.81,-40 454.08,-40 454.08,-64.27"/>
-<text xml:space="preserve" text-anchor="middle" x="416.44" y="-48.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_output</text>
-</a>
-</g>
-</g>
-<!-- module~mod_output~2&#45;&gt;module~mod_fields -->
-<g id="module~~mod_fields~~UsedByGraph_edge4" class="edge">
-<title>module~mod_output~2&#45;&gt;module~mod_fields</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M378.35,-50.79C356.54,-50.33 328.45,-50.32 303.55,-52.13"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M301.55,-52.13C241.81,-56.48 225.23,-39.03 166.78,-52.13"/>
-</g>
-<!-- module~mod_output~2&#45;&gt;module~mod_flow_projection -->
-<g id="module~~mod_fields~~UsedByGraph_edge6" class="edge">
-<title>module~mod_output~2&#45;&gt;module~mod_flow_projection</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M301.55,-52.13C268.64,-54.53 232.91,-65.55 206.51,-75.42"/>
-<polygon fill="#000000" stroke="#000000" points="205.28,-72.14 197.21,-79 207.8,-78.67 205.28,-72.14"/>
-</g>
-<!-- module~mod_output~2&#45;&gt;module~mod_species -->
-<g id="module~~mod_fields~~UsedByGraph_edge10" class="edge">
-<title>module~mod_output~2&#45;&gt;module~mod_species</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M380.35,-39.59C370.45,-36.05 359.54,-32.15 349.13,-28.43"/>
-<polygon fill="#000000" stroke="#000000" points="350.54,-25.22 339.95,-25.15 348.19,-31.81 350.54,-25.22"/>
-</g>
-<!-- program~lowmach_react_hex -->
-<g id="module~~mod_fields~~UsedByGraph_node6" class="node">
-<title>program~lowmach_react_hex</title>
-<g id="a_module~~mod_fields~~UsedByGraph_node6"><a xlink:href=".././program/lowmach_react_hex.html" xlink:title="lowmach_react_hex">
-<polygon fill="#f0ad4e" stroke="#f0ad4e" points="605.85,-64.27 490.08,-64.27 490.08,-40 605.85,-40 605.85,-64.27"/>
-<text xml:space="preserve" text-anchor="middle" x="547.96" y="-48.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lowmach_react_hex</text>
-</a>
-</g>
-</g>
-<!-- program~lowmach_react_hex&#45;&gt;module~mod_fields -->
-<g id="module~~mod_fields~~UsedByGraph_edge5" class="edge">
-<title>program~lowmach_react_hex&#45;&gt;module~mod_fields</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M415.44,-131.13C308.44,-163.75 276.51,-191.89 166.78,-170.13"/>
-</g>
-<!-- program~lowmach_react_hex&#45;&gt;module~mod_flow_projection -->
-<g id="module~~mod_fields~~UsedByGraph_edge9" class="edge">
-<title>program~lowmach_react_hex&#45;&gt;module~mod_flow_projection</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M532.72,-64.65C510.15,-83.54 463.95,-118.46 417.44,-131.13"/>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M415.44,-131.13C382.9,-140 375.9,-115.68 342.81,-109.14 308.59,-102.37 270.08,-98.26 237.82,-95.78"/>
-<polygon fill="#000000" stroke="#000000" points="238.42,-92.32 228.2,-95.08 237.92,-99.3 238.42,-92.32"/>
 </g>
 <!-- program~lowmach_react_hex&#45;&gt;module~mod_species -->
-<g id="module~~mod_fields~~UsedByGraph_edge11" class="edge">
+<g id="module~~mod_fields~~UsedByGraph_edge9" class="edge">
 <title>program~lowmach_react_hex&#45;&gt;module~mod_species</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M495.56,-39.58C482.11,-36.55 467.6,-33.51 454.08,-31.13 420.98,-25.32 383.49,-20.58 354.21,-17.29"/>
-<polygon fill="#000000" stroke="#000000" points="354.84,-13.84 344.51,-16.22 354.07,-20.8 354.84,-13.84"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M415.44,-2.72C385.75,0.98 353.79,-12.35 331.66,-24.6"/>
+<polygon fill="#000000" stroke="#000000" points="330.12,-21.45 323.24,-29.51 333.64,-27.5 330.12,-21.45"/>
 </g>
-<!-- program~lowmach_react_hex&#45;&gt;module~mod_output~2 -->
-<g id="module~~mod_fields~~UsedByGraph_edge12" class="edge">
-<title>program~lowmach_react_hex&#45;&gt;module~mod_output~2</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M489.78,-52.13C481.67,-52.13 473.41,-52.13 465.5,-52.13"/>
-<polygon fill="#000000" stroke="#000000" points="465.74,-48.64 455.74,-52.14 465.74,-55.64 465.74,-48.64"/>
+<!-- module~mod_output -->
+<g id="module~~mod_fields~~UsedByGraph_node5" class="node">
+<title>module~mod_output</title>
+<g id="a_module~~mod_fields~~UsedByGraph_node5"><a xlink:href=".././module/mod_output.html" xlink:title="mod_output">
+<polygon fill="#337ab7" stroke="#337ab7" points="454.08,-73.85 378.81,-73.85 378.81,-49.58 454.08,-49.58 454.08,-73.85"/>
+<text xml:space="preserve" text-anchor="middle" x="416.44" y="-58.12" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_output</text>
+</a>
+</g>
+</g>
+<!-- program~lowmach_react_hex&#45;&gt;module~mod_output -->
+<g id="module~~mod_fields~~UsedByGraph_edge10" class="edge">
+<title>program~lowmach_react_hex&#45;&gt;module~mod_output</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M489.78,-61.72C481.67,-61.72 473.41,-61.72 465.5,-61.72"/>
+<polygon fill="#000000" stroke="#000000" points="465.74,-58.22 455.74,-61.72 465.74,-65.22 465.74,-58.22"/>
+</g>
+<!-- module~mod_species&#45;&gt;module~mod_fields -->
+<g id="module~~mod_fields~~UsedByGraph_edge4" class="edge">
+<title>module~mod_species&#45;&gt;module~mod_fields</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M261.98,-41.15C235.09,-40.46 198.74,-40.29 166.78,-42.72"/>
+</g>
+<!-- module~mod_species&#45;&gt;module~mod_flow_projection -->
+<g id="module~~mod_fields~~UsedByGraph_edge5" class="edge">
+<title>module~mod_species&#45;&gt;module~mod_flow_projection</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M261.84,-54.5C248.73,-58.39 233.93,-62.79 219.98,-66.93"/>
+<polygon fill="#000000" stroke="#000000" points="219.06,-63.55 210.47,-69.75 221.05,-70.26 219.06,-63.55"/>
+</g>
+<!-- module~mod_output&#45;&gt;module~mod_fields -->
+<g id="module~~mod_fields~~UsedByGraph_edge3" class="edge">
+<title>module~mod_output&#45;&gt;module~mod_fields</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M378.47,-71.86C356.82,-77 328.85,-82.25 303.55,-82.72"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M301.55,-82.72C239.08,-83.88 229.08,-37.99 166.78,-42.72"/>
+</g>
+<!-- module~mod_output&#45;&gt;module~mod_flow_projection -->
+<g id="module~~mod_fields~~UsedByGraph_edge7" class="edge">
+<title>module~mod_output&#45;&gt;module~mod_flow_projection</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M301.55,-82.72C280.92,-83.1 258.51,-83.22 238,-83.21"/>
+<polygon fill="#000000" stroke="#000000" points="238.01,-79.71 228.01,-83.2 238,-86.71 238.01,-79.71"/>
+</g>
+<!-- module~mod_output&#45;&gt;module~mod_species -->
+<g id="module~~mod_fields~~UsedByGraph_edge8" class="edge">
+<title>module~mod_output&#45;&gt;module~mod_species</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M378.5,-55.44C370.79,-54.14 362.55,-52.74 354.44,-51.36"/>
+<polygon fill="#000000" stroke="#000000" points="355.09,-47.92 344.65,-49.7 353.92,-54.82 355.09,-47.92"/>
 </g>
 </g>
 </svg>
@@ -583,7 +567,7 @@ flow variables (velocity, pressure, fluxes, etc.).</p>
      <div class="panel panel-default">
   <div class="panel-heading codesum"><span class="anchor" id="type-flow_fields_t"></span><h3>type, public :: <a href='../type/flow_fields_t.html'>flow_fields_t</a>  </h3></div>
   <div class="panel-body">
-    <p>Data structure for primary flow variables.</p>
+    <p>Container for all primary hydrodynamic fields.</p>
      <h4>Components</h4>
     <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Visibility</th><th>Attributes</th><th></th><th>Name</th><th></th><th>Initial</th><th></th></thead>
@@ -621,13 +605,14 @@ flow variables (velocity, pressure, fluxes, etc.).</p>
 <tr>
   <td><span class="anchor" id="variable-face_flux"></span>real(kind=rk),</td>
 <td>public,</td>  <td>allocatable</td><td>::</td>
-  <td><strong>face_flux</strong>(:)</td><td></td><td></td><td><p>Conservative face flux, oriented with mesh%faces(f)%normal.
-For internal faces this is owner -&gt; neighbor.</p></td>
+  <td><strong>face_flux</strong>(:)</td><td></td><td></td><td><p>Conservative face-centered flux $U_f = \mathbf{u}_f \cdot \mathbf{n}_f$.
+Oriented according to the face normal (owner $\rightarrow$ neighbor).</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-rhs_old"></span>real(kind=rk),</td>
 <td>public,</td>  <td>allocatable</td><td>::</td>
-  <td><strong>rhs_old</strong>(:,:)</td><td></td><td></td><td><p>Previous explicit momentum RHS for AB2 time integration.</p></td>
+  <td><strong>rhs_old</strong>(:,:)</td><td></td><td></td><td><p>Storage for the previous explicit RHS (Advection + Diffusion).
+Required for 2nd-order Adams-Bashforth (AB2) time marching.</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-rhs_old_valid"></span>logical,</td>
@@ -651,7 +636,7 @@ For internal faces this is owner -&gt; neighbor.</p></td>
   <div class="panel-heading codesum"><span class="anchor" id="proc-allocate_fields"></span><h3>public subroutine <a href='../proc/allocate_fields.html'>allocate_fields</a>(mesh, fields)</h3></div>
   <div class="panel-body">
        
-<p>Allocate all flow field arrays.</p><a href="../proc/allocate_fields.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+<p>Dynamically allocates all arrays within the flow fields container.</p><a href="../proc/allocate_fields.html" class="pull-right"><emph>Read more&hellip;</emph></a>
     
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
@@ -676,10 +661,10 @@ For internal faces this is owner -&gt; neighbor.</p></td>
   </div>
 
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-initialize_fields"></span><h3>public subroutine <a href='../proc/initialize_fields.html'>initialize_fields</a>(mesh, params, bc, fields)</h3></div>
+  <div class="panel-heading codesum"><span class="anchor" id="proc-initialize_fields"></span><h3>public subroutine <a href='../proc/initialize_fields.html'>initialize_fields</a>(mesh, fields)</h3></div>
   <div class="panel-body">
        
-<p>Initialize flow fields and set initial conditions.</p><a href="../proc/initialize_fields.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+<p>Initializes flow fields and sets simulation initial conditions.</p><a href="../proc/initialize_fields.html" class="pull-right"><emph>Read more&hellip;</emph></a>
     
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
@@ -689,18 +674,6 @@ For internal faces this is owner -&gt; neighbor.</p></td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>params</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>bc</strong></td><td></td>
 </tr>
 <tr>
   <td><span class="anchor" ></span>type(<a href='../type/flow_fields_t.html'>flow_fields_t</a>),</td>
@@ -718,7 +691,9 @@ For internal faces this is owner -&gt; neighbor.</p></td>
       <div class="panel panel-default">
   <div class="panel-heading codesum"><span class="anchor" id="proc-finalize_fields"></span><h3>public subroutine <a href='../proc/finalize_fields.html'>finalize_fields</a>(fields)</h3></div>
   <div class="panel-body">
-           
+       
+<p>Deallocates all arrays and resets validity flags.</p><a href="../proc/finalize_fields.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+    
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>

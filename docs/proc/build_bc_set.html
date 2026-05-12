@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 3.9% of total for procedures.">40 statements</a>
+    title=" 4.4% of total for procedures.">50 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_bc.f90"> Source File</a></li>
   </ul>
@@ -123,29 +123,32 @@
     <h2>public subroutine build_bc_set(mesh, params, bc)</h2>
     
 
-    <p>Map case parameters to mesh patches to create the BC set.</p>
-<p>@param mesh Mesh data structure.
-@param params Case configuration parameters.
-@param bc Boundary condition set to build.</p>
+    <p>Synchronizes namelist parameters with mesh patches to create a complete BC set.</p>
+<p>This routine iterates through all patches in the <code>mesh_t</code> structure and 
+searches for matching names in the <code>case_params_t</code> object. It converts 
+string-based inputs into internal type IDs.</p>
+<p>@param mesh The computational mesh containing patch definitions.
+@param params Parsed case configuration from <code>case.nml</code>.
+@param bc The boundary condition set to be populated.</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-mesh~4"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~5"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-params~2"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
+  <td><span class="anchor" id="variable-params"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>params</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-bc~4"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
+  <td><span class="anchor" id="variable-bc~5"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
 <td>intent(inout)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>bc</strong></td><td></td>

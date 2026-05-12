@@ -3,7 +3,7 @@
 /
 
 &time_input
-  nsteps = 10000
+  nsteps = 5000
   dt = 2.5e-4
   output_interval = 500
   use_dynamic_dt = .false.

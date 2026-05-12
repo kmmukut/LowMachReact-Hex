@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title="<p> 5.0% of total for derived types.</p>Including implementation: 7 statements,  5.0% of total for derived types.">7 statements</a>
+    title="<p> 4.5% of total for derived types.</p>Including implementation: 7 statements,  4.5% of total for derived types.">7 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_transport_properties.f90"> Source File</a></li>
   </ul>
@@ -121,7 +121,10 @@
     
     <div class="col-md-9" id='text'>
       <h2>type, public :: transport_properties_t</h2>
-    <p>Transport property fields available for all cells.</p>
+    <p>Container for cell-centered transport properties.</p>
+<p>These fields are used by the Momentum and Species transport solvers 
+to evaluate diffusion terms and calculate the local Reynolds/Peclet 
+numbers.</p>
     <br>
 
     <section class="visible-xs visible-sm hidden-md">

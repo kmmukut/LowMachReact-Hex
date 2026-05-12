@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 1.6% of total for procedures.">16 statements</a>
+    title=" 1.4% of total for procedures.">16 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_mpi_radiation.f90"> Source File</a></li>
   </ul>
@@ -123,6 +123,10 @@
     <h2>public subroutine radiation_mpi_initialize(rad, comm_parent, n_tasks)</h2>
     
 
+    <p>Initializes the radiation MPI context by duplicating a parent communicator.</p>
+<p>@param rad The radiation context to initialize.
+@param comm_parent The parent communicator (usually MPI_COMM_WORLD).
+@param n_tasks Optional total number of tasks to decompose immediately.</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
@@ -187,17 +191,17 @@
 <path fill="none" stroke="#000000" d="M85.64,-108.63C105.44,-122.42 139.11,-144.59 170.52,-159.13 173.83,-160.67 177.28,-162.14 180.79,-163.53"/>
 <polygon fill="#000000" stroke="#000000" points="179.41,-166.75 190,-166.98 181.86,-160.2 179.41,-166.75"/>
 </g>
-<!-- mpi_comm_rank -->
+<!-- mpi_comm_dup -->
 <g id="proc~~radiation_mpi_initialize~~CallsGraph_node3" class="node">
-<title>mpi_comm_rank</title>
-<polygon fill="#777777" stroke="#777777" points="285.92,-150.27 185.9,-150.27 185.9,-126 285.92,-126 285.92,-150.27"/>
-<text xml:space="preserve" text-anchor="middle" x="235.91" y="-134.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_rank</text>
+<title>mpi_comm_dup</title>
+<polygon fill="#777777" stroke="#777777" points="284.04,-150.27 187.77,-150.27 187.77,-126 284.04,-126 284.04,-150.27"/>
+<text xml:space="preserve" text-anchor="middle" x="235.91" y="-134.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_dup</text>
 </g>
-<!-- proc~radiation_mpi_initialize&#45;&gt;mpi_comm_rank -->
-<g id="proc~~radiation_mpi_initialize~~CallsGraph_edge2" class="edge">
-<title>proc~radiation_mpi_initialize&#45;&gt;mpi_comm_rank</title>
-<path fill="none" stroke="#000000" d="M118.26,-108.74C135.97,-113.2 156.08,-118.27 174.56,-122.93"/>
-<polygon fill="#000000" stroke="#000000" points="173.5,-126.27 184.05,-125.32 175.21,-119.48 173.5,-126.27"/>
+<!-- proc~radiation_mpi_initialize&#45;&gt;mpi_comm_dup -->
+<g id="proc~~radiation_mpi_initialize~~CallsGraph_edge5" class="edge">
+<title>proc~radiation_mpi_initialize&#45;&gt;mpi_comm_dup</title>
+<path fill="none" stroke="#000000" d="M118.26,-108.74C136.61,-113.36 157.55,-118.64 176.57,-123.43"/>
+<polygon fill="#000000" stroke="#000000" points="175.49,-126.77 186.04,-125.82 177.2,-119.98 175.49,-126.77"/>
 </g>
 <!-- proc~radiation_task_bounds -->
 <g id="proc~~radiation_mpi_initialize~~CallsGraph_node4" class="node">
@@ -209,32 +213,32 @@
 </g>
 </g>
 <!-- proc~radiation_mpi_initialize&#45;&gt;proc~radiation_task_bounds -->
-<g id="proc~~radiation_mpi_initialize~~CallsGraph_edge3" class="edge">
+<g id="proc~~radiation_mpi_initialize~~CallsGraph_edge2" class="edge">
 <title>proc~radiation_mpi_initialize&#45;&gt;proc~radiation_task_bounds</title>
 <path fill="none" stroke="#000000" d="M134.6,-96.14C142.56,-96.14 150.73,-96.14 158.82,-96.14"/>
 <polygon fill="#000000" stroke="#000000" points="158.64,-99.64 168.64,-96.14 158.64,-92.64 158.64,-99.64"/>
 </g>
-<!-- mpi_comm_dup -->
+<!-- mpi_comm_size -->
 <g id="proc~~radiation_mpi_initialize~~CallsGraph_node5" class="node">
-<title>mpi_comm_dup</title>
+<title>mpi_comm_size</title>
 <polygon fill="#777777" stroke="#777777" points="284.04,-66.27 187.77,-66.27 187.77,-42 284.04,-42 284.04,-66.27"/>
-<text xml:space="preserve" text-anchor="middle" x="235.91" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_dup</text>
+<text xml:space="preserve" text-anchor="middle" x="235.91" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_size</text>
 </g>
-<!-- proc~radiation_mpi_initialize&#45;&gt;mpi_comm_dup -->
-<g id="proc~~radiation_mpi_initialize~~CallsGraph_edge4" class="edge">
-<title>proc~radiation_mpi_initialize&#45;&gt;mpi_comm_dup</title>
+<!-- proc~radiation_mpi_initialize&#45;&gt;mpi_comm_size -->
+<g id="proc~~radiation_mpi_initialize~~CallsGraph_edge3" class="edge">
+<title>proc~radiation_mpi_initialize&#45;&gt;mpi_comm_size</title>
 <path fill="none" stroke="#000000" d="M118.26,-83.53C136.61,-78.91 157.55,-73.63 176.57,-68.84"/>
 <polygon fill="#000000" stroke="#000000" points="177.2,-72.29 186.04,-66.45 175.49,-65.5 177.2,-72.29"/>
 </g>
-<!-- mpi_comm_size -->
+<!-- mpi_comm_rank -->
 <g id="proc~~radiation_mpi_initialize~~CallsGraph_node6" class="node">
-<title>mpi_comm_size</title>
-<polygon fill="#777777" stroke="#777777" points="284.04,-24.27 187.77,-24.27 187.77,0 284.04,0 284.04,-24.27"/>
-<text xml:space="preserve" text-anchor="middle" x="235.91" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_size</text>
+<title>mpi_comm_rank</title>
+<polygon fill="#777777" stroke="#777777" points="285.92,-24.27 185.9,-24.27 185.9,0 285.92,0 285.92,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="235.91" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_rank</text>
 </g>
-<!-- proc~radiation_mpi_initialize&#45;&gt;mpi_comm_size -->
-<g id="proc~~radiation_mpi_initialize~~CallsGraph_edge5" class="edge">
-<title>proc~radiation_mpi_initialize&#45;&gt;mpi_comm_size</title>
+<!-- proc~radiation_mpi_initialize&#45;&gt;mpi_comm_rank -->
+<g id="proc~~radiation_mpi_initialize~~CallsGraph_edge4" class="edge">
+<title>proc~radiation_mpi_initialize&#45;&gt;mpi_comm_rank</title>
 <path fill="none" stroke="#000000" d="M85.64,-83.64C105.44,-69.85 139.11,-47.68 170.52,-33.13 173.83,-31.6 177.28,-30.13 180.79,-28.74"/>
 <polygon fill="#000000" stroke="#000000" points="181.86,-32.07 190,-25.29 179.41,-25.52 181.86,-32.07"/>
 </g>

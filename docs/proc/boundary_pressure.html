@@ -8,7 +8,7 @@
     <meta name="author" content="Khaled Mosharraf Mukut" >
     <link rel="icon" href="../favicon.png">
 
-    <title>write_vtu_unstructured &ndash; LowMachReact-Hex</title>
+    <title>boundary_pressure &ndash; LowMachReact-Hex</title>
 
     <link href="../css/bootstrap.min.css" rel="stylesheet">
     <link href="../css/pygments.css" rel="stylesheet">
@@ -78,7 +78,7 @@
 
     <div class="container">
   <div class="row">
-    <h1>write_vtu_unstructured
+    <h1>boundary_pressure
       <small>Subroutine</small>
     </h1>
     <div class="row">
@@ -88,14 +88,14 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 3.7% of total for procedures.">38 statements</a>
+    title=" 2.0% of total for procedures.">23 statements</a>
      </li> 
-    <li><i class="fa fa-code"></i><a href="../src/mod_output_vtk.f90"> Source File</a></li>
+    <li><i class="fa fa-code"></i><a href="../src/mod_bc.f90"> Source File</a></li>
   </ul>
   <ol class="breadcrumb in-well text-right">
-     <li><a href='../sourcefile/mod_output_vtk.f90.html'>mod_output_vtk.f90</a></li>
-     <li><a href='../module/mod_output.html'>mod_output</a></li>
-     <li class="active">write_vtu_unstructured</li>
+     <li><a href='../sourcefile/mod_bc.f90.html'>mod_bc.f90</a></li>
+     <li><a href='../module/mod_bc.html'>mod_bc</a></li>
+     <li class="active">boundary_pressure</li>
   </ol>
 </div>
 </div>
@@ -120,43 +120,50 @@
     </div>
     
     <div class="col-md-9" id='text'>
-    <h2>public subroutine write_vtu_unstructured(params, flow, mesh, fields, step)</h2>
+    <h2>public subroutine boundary_pressure(mesh, bc, face_id, interior_p, ext_p, is_dirichlet)</h2>
     
 
+    <p>Evaluates pressure at a boundary face.</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-params~14"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>params</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-flow~19"></span>type(<a href='../type/flow_mpi_t.html'>flow_mpi_t</a>),</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>flow</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-mesh~13"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~8"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-fields~5"></span>type(<a href='../type/flow_fields_t.html'>flow_fields_t</a>),</td>
+  <td><span class="anchor" id="variable-bc~9"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
-  <td><strong>fields</strong></td><td></td>
+  <td><strong>bc</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-step~4"></span>integer,</td>
+  <td><span class="anchor" id="variable-face_id~7"></span>integer,</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
-  <td><strong>step</strong></td><td></td>
+  <td><strong>face_id</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-interior_p"></span>real(kind=rk),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>interior_p</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-ext_p"></span>real(kind=rk),</td>
+<td>intent(out)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>ext_p</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-is_dirichlet~2"></span>logical,</td>
+<td>intent(out)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>is_dirichlet</strong></td><td></td>
 </tr>
 </tbody>
 </table>

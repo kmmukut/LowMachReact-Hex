@@ -1,3 +1,9 @@
+!> Output management for VTK visualization and diagnostics (XML VTU format).
+!!
+!! This module handles the generation of simulation results in modern XML-based 
+!! VTK format (.vtu) and CSV-based global diagnostics. It manages the 
+!! creation of the output directory, writing mesh summaries, and 
+!! generating PVD collection files for time-series visualization in ParaView.
 module mod_output
    use mod_kinds, only : rk, zero, path_len, fatal_error
    use mod_input, only : case_params_t
@@ -15,6 +21,7 @@ module mod_output
 
 contains
 
+   !> Creates the output directory specified in the case parameters.
    subroutine prepare_output(params, flow)
       type(case_params_t), intent(in) :: params
       type(flow_mpi_t), intent(in) :: flow
@@ -33,6 +40,7 @@ contains
    end subroutine prepare_output
 
 
+   !> Writes the CSV header for global simulation diagnostics.
    subroutine write_diagnostics_header(params, flow)
       type(case_params_t), intent(in) :: params
       type(flow_mpi_t), intent(in) :: flow
@@ -45,12 +53,13 @@ contains
       filename = trim(params%output_dir)//'/diagnostics.csv'
       open(newunit=unit_id, file=trim(filename), status='replace', action='write')
 
-      write(unit_id,'(a)') 'step,time,dt,max_divergence,rms_divergence,net_boundary_flux,kinetic_energy,pressure_iterations,pressure_residual'
+      write(unit_id,'(a)') 'step,time,dt,max_divergence,rms_divergence,net_boundary_flux,kinetic_energy,pressure_iterations,pressure_residual,cfl,wall_time,max_velocity,total_mass,min_species_y'
 
       close(unit_id)
    end subroutine write_diagnostics_header
 
 
+   !> Appends a new row of diagnostic data to the CSV file.
    subroutine write_diagnostics_row(params, flow, step, time, stats)
       type(case_params_t), intent(in) :: params
       type(flow_mpi_t), intent(in) :: flow
@@ -66,15 +75,17 @@ contains
       filename = trim(params%output_dir)//'/diagnostics.csv'
       open(newunit=unit_id, file=trim(filename), status='old', position='append', action='write')
 
-      write(unit_id,'(i0,",",es16.8,",",es16.8,",",es16.8,",",es16.8,",",es16.8,",",es16.8,",",i0,",",es16.8)') &
-         step, time, params%dt, stats%max_divergence, stats%rms_divergence, &
-         stats%net_boundary_flux, stats%kinetic_energy, stats%pressure_iterations, &
-         stats%pressure_residual
+      write(unit_id,'(i0,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,i0,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8,a,es16.8)') &
+            step, ',', time, ',', params%dt, ',', stats%max_divergence, ',', &
+            stats%rms_divergence, ',', stats%net_boundary_flux, ',', &
+            stats%kinetic_energy, ',', stats%pressure_iterations, ',', stats%pressure_residual, ',', &
+            stats%cfl, ',', stats%wall_time, ',', stats%max_velocity, ',', stats%total_mass, ',', stats%min_species_y
 
       close(unit_id)
    end subroutine write_diagnostics_row
 
 
+   !> Writes a human-readable summary of the mesh connectivity and patches.
    subroutine write_mesh_summary(params, flow, mesh)
       type(case_params_t), intent(in) :: params
       type(flow_mpi_t), intent(in) :: flow
@@ -101,6 +112,13 @@ contains
    end subroutine write_mesh_summary
 
 
+   !> Writes the full flow field to an XML Unstructured Grid file (.vtu).
+   !!
+   !! Fields included:
+   !! - Velocity (Cell Vector)
+   !! - Pressure (Cell Scalar)
+   !! - Divergence (Cell Scalar)
+   !! - Species Mass Fractions (Cell Scalars, if enabled)
    subroutine write_vtu_unstructured(params, flow, mesh, fields, species, step)
       type(case_params_t), intent(in) :: params
       type(flow_mpi_t), intent(in) :: flow
@@ -149,7 +167,7 @@ contains
       call write_vtu_cell_scalar(unit_id, 'pressure', fields%p)
       call write_vtu_cell_scalar(unit_id, 'divergence', fields%div)
 
-      if (params%nspecies > 0) then
+      if (params%enable_species .and. params%nspecies > 0) then
          do k = 1, params%nspecies
             call write_vtu_cell_scalar(unit_id, 'Y_'//trim(params%species_name(k)), species%Y(k,:))
          end do
@@ -208,6 +226,7 @@ contains
    end subroutine write_vtu_unstructured
 
 
+   !> Writes a PVD collection file to allow ParaView to load time-series data.
    subroutine write_pvd_collection(params, flow, nsteps, output_interval, dt)
       type(case_params_t), intent(in) :: params
       type(flow_mpi_t), intent(in) :: flow
@@ -264,6 +283,7 @@ contains
    end subroutine write_pvd_collection
 
 
+   !> Internal helper to write a scalar field to a VTU file.
    subroutine write_vtu_cell_scalar(unit_id, name, field)
       integer, intent(in) :: unit_id
       character(len=*), intent(in) :: name
@@ -281,6 +301,7 @@ contains
    end subroutine write_vtu_cell_scalar
 
 
+   !> Performs sanity checks on hex connectivity before writing output.
    subroutine validate_hex_connectivity(mesh)
       type(mesh_t), intent(in) :: mesh
 

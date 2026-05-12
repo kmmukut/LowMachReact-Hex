@@ -31,11 +31,23 @@ The code implements a dual-MPI architecture designed to balance flow solver effi
 The solver is organized into specialized modules to isolate physics, numerics, and external dependencies:
 
 *   **`mod_flow_projection`**: Implements the fractional-step projection algorithm.
+
+    Advances the incompressible flow fields using the fractional-step method.
+
+    *   Computes explicit momentum prediction (using AB2 or Forward Euler).
+    *   Solves the symmetric pressure Poisson equation using matrix-free Conjugate Gradient.
+    *   Corrects velocity and pressure.
+    *   Calculates diagnostics (RMS divergence, net boundary flux, kinetic energy).
+
+    > [!WARNING]
+    > **Pressure Boundary Condition Limitation:** Currently, the pressure Poisson matrix is built assuming purely Neumann (zero-gradient) conditions on all physical boundaries. This gives the matrix a null space, which is removed by hardcoding `phi(1) = 0`. As a result, the solver currently only supports closed domains (cavity) or purely periodic domains (channel flow). Open flows with Dirichlet pressure inlets/outlets are structurally unsupported.
+
 *   **`mod_species`**: Manages the transport of passive scalars ($Y_k$). Supports **Scale-on-Demand** architecture with dynamic allocation for 0 to 256+ species. Implements a **Correction Velocity** (diffusive flux correction) to ensure strict mass conservation when using different species diffusivities ($D_k$).
 *   **`mod_transport_properties`**: Abstracts property evaluation. It provides a bridge to the **Cantera 3.x C++ API** for dynamic evaluation of viscosity and species diffusivity. Features include:
     *   **Automatic Mechanism Discovery**: Automatically identifies all species from a `.yaml` mechanism when `enable_reactions` is active.
     *   **Decoupled Control**: Independent toggles for Cantera-calculated fluid properties (viscosity/density) and species transport properties (diffusivity).
     *   **Name-Based Initialization**: Maps namelist-provided mass fractions to the correct indices in complex mechanisms at runtime.
+*   **`mod_profiler`**: A hierarchical performance profiling module used to track execution time for critical kernels and MPI communication. It provides a terminal summary at the end of each simulation.
 *   **`mod_bc`**: A unified boundary condition manager that supports field-specific types (Velocity, Pressure, Species) for every patch.
 
 ## Boundary Condition System

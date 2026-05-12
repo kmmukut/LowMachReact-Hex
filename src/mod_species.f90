@@ -1,7 +1,15 @@
-!> Species transport solver for passive scalars.
+!> Finite-Volume transport solver for chemical species mass fractions.
 !!
-!! This module implements the finite-volume transport of multiple species
-!! mass fractions using explicit time integration and upwind advection.
+!! This module implements the solution of the transport equation for $N$ 
+!! chemical species mass fractions $Y_k$. The solver supports:
+!! 1. **Upwind Advection**: A 1st-order stable scheme for robust transport 
+!!    of sharp scalar gradients.
+!! 2. **Corrected Diffusion**: Diffusive fluxes are explicitly corrected 
+!!    to ensure the net mass flux sums to zero ($\sum \mathbf{j}_k = 0$).
+!! 3. **Mass Conservation**: Enforces $\sum Y_k = 1$ and boundedness $[0, 1]$ 
+!!    after every timestep.
+!! 4. **MPI Synchronization**: Efficiently gathers owned-cell updates into 
+!!    the globally replicated mesh field.
 module mod_species
    use mod_kinds, only : rk, zero, one, fatal_error, name_len, lowercase
    use mod_mesh_types, only : mesh_t
@@ -18,21 +26,25 @@ module mod_species
    public :: species_fields_t
    public :: initialize_species, finalize_species, advance_species_transport
 
-   !> Data structure for cell-centered species mass fractions.
+   !> Container for multi-species mass fraction fields.
    type :: species_fields_t
-      integer :: nspecies = 0                       !< Number of species
-      real(rk), allocatable :: Y(:,:)               !< Current mass fractions (nspecies, ncells)
-      real(rk), allocatable :: Y_old(:,:)           !< Previous-step mass fractions (nspecies, ncells)
-      character(len=name_len), allocatable :: names(:) !< Species names
+      integer :: nspecies = 0                       !< Total number of transport species $N_s$.
+      real(rk), allocatable :: Y(:,:)               !< Current mass fractions $Y_k$ (nspecies, ncells).
+      real(rk), allocatable :: Y_old(:,:)           !< Mass fractions from previous step $n$.
+      character(len=name_len), allocatable :: names(:) !< Array of species names (e.g., "H2", "O2", "N2").
    end type species_fields_t
 
 contains
 
-   !> Initialize species mass fractions from case parameters.
+   !> Populates species fields with initial mass fractions and handles naming.
    !!
-   !! @param mesh Full replicated mesh.
-   !! @param params Case configuration parameters.
-   !! @param species Species field data structure to initialize.
+   !! Performs name-based matching between the transport registry and 
+   !! namelist initial conditions. Normalizes the initial mixture to 
+   !! ensure the physical constraint $\sum Y_k = 1$ is met at $t=0$.
+   !!
+   !! @param mesh The computational mesh.
+   !! @param params Input configuration.
+   !! @param species The fields to initialize.
    subroutine initialize_species(mesh, params, species)
       type(mesh_t), intent(in) :: mesh
       type(case_params_t), intent(in) :: params
@@ -54,9 +66,7 @@ contains
 
       species%names = params%species_name(1:species%nspecies)
 
-      ! ------------------------------------------------------------
-      ! Name-based matching for initialization
-      ! ------------------------------------------------------------
+      ! Match namelist initial conditions by species name
       init_mixture = zero
       
       do j = 1, params%namelist_nspecies
@@ -71,12 +81,12 @@ contains
          end do
       end do
 
-      ! Normalize
+      ! Normalize the initial mixture vector
       sum_Y = sum(init_mixture)
       if (sum_Y > zero) then
          init_mixture = init_mixture / sum_Y
       else
-         ! Fallback if nothing matched or sum was zero
+         ! Fallback: If no IC specified, set the mixture to 100% of the first species.
          if (species%nspecies > 0) init_mixture(1) = one
       end if
 
@@ -88,9 +98,7 @@ contains
    end subroutine initialize_species
 
 
-   !> Deallocate all species-related arrays.
-   !!
-   !! @param species Species field data structure to finalize.
+   !> Safely deallocates species fields and names.
    subroutine finalize_species(species)
       type(species_fields_t), intent(inout) :: species
 
@@ -101,18 +109,21 @@ contains
    end subroutine finalize_species
 
 
-   !> Advance the species transport equation by one timestep.
+   !> Performs one explicit Euler step for species transport.
    !!
-   !! Computes advective and diffusive fluxes, performs an explicit update,
-   !! clamps values to [0, 1], and renormalizes sum(Y)=1.
+   !! This routine evaluates:
+   !! - **Advective Fluxes**: $J_{adv,k} = \dot{m}_f Y_{upwind,k}$.
+   !! - **Diffusive Fluxes**: $J_{diff,k} = -D_k A_f \nabla Y_k$.
+   !! - **Flux Correction**: Subtracts $Y_k \sum J_{diff,k}$ to satisfy mass conservation.
+   !! - **Bounding & Normalization**: Clamps $Y_k \in [0, 1]$ and enforces $\sum Y_k = 1$ locally.
    !!
-   !! @param mesh Full replicated mesh.
-   !! @param flow MPI flow decomposition data.
-   !! @param bc Boundary condition set.
-   !! @param params Case configuration parameters.
-   !! @param fields Flow fields (velocity/fluxes) for advection.
-   !! @param species Species field data to update.
-   !! @param transport Transport properties (diffusivity).
+   !! @param mesh The computational mesh.
+   !! @param flow MPI decomposition data for synchronization.
+   !! @param bc Boundary condition settings.
+   !! @param params Simulation parameters (dt, etc).
+   !! @param fields Flow field (velocity/face fluxes).
+   !! @param species Mass fraction fields to update.
+   !! @param transport Physical properties (diffusivities).
    subroutine advance_species_transport(mesh, flow, bc, params, fields, species, transport)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(inout) :: flow
@@ -140,13 +151,13 @@ contains
 
       species%Y_old = species%Y
 
-      ! Update each cell
+      ! Iterate through MPI-owned cells
       do c = flow%first_cell, flow%last_cell
          dY = zero
 
          do f = 1, mesh%ncell_faces(c)
             fid = mesh%cell_faces(f,c)
-            flux = fields%face_flux(fid) ! Mass flux (outward positive for owner)
+            flux = fields%face_flux(fid) ! Oriented outward for owner
 
             owner = mesh%faces(fid)%owner
             neighbor = face_effective_neighbor(mesh, bc, fid, c)
@@ -162,10 +173,10 @@ contains
                   call boundary_species(mesh, bc, fid, k, Y_owner, Y_neighbor, is_dirichlet)
                else
                   Y_neighbor = species%Y_old(k, neighbor)
-                  is_dirichlet = .true. ! Treat internal as dirichlet for flux calculation
+                  is_dirichlet = .true.
                end if
 
-               ! 1. Advective flux (outward positive for owner)
+               ! 1. Advective flux using Upwind discretization
                if (flux > zero) then
                   Y_face = Y_owner
                else
@@ -173,8 +184,7 @@ contains
                end if
                adv_flux(k) = -flux * Y_face
 
-               ! 2. Raw Diffusive flux (central difference, outward positive for owner)
-               ! flux_diff = - D * grad(Y) dot n * area
+               ! 2. Diffusive flux using central difference
                diff_flux(k) = zero
                if (neighbor /= 0 .or. is_dirichlet) then
                   if (neighbor == 0) then
@@ -189,23 +199,22 @@ contains
                Y_face_lin(k) = 0.5_rk * (Y_owner + Y_neighbor)
             end do
 
-            ! 3. Apply Correction to ensure sum(diff_flux) = 0
-            ! We subtract the net imbalance distributed by mass fraction.
+            ! 3. Apply Correction Velocity to ensure mass conservation: sum(j_k) = 0
             do k = 1, species%nspecies
                dY(k) = dY(k) + adv_flux(k) + (diff_flux(k) - Y_face_lin(k) * sum_diff_flux)
             end do
          end do
 
-         ! Explicit update
+         ! Explicit timestep update
          do k = 1, species%nspecies
             species%Y(k,c) = species%Y_old(k,c) + params%dt * dY(k) / mesh%cells(c)%volume
             
-            ! Clamp to [0, 1]
+            ! Ensure boundedness: Y_k must remain in [0, 1]
             if (species%Y(k,c) < zero) species%Y(k,c) = zero
             if (species%Y(k,c) > one)  species%Y(k,c) = one
          end do
 
-         ! Renormalize mass fractions so sum(Y_k) = 1
+         ! Local renormalization: sum(Y_k) = 1
          sum_Y = zero
          do k = 1, species%nspecies
             sum_Y = sum_Y + species%Y(k,c)
@@ -220,18 +229,17 @@ contains
 
       deallocate(dY)
 
-      ! We need to sync the updated species across all ranks since the full mesh is replicated.
+      ! Synchronize updated species fields across all MPI ranks
       call flow_allgather_owned_species(flow, species)
 
    end subroutine advance_species_transport
 
-   !> Synchronize species mass fractions across all MPI ranks.
+
+   !> Coordinates the gathering of species mass fractions from all ranks.
    !!
-   !! Since the full mesh is replicated on each rank, we must gather
-   !! owned-cell updates into the global arrays.
-   !!
-   !! @param flow MPI flow decomposition data.
-   !! @param species Species field data structure.
+   !! Since the solver uses a replicated mesh (full geometry on each rank), 
+   !! this routine ensures that updates computed on Rank $N$ for its owned 
+   !! cells are propagated to all other ranks.
    subroutine flow_allgather_owned_species(flow, species)
       type(flow_mpi_t), intent(inout) :: flow
       type(species_fields_t), intent(inout) :: species

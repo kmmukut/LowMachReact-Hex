@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 2.8% of total for procedures.">29 statements</a>
+    title=" 2.1% of total for procedures.">24 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_bc.f90"> Source File</a></li>
   </ul>
@@ -123,31 +123,35 @@
     <h2>public subroutine boundary_velocity(mesh, bc, face_id, interior_velocity, value)</h2>
     
 
-    <p>Evaluate velocity at a boundary face.</p>
+    <p>Evaluates the velocity vector at a boundary face.</p>
+<p>Implements standard FV boundary evaluations:
+- <strong>Wall/Dirichlet</strong>: Returns the specified patch velocity.
+- <strong>Symmetry</strong>: Subtracts the normal component from the interior velocity.
+- <strong>Neumann/Periodic</strong>: Extrapolates the interior velocity to the face.</p>
 <p>@param mesh Mesh data structure.
 @param bc Boundary condition set.
 @param face_id ID of the boundary face.
-@param interior_velocity Velocity in the owner cell.
-@param value Resulting velocity at the face.</p>
+@param interior_velocity Velocity in the owner cell [m/s].
+@param value Resulting velocity at the face [m/s].</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-mesh~5"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~6"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-bc~6"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
+  <td><span class="anchor" id="variable-bc~7"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>bc</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-face_id~4"></span>integer,</td>
+  <td><span class="anchor" id="variable-face_id~5"></span>integer,</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>face_id</strong></td><td></td>

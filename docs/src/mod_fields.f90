@@ -1,7 +1,14 @@
-!> Core flow solver field containers.
+!> Allocation and management of primary flow variables (U, P, Fluxes).
 !!
-!! This module defines the data structure for cell-centered and face-centered
-!! flow variables (velocity, pressure, fluxes, etc.).
+!! This module acts as the central repository for all physical fields associated 
+!! with the fluid flow. It handles the allocation, initialization, and 
+!! deallocation of cell-centered and face-centered variables.
+!!
+!! The fields are designed to support the **Fractional-Step Projection Method**:
+!! 1. **`u`**: The soluable, divergence-free velocity field at the new time level.
+!! 2. **`u_star`**: The intermediate predicted velocity (contains advection and diffusion).
+!! 3. **`phi`**: The scalar potential used to project `u_star` onto a divergence-free space.
+!! 4. **`face_flux`**: The mass/volume flux at cell faces, used for conservative transport.
 module mod_fields
    use mod_kinds, only : rk, zero
    use mod_mesh_types, only : mesh_t
@@ -11,33 +18,37 @@ module mod_fields
 
    private
 
-   !> Data structure for primary flow variables.
+   !> Container for all primary hydrodynamic fields.
    type, public :: flow_fields_t
-      real(rk), allocatable :: u(:,:)        !< Cell-centered velocity (3, ncells)
-      real(rk), allocatable :: u_old(:,:)    !< Previous-step velocity (3, ncells)
-      real(rk), allocatable :: u_star(:,:)   !< Intermediate (predicted) velocity (3, ncells)
+      real(rk), allocatable :: u(:,:)        !< Current cell-centered velocity vector $(u, v, w)$ [m/s].
+      real(rk), allocatable :: u_old(:,:)    !< Velocity vector from the previous time step $n$ [m/s].
+      real(rk), allocatable :: u_star(:,:)   !< Intermediate predicted velocity field [m/s].
 
-      real(rk), allocatable :: p(:)          !< Pressure field (ncells)
-      real(rk), allocatable :: phi(:)        !< Pressure correction/potential (ncells)
-      real(rk), allocatable :: div(:)        !< Divergence of velocity field (ncells)
+      real(rk), allocatable :: p(:)          !< Static pressure field $P$ [Pa].
+      real(rk), allocatable :: phi(:)        !< Pressure correction potential $\phi$. Used in the Poisson solver.
+      real(rk), allocatable :: div(:)        !< Local velocity divergence $\nabla \cdot \mathbf{u}$. Should be $\approx 0$ after projection.
 
-      !> Conservative face flux, oriented with mesh%faces(f)%normal.
-      !! For internal faces this is owner -> neighbor.
-      real(rk), allocatable :: face_flux(:)  !< Face-centered mass/volume flux (nfaces)
+      !> Conservative face-centered flux $U_f = \mathbf{u}_f \cdot \mathbf{n}_f$.
+      !! Oriented according to the face normal (owner $\rightarrow$ neighbor).
+      real(rk), allocatable :: face_flux(:)  !< Volumetric flux across faces [m^3/s].
 
-      !> Previous explicit momentum RHS for AB2 time integration.
-      real(rk), allocatable :: rhs_old(:,:)  !< Previous momentum source term (3, ncells)
-      logical :: rhs_old_valid = .false.     !< Flag for AB2 initialization
+      !> Storage for the previous explicit RHS (Advection + Diffusion).
+      !! Required for 2nd-order Adams-Bashforth (AB2) time marching.
+      real(rk), allocatable :: rhs_old(:,:)  !< Momentum RHS from step $n-1$.
+      logical :: rhs_old_valid = .false.     !< False on the first step (triggers Euler fallback).
    end type flow_fields_t
 
    public :: allocate_fields, finalize_fields, initialize_fields
 
 contains
 
-   !> Allocate all flow field arrays.
+   !> Dynamically allocates all arrays within the flow fields container.
    !!
-   !! @param mesh Mesh data structure for sizing.
-   !! @param fields Flow fields structure to allocate.
+   !! Sizing is determined by the number of cells and faces in the provided mesh.
+   !! All fields are initialized to zero upon allocation.
+   !!
+   !! @param mesh The mesh structure defining the domain size.
+   !! @param fields The container to be allocated.
    subroutine allocate_fields(mesh, fields)
       type(mesh_t), intent(in) :: mesh
       type(flow_fields_t), intent(inout) :: fields
@@ -69,26 +80,28 @@ contains
    end subroutine allocate_fields
 
 
-   !> Initialize flow fields and set initial conditions.
+   !> Initializes flow fields and sets simulation initial conditions.
    !!
-   !! @param mesh Mesh data structure.
-   !! @param params Case parameters.
-   !! @param bc Boundary condition set.
-   !! @param fields Flow fields structure to initialize.
-   subroutine initialize_fields(mesh, params, bc, fields)
+   !! Currently implements a "Start from Rest" condition where all 
+   !! velocities and pressures are zero. IC overrides for restarts or 
+   !! analytical solutions will be implemented here.
+   !!
+   !! @param mesh The computational mesh.
+   !! @param fields The fields container to initialize.
+   subroutine initialize_fields(mesh, fields)
       type(mesh_t), intent(in) :: mesh
-      type(case_params_t), intent(in) :: params
-      type(bc_set_t), intent(in) :: bc
       type(flow_fields_t), intent(inout) :: fields
 
-      ! v1 starts from rest. Boundary motion and body force enter through
-      ! the FV operators.
+      ! Initial condition: Fluids starts from rest. 
+      ! Boundary motion and body forces drive the flow from t=0.
       call allocate_fields(mesh, fields)
-
 
    end subroutine initialize_fields
 
 
+   !> Deallocates all arrays and resets validity flags.
+   !!
+   !! @param fields The container to be cleared.
    subroutine finalize_fields(fields)
       type(flow_fields_t), intent(inout) :: fields
 

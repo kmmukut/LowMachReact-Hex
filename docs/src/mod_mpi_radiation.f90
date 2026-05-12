@@ -1,3 +1,9 @@
+!> MPI infrastructure for the radiation solver.
+!!
+!! This module manages the parallel execution of the radiation transport 
+!! solver. Unlike the flow solver which uses a replicated mesh, the 
+!! radiation solver can be configured with its own communicator and 
+!! task decomposition logic (e.g., distributing rays or discrete ordinates).
 module mod_mpi_radiation
    use mpi_f08
    use mod_kinds, only : fatal_error
@@ -9,17 +15,23 @@ module mod_mpi_radiation
    public :: radiation_mpi_initialize, radiation_mpi_finalize
    public :: radiation_task_bounds
 
+   !> MPI context for radiation operations.
    type :: radiation_mpi_t
-      type(MPI_Comm) :: comm = MPI_COMM_NULL
-      integer :: rank = -1
-      integer :: nprocs = 0
-      integer :: first_task = 0
-      integer :: last_task = -1
-      integer :: nlocal_tasks = 0
+      type(MPI_Comm) :: comm = MPI_COMM_NULL !< MPI Communicator.
+      integer :: rank = -1                   !< Local rank ID.
+      integer :: nprocs = 0                  !< Total number of radiation processors.
+      integer :: first_task = 0              !< First task index owned by this rank.
+      integer :: last_task = -1              !< Last task index owned by this rank.
+      integer :: nlocal_tasks = 0            !< Total number of tasks owned locally.
    end type radiation_mpi_t
 
 contains
 
+   !> Initializes the radiation MPI context by duplicating a parent communicator.
+   !!
+   !! @param rad The radiation context to initialize.
+   !! @param comm_parent The parent communicator (usually MPI_COMM_WORLD).
+   !! @param n_tasks Optional total number of tasks to decompose immediately.
    subroutine radiation_mpi_initialize(rad, comm_parent, n_tasks)
       type(radiation_mpi_t), intent(inout) :: rad
       type(MPI_Comm), intent(in) :: comm_parent
@@ -44,6 +56,7 @@ contains
    end subroutine radiation_mpi_initialize
 
 
+   !> Releases radiation MPI resources.
    subroutine radiation_mpi_finalize(rad)
       type(radiation_mpi_t), intent(inout) :: rad
 
@@ -63,6 +76,10 @@ contains
    end subroutine radiation_mpi_finalize
 
 
+   !> Performs contiguous task decomposition for the radiation solver.
+   !!
+   !! @param rad The radiation context to update.
+   !! @param n_tasks Total number of discrete tasks (e.g., rays).
    subroutine radiation_task_bounds(rad, n_tasks)
       type(radiation_mpi_t), intent(inout) :: rad
       integer, intent(in) :: n_tasks
@@ -86,6 +103,7 @@ contains
    end subroutine radiation_task_bounds
 
 
+   !> Internal helper for MPI error checking.
    subroutine check_mpi(ierr, where)
       integer, intent(in) :: ierr
       character(len=*), intent(in) :: where

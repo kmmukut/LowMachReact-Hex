@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 2.9% of total for procedures.">30 statements</a>
+    title=" 2.6% of total for procedures.">30 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_flow_projection.f90"> Source File</a></li>
   </ul>
@@ -123,25 +123,32 @@
     <h2>public function face_normal_distance(mesh, bc, face_id, cell_id, nb) result(dist)</h2>
     
 
+    <p>Calculates the normal distance between cell centers or cell-to-face.</p>
+<p>Handles periodic boundary logic by accounting for the face pair offset.</p>
+<p>@param mesh The mesh.
+@param bc Boundary conditions.
+@param face_id Face index.
+@param cell_id Source cell index.
+@param nb Neighbor cell index (or 0 for boundaries).</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-mesh~18"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~17"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-bc~10"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
+  <td><span class="anchor" id="variable-bc~11"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>bc</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-face_id~6"></span>integer,</td>
+  <td><span class="anchor" id="variable-face_id~8"></span>integer,</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>face_id</strong></td><td></td>

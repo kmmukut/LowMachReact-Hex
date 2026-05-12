@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 0.7% of total for procedures.">7 statements</a>
+    title=" 0.4% of total for procedures.">5 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_fields.f90"> Source File</a></li>
   </ul>
@@ -120,36 +120,25 @@
     </div>
     
     <div class="col-md-9" id='text'>
-    <h2>public subroutine initialize_fields(mesh, params, bc, fields)</h2>
+    <h2>public subroutine initialize_fields(mesh, fields)</h2>
     
 
-    <p>Initialize flow fields and set initial conditions.</p>
-<p>@param mesh Mesh data structure.
-@param params Case parameters.
-@param bc Boundary condition set.
-@param fields Flow fields structure to initialize.</p>
+    <p>Initializes flow fields and sets simulation initial conditions.</p>
+<p>Currently implements a "Start from Rest" condition where all 
+velocities and pressures are zero. IC overrides for restarts or 
+analytical solutions will be implemented here.</p>
+<p>@param mesh The computational mesh.
+@param fields The fields container to initialize.</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-mesh~8"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~10"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-params~3"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>params</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-bc~8"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>bc</strong></td><td></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-fields~2"></span>type(<a href='../type/flow_fields_t.html'>flow_fields_t</a>),</td>

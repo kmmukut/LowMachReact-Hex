@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 2.6% of total for procedures.">27 statements</a>
+    title=" 3.2% of total for procedures.">37 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_species.f90"> Source File</a></li>
   </ul>
@@ -123,29 +123,32 @@
     <h2>public subroutine initialize_species(mesh, params, species)</h2>
     
 
-    <p>Initialize species mass fractions from case parameters.</p>
-<p>@param mesh Full replicated mesh.
-@param params Case configuration parameters.
-@param species Species field data structure to initialize.</p>
+    <p>Populates species fields with initial mass fractions and handles naming.</p>
+<p>Performs name-based matching between the transport registry and 
+namelist initial conditions. Normalizes the initial mixture to 
+ensure the physical constraint $\sum Y_k = 1$ is met at $t=0$.</p>
+<p>@param mesh The computational mesh.
+@param params Input configuration.
+@param species The fields to initialize.</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-mesh~14"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~15"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-params~16"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
+  <td><span class="anchor" id="variable-params~8"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>params</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-species~2"></span>type(<a href='../type/species_fields_t.html'>species_fields_t</a>),</td>
+  <td><span class="anchor" id="variable-species~3"></span>type(<a href='../type/species_fields_t.html'>species_fields_t</a>),</td>
 <td>intent(inout)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>species</strong></td><td></td>
@@ -191,20 +194,20 @@
 <path fill="none" stroke="#000000" d="M101.2,-41.07C109.03,-42.32 117.18,-43.62 125.17,-44.89"/>
 <polygon fill="#000000" stroke="#000000" points="124.39,-48.31 134.82,-46.43 125.49,-41.4 124.39,-48.31"/>
 </g>
-<!-- proc~fatal_error -->
+<!-- proc~lowercase -->
 <g id="proc~~initialize_species~~CallsGraph_node3" class="node">
-<title>proc~fatal_error</title>
-<g id="a_proc~~initialize_species~~CallsGraph_node3"><a xlink:href=".././proc/fatal_error.html" xlink:title="fatal_error">
-<polygon fill="#d9534f" stroke="#d9534f" points="217.66,-24.27 150.64,-24.27 150.64,0 217.66,0 217.66,-24.27"/>
-<text xml:space="preserve" text-anchor="middle" x="184.15" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">fatal_error</text>
+<title>proc~lowercase</title>
+<g id="a_proc~~initialize_species~~CallsGraph_node3"><a xlink:href=".././proc/lowercase.html" xlink:title="lowercase">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="216.54,-24.27 151.77,-24.27 151.77,0 216.54,0 216.54,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="184.15" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lowercase</text>
 </a>
 </g>
 </g>
-<!-- proc~initialize_species&#45;&gt;proc~fatal_error -->
+<!-- proc~initialize_species&#45;&gt;proc~lowercase -->
 <g id="proc~~initialize_species~~CallsGraph_edge2" class="edge">
-<title>proc~initialize_species&#45;&gt;proc~fatal_error</title>
-<path fill="none" stroke="#000000" d="M101.2,-25.2C113.68,-23.21 126.98,-21.09 139.16,-19.15"/>
-<polygon fill="#000000" stroke="#000000" points="139.61,-22.62 148.93,-17.59 138.51,-15.71 139.61,-22.62"/>
+<title>proc~initialize_species&#45;&gt;proc~lowercase</title>
+<path fill="none" stroke="#000000" d="M101.2,-25.2C114.15,-23.13 127.97,-20.93 140.51,-18.93"/>
+<polygon fill="#000000" stroke="#000000" points="140.78,-22.43 150.11,-17.4 139.68,-15.52 140.78,-22.43"/>
 </g>
 </g>
 </svg>

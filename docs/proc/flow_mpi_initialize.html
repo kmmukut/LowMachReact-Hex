@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 3.0% of total for procedures.">31 statements</a>
+    title=" 2.5% of total for procedures.">29 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_mpi_flow.f90"> Source File</a></li>
   </ul>
@@ -123,19 +123,25 @@
     <h2>public subroutine flow_mpi_initialize(mesh, flow, comm_parent)</h2>
     
 
+    <p>Sets up domain decomposition for a given mesh.</p>
+<p>Splits the total number of cells among available processors 
+using a contiguous block decomposition.</p>
+<p>@param mesh The mesh to decompose.
+@param flow The MPI context to populate.
+@param comm_parent The parent communicator (usually MPI_COMM_WORLD).</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-mesh~11"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~14"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-flow~10"></span>type(<a href='../type/flow_mpi_t.html'>flow_mpi_t</a>),</td>
+  <td><span class="anchor" id="variable-flow~11"></span>type(<a href='../type/flow_mpi_t.html'>flow_mpi_t</a>),</td>
 <td>intent(inout)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>flow</strong></td><td></td>
@@ -187,17 +193,17 @@
 <path fill="none" stroke="#000000" d="M81.13,-87.75C98.83,-96.25 122.86,-107.61 144.27,-117.14 147.22,-118.45 150.28,-119.78 153.36,-121.12"/>
 <polygon fill="#000000" stroke="#000000" points="151.86,-124.28 162.43,-124.98 154.61,-117.84 151.86,-124.28"/>
 </g>
-<!-- mpi_comm_rank -->
+<!-- mpi_comm_size -->
 <g id="proc~~flow_mpi_initialize~~CallsGraph_node3" class="node">
-<title>mpi_comm_rank</title>
-<polygon fill="#777777" stroke="#777777" points="245.41,-108.27 145.39,-108.27 145.39,-84 245.41,-84 245.41,-108.27"/>
-<text xml:space="preserve" text-anchor="middle" x="195.4" y="-92.54" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_rank</text>
+<title>mpi_comm_size</title>
+<polygon fill="#777777" stroke="#777777" points="243.54,-108.27 147.27,-108.27 147.27,-84 243.54,-84 243.54,-108.27"/>
+<text xml:space="preserve" text-anchor="middle" x="195.4" y="-92.54" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_size</text>
 </g>
-<!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_rank -->
+<!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_size -->
 <g id="proc~~flow_mpi_initialize~~CallsGraph_edge2" class="edge">
-<title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_rank</title>
-<path fill="none" stroke="#000000" d="M108.58,-83.19C116.81,-84.43 125.36,-85.72 133.73,-86.99"/>
-<polygon fill="#000000" stroke="#000000" points="133.08,-90.43 143.49,-88.46 134.12,-83.51 133.08,-90.43"/>
+<title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_size</title>
+<path fill="none" stroke="#000000" d="M108.58,-83.19C117.43,-84.53 126.64,-85.92 135.61,-87.27"/>
+<polygon fill="#000000" stroke="#000000" points="134.89,-90.7 145.3,-88.73 135.93,-83.78 134.89,-90.7"/>
 </g>
 <!-- mpi_comm_dup -->
 <g id="proc~~flow_mpi_initialize~~CallsGraph_node4" class="node">
@@ -206,20 +212,20 @@
 <text xml:space="preserve" text-anchor="middle" x="195.4" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_dup</text>
 </g>
 <!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_dup -->
-<g id="proc~~flow_mpi_initialize~~CallsGraph_edge3" class="edge">
+<g id="proc~~flow_mpi_initialize~~CallsGraph_edge4" class="edge">
 <title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_dup</title>
 <path fill="none" stroke="#000000" d="M108.58,-67.08C117.43,-65.74 126.64,-64.35 135.61,-63"/>
 <polygon fill="#000000" stroke="#000000" points="135.93,-66.49 145.3,-61.54 134.89,-59.57 135.93,-66.49"/>
 </g>
-<!-- mpi_comm_size -->
+<!-- mpi_comm_rank -->
 <g id="proc~~flow_mpi_initialize~~CallsGraph_node5" class="node">
-<title>mpi_comm_size</title>
-<polygon fill="#777777" stroke="#777777" points="243.54,-24.27 147.27,-24.27 147.27,0 243.54,0 243.54,-24.27"/>
-<text xml:space="preserve" text-anchor="middle" x="195.4" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_size</text>
+<title>mpi_comm_rank</title>
+<polygon fill="#777777" stroke="#777777" points="245.41,-24.27 145.39,-24.27 145.39,0 245.41,0 245.41,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="195.4" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_comm_rank</text>
 </g>
-<!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_size -->
-<g id="proc~~flow_mpi_initialize~~CallsGraph_edge4" class="edge">
-<title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_size</title>
+<!-- proc~flow_mpi_initialize&#45;&gt;mpi_comm_rank -->
+<g id="proc~~flow_mpi_initialize~~CallsGraph_edge3" class="edge">
+<title>proc~flow_mpi_initialize&#45;&gt;mpi_comm_rank</title>
 <path fill="none" stroke="#000000" d="M81.13,-62.52C98.83,-54.02 122.86,-42.66 144.27,-33.13 147.22,-31.82 150.28,-30.49 153.36,-29.15"/>
 <polygon fill="#000000" stroke="#000000" points="154.61,-32.43 162.43,-25.29 151.86,-25.99 154.61,-32.43"/>
 </g>

@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 1.4% of total for procedures.">14 statements</a>
+    title=" 1.2% of total for procedures.">14 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_bc.f90"> Source File</a></li>
   </ul>
@@ -123,6 +123,14 @@
     <h2>public function face_effective_neighbor(mesh, bc, face_id, cell_id) result(neighbor)</h2>
     
 
+    <p>Returns the neighbor cell index, accounting for periodic connectivity.</p>
+<p>If the face is on a periodic boundary, this returns the <code>periodic_neighbor</code> 
+stored in the face structure. Otherwise, it returns the standard neighbor.</p>
+<p>@param mesh The computational mesh.
+@param bc The active BC set.
+@param face_id Global index of the face.
+@param cell_id Index of the cell requesting the neighbor.
+@result The effective neighbor cell index.</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">

@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title="<p>25.2% of total for derived types.</p>Including implementation: 35 statements, 25.2% of total for derived types.">35 statements</a>
+    title="<p>27.9% of total for derived types.</p>Including implementation: 43 statements, 27.9% of total for derived types.">43 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_input.f90"> Source File</a></li>
   </ul>
@@ -121,8 +121,11 @@
       <a class="list-group-item" href="../type/case_params_t.html#variable-nsteps">nsteps</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-dt">dt</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-output_interval">output_interval</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-use_dynamic_dt">use_dynamic_dt</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-max_cfl">max_cfl</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-rho">rho</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-nu">nu</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-transport_update_interval">transport_update_interval</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-pressure_max_iter">pressure_max_iter</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-pressure_tol">pressure_tol</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-body_force">body_force</a>
@@ -142,11 +145,16 @@
       <a class="list-group-item" href="../type/case_params_t.html#variable-output_dir">output_dir</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-write_vtu">write_vtu</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-write_diagnostics">write_diagnostics</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_species">enable_species</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_reactions">enable_reactions</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-nspecies">nspecies</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-species_name">species_name</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-species_diffusivity">species_diffusivity</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-initial_y">initial_Y</a>
-      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_cantera">enable_cantera</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-namelist_nspecies">namelist_nspecies</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-namelist_species_name">namelist_species_name</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_cantera_fluid">enable_cantera_fluid</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_cantera_species">enable_cantera_species</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-cantera_mech_file">cantera_mech_file</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-background_temp">background_temp</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-background_press">background_press</a>
@@ -160,7 +168,10 @@
     
     <div class="col-md-9" id='text'>
       <h2>type, public :: case_params_t</h2>
-    <p>Container for all case parameters.</p>
+    <p>Global container for all parsed simulation parameters.</p>
+<p>This structure acts as the source of truth for the entire solver. 
+It is populated once at startup and accessed as a read-only object 
+by the various solver modules.</p>
     <br>
 
     <section class="visible-xs visible-sm hidden-md">
@@ -174,8 +185,11 @@
       <a class="list-group-item" href="../type/case_params_t.html#variable-nsteps">nsteps</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-dt">dt</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-output_interval">output_interval</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-use_dynamic_dt">use_dynamic_dt</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-max_cfl">max_cfl</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-rho">rho</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-nu">nu</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-transport_update_interval">transport_update_interval</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-pressure_max_iter">pressure_max_iter</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-pressure_tol">pressure_tol</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-body_force">body_force</a>
@@ -195,11 +209,16 @@
       <a class="list-group-item" href="../type/case_params_t.html#variable-output_dir">output_dir</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-write_vtu">write_vtu</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-write_diagnostics">write_diagnostics</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_species">enable_species</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_reactions">enable_reactions</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-nspecies">nspecies</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-species_name">species_name</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-species_diffusivity">species_diffusivity</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-initial_y">initial_Y</a>
-      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_cantera">enable_cantera</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-namelist_nspecies">namelist_nspecies</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-namelist_species_name">namelist_species_name</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_cantera_fluid">enable_cantera_fluid</a>
+      <a class="list-group-item" href="../type/case_params_t.html#variable-enable_cantera_species">enable_cantera_species</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-cantera_mech_file">cantera_mech_file</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-background_temp">background_temp</a>
       <a class="list-group-item" href="../type/case_params_t.html#variable-background_press">background_press</a>
@@ -218,27 +237,37 @@
 <tr>
   <td><span class="anchor" id="variable-mesh_dir"></span>character(len=path_len),</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>mesh_dir</strong></td><td> =</td><td>"mesh_native"</td><td></td>
+  <td><strong>mesh_dir</strong></td><td> =</td><td>"mesh_native"</td><td><p>@name Mesh Configuration</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-nsteps"></span>integer,</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>nsteps</strong></td><td> =</td><td>100</td><td></td>
+  <td><strong>nsteps</strong></td><td> =</td><td>0</td><td><p>@name Time Stepping</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-dt"></span>real(kind=rk),</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>dt</strong></td><td> =</td><td>1.0e-3_rk</td><td></td>
+  <td><strong>dt</strong></td><td> =</td><td>zero</td><td></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-output_interval"></span>integer,</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>output_interval</strong></td><td> =</td><td>10</td><td></td>
+  <td><strong>output_interval</strong></td><td> =</td><td>1</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-use_dynamic_dt"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>use_dynamic_dt</strong></td><td> =</td><td>.false.</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-max_cfl"></span>real(kind=rk),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>max_cfl</strong></td><td> =</td><td>0.5_rk</td><td></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-rho"></span>real(kind=rk),</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>rho</strong></td><td> =</td><td>one</td><td></td>
+  <td><strong>rho</strong></td><td> =</td><td>one</td><td><p>@name Fluid Properties</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-nu"></span>real(kind=rk),</td>
@@ -246,9 +275,14 @@
   <td><strong>nu</strong></td><td> =</td><td>1.0e-2_rk</td><td></td>
 </tr>
 <tr>
+  <td><span class="anchor" id="variable-transport_update_interval"></span>integer,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>transport_update_interval</strong></td><td> =</td><td>1</td><td></td>
+</tr>
+<tr>
   <td><span class="anchor" id="variable-pressure_max_iter"></span>integer,</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>pressure_max_iter</strong></td><td> =</td><td>300</td><td></td>
+  <td><strong>pressure_max_iter</strong></td><td> =</td><td>300</td><td><p>@name Linear Solver &amp; Numerics</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-pressure_tol"></span>real(kind=rk),</td>
@@ -268,7 +302,7 @@
 <tr>
   <td><span class="anchor" id="variable-n_patches"></span>integer,</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>n_patches</strong></td><td> =</td><td>0</td><td></td>
+  <td><strong>n_patches</strong></td><td> =</td><td>0</td><td><p>@name Boundary Condition Mapping</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-patch_name"></span>character(len=name_len),</td>
@@ -283,9 +317,7 @@
 <tr>
   <td><span class="anchor" id="variable-patch_velocity_type"></span>character(len=name_len),</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>patch_velocity_type</strong>(max_patches)</td><td> =</td><td>""</td><td><p>Stage 2 boundary condition split.
-These are optional in case.nml. If left blank, mod_bc can fall back
-to the legacy patch_type behavior.</p></td>
+  <td><strong>patch_velocity_type</strong>(max_patches)</td><td> =</td><td>""</td><td><p>Field-specific BC Overrides</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-patch_pressure_type"></span>character(len=name_len),</td>
@@ -320,7 +352,7 @@ to the legacy patch_type behavior.</p></td>
 <tr>
   <td><span class="anchor" id="variable-patch_species_type"></span>character(len=name_len),</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>patch_species_type</strong>(max_patches)</td><td> =</td><td>""</td><td><p>Stage 3B species boundary conditions</p></td>
+  <td><strong>patch_species_type</strong>(max_patches)</td><td> =</td><td>""</td><td><p>Species Boundary Conditions</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-patch_y"></span>real(kind=rk),</td>
@@ -330,7 +362,7 @@ to the legacy patch_type behavior.</p></td>
 <tr>
   <td><span class="anchor" id="variable-output_dir"></span>character(len=path_len),</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>output_dir</strong></td><td> =</td><td>"output"</td><td></td>
+  <td><strong>output_dir</strong></td><td> =</td><td>"output"</td><td><p>@name Data Output</p></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-write_vtu"></span>logical,</td>
@@ -341,6 +373,16 @@ to the legacy patch_type behavior.</p></td>
   <td><span class="anchor" id="variable-write_diagnostics"></span>logical,</td>
 <td>public</td>  <td></td><td>::</td>
   <td><strong>write_diagnostics</strong></td><td> =</td><td>.true.</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-enable_species"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>enable_species</strong></td><td> =</td><td>.false.</td><td><p>@name Multi-Species Transport</p></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-enable_reactions"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>enable_reactions</strong></td><td> =</td><td>.false.</td><td></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-nspecies"></span>integer,</td>
@@ -363,9 +405,24 @@ to the legacy patch_type behavior.</p></td>
   <td><strong>initial_Y</strong>(max_species)</td><td> =</td><td>0.0_rk</td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-enable_cantera"></span>logical,</td>
+  <td><span class="anchor" id="variable-namelist_nspecies"></span>integer,</td>
 <td>public</td>  <td></td><td>::</td>
-  <td><strong>enable_cantera</strong></td><td> =</td><td>.false.</td><td></td>
+  <td><strong>namelist_nspecies</strong></td><td> =</td><td>0</td><td><p>@name Internal Registry (Reacting discovery)</p></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-namelist_species_name"></span>character(len=name_len),</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>namelist_species_name</strong>(max_species)</td><td> =</td><td>""</td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-enable_cantera_fluid"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>enable_cantera_fluid</strong></td><td> =</td><td>.false.</td><td><p>@name Cantera Bridge Integration</p></td>
+</tr>
+<tr>
+  <td><span class="anchor" id="variable-enable_cantera_species"></span>logical,</td>
+<td>public</td>  <td></td><td>::</td>
+  <td><strong>enable_cantera_species</strong></td><td> =</td><td>.false.</td><td></td>
 </tr>
 <tr>
   <td><span class="anchor" id="variable-cantera_mech_file"></span>character(len=path_len),</td>

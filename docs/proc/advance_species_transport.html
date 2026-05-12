@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 6.8% of total for procedures.">70 statements</a>
+    title=" 7.0% of total for procedures.">80 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_species.f90"> Source File</a></li>
   </ul>
@@ -123,41 +123,44 @@
     <h2>public subroutine advance_species_transport(mesh, flow, bc, params, fields, species, transport)</h2>
     
 
-    <p>Advance the species transport equation by one timestep.</p>
-<p>Computes advective and diffusive fluxes, performs an explicit update,
-clamps values to [0, 1], and renormalizes sum(Y)=1.</p>
-<p>@param mesh Full replicated mesh.
-@param flow MPI flow decomposition data.
-@param bc Boundary condition set.
-@param params Case configuration parameters.
-@param fields Flow fields (velocity/fluxes) for advection.
-@param species Species field data to update.
-@param transport Transport properties (diffusivity).</p>
+    <p>Performs one explicit Euler step for species transport.</p>
+<p>This routine evaluates:
+- <strong>Advective Fluxes</strong>: $J_{adv,k} = \dot{m}<em upwind_k="upwind,k">f Y</em>$.
+- <strong>Diffusive Fluxes</strong>: $J_{diff,k} = -D_k A_f \nabla Y_k$.
+- <strong>Flux Correction</strong>: Subtracts $Y_k \sum J_{diff,k}$ to satisfy mass conservation.
+- <strong>Bounding &amp; Normalization</strong>: Clamps $Y_k \in [0, 1]$ and enforces $\sum Y_k = 1$ locally.</p>
+<p>@param mesh The computational mesh.
+@param flow MPI decomposition data for synchronization.
+@param bc Boundary condition settings.
+@param params Simulation parameters (dt, etc).
+@param fields Flow field (velocity/face fluxes).
+@param species Mass fraction fields to update.
+@param transport Physical properties (diffusivities).</p>
 
     <h3>Arguments</h3>
       <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
 <tr>
-  <td><span class="anchor" id="variable-mesh~15"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
+  <td><span class="anchor" id="variable-mesh~16"></span>type(<a href='../type/mesh_t.html'>mesh_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>mesh</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-flow~21"></span>type(<a href='../type/flow_mpi_t.html'>flow_mpi_t</a>),</td>
+  <td><span class="anchor" id="variable-flow~17"></span>type(<a href='../type/flow_mpi_t.html'>flow_mpi_t</a>),</td>
 <td>intent(inout)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>flow</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-bc~9"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
+  <td><span class="anchor" id="variable-bc~10"></span>type(<a href='../type/bc_set_t.html'>bc_set_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>bc</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-params~17"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
+  <td><span class="anchor" id="variable-params~9"></span>type(<a href='../type/case_params_t.html'>case_params_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>params</strong></td><td></td>
@@ -169,13 +172,13 @@ clamps values to [0, 1], and renormalizes sum(Y)=1.</p>
   <td><strong>fields</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-species~4"></span>type(<a href='../type/species_fields_t.html'>species_fields_t</a>),</td>
+  <td><span class="anchor" id="variable-species~5"></span>type(<a href='../type/species_fields_t.html'>species_fields_t</a>),</td>
 <td>intent(inout)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>species</strong></td><td></td>
 </tr>
 <tr>
-  <td><span class="anchor" id="variable-transport"></span>type(<a href='../type/transport_properties_t.html'>transport_properties_t</a>),</td>
+  <td><span class="anchor" id="variable-transport~2"></span>type(<a href='../type/transport_properties_t.html'>transport_properties_t</a>),</td>
 <td>intent(in)</td>
   <td></td>  <td></td><td>::</td>
   <td><strong>transport</strong></td><td></td>
@@ -231,7 +234,7 @@ clamps values to [0, 1], and renormalizes sum(Y)=1.</p>
 </g>
 </g>
 <!-- proc~advance_species_transport&#45;&gt;proc~face_normal_distance -->
-<g id="proc~~advance_species_transport~~CallsGraph_edge2" class="edge">
+<g id="proc~~advance_species_transport~~CallsGraph_edge3" class="edge">
 <title>proc~advance_species_transport&#45;&gt;proc~face_normal_distance</title>
 <path fill="none" stroke="#000000" d="M156.59,-54.13C166.4,-54.13 176.42,-54.13 186.18,-54.13"/>
 <polygon fill="#000000" stroke="#000000" points="185.99,-57.64 195.99,-54.14 185.99,-50.64 185.99,-57.64"/>
@@ -246,7 +249,7 @@ clamps values to [0, 1], and renormalizes sum(Y)=1.</p>
 </g>
 </g>
 <!-- proc~advance_species_transport&#45;&gt;proc~boundary_species -->
-<g id="proc~~advance_species_transport~~CallsGraph_edge3" class="edge">
+<g id="proc~~advance_species_transport~~CallsGraph_edge2" class="edge">
 <title>proc~advance_species_transport&#45;&gt;proc~boundary_species</title>
 <path fill="none" stroke="#000000" d="M133.75,-41.53C153.72,-36.93 176.49,-31.67 197.21,-26.89"/>
 <polygon fill="#000000" stroke="#000000" points="197.71,-30.37 206.67,-24.71 196.14,-23.54 197.71,-30.37"/>

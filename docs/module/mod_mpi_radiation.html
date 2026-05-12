@@ -88,7 +88,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 2.9% of total for modules and submodules.">70 statements</a>
+    title=" 2.7% of total for modules and submodules.">70 statements</a>
      </li> 
     <li><i class="fa fa-code"></i><a href="../src/mod_mpi_radiation.f90"> Source File</a></li>
   </ul>
@@ -136,7 +136,11 @@
     </div>
     
     <div class="col-md-9" id='text'>
-    
+    <p>MPI infrastructure for the radiation solver.</p>
+<p>This module manages the parallel execution of the radiation transport 
+solver. Unlike the flow solver which uses a replicated mesh, the 
+radiation solver can be configured with its own communicator and 
+task decomposition logic (e.g., distributing rays or discrete ordinates).</p>
 <br>        <div class="panel panel-default">
       <div class="panel-heading">
   <h3 class="panel-title">Uses</h3>
@@ -144,8 +148,8 @@
       <ul class="list-group">
       <li class="list-group-item">
   <ul class="list-inline">
-    <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
     <li><a href="http://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node409.htm">mpi_f08</a></li>
+    <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
   </ul>
       </li>
       <li class="list-group-item">
@@ -166,50 +170,50 @@
 <polygon fill="none" stroke="black" points="348.06,-45.27 233.79,-45.27 233.79,-21 348.06,-21 348.06,-45.27"/>
 <text xml:space="preserve" text-anchor="middle" x="290.92" y="-29.53" font-family="Helvetica,sans-Serif" font-size="10.50">mod_mpi_radiation</text>
 </g>
-<!-- module~mod_kinds -->
-<g id="module~~mod_mpi_radiation~~UsesGraph_node2" class="node">
-<title>module~mod_kinds</title>
-<g id="a_module~~mod_mpi_radiation~~UsesGraph_node2"><a xlink:href=".././module/mod_kinds.html" xlink:title="mod_kinds">
-<polygon fill="#337ab7" stroke="#337ab7" points="197.79,-66.27 129.27,-66.27 129.27,-42 197.79,-42 197.79,-66.27"/>
-<text xml:space="preserve" text-anchor="middle" x="163.53" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_kinds</text>
-</a>
-</g>
-</g>
-<!-- module~mod_mpi_radiation&#45;&gt;module~mod_kinds -->
-<g id="module~~mod_mpi_radiation~~UsesGraph_edge1" class="edge">
-<title>module~mod_mpi_radiation&#45;&gt;module~mod_kinds</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M233.46,-42.59C225.34,-43.95 217.08,-45.34 209.22,-46.65"/>
-<polygon fill="#000000" stroke="#000000" points="208.85,-43.16 199.57,-48.27 210.01,-50.07 208.85,-43.16"/>
-</g>
 <!-- mpi_f08 -->
-<g id="module~~mod_mpi_radiation~~UsesGraph_node3" class="node">
+<g id="module~~mod_mpi_radiation~~UsesGraph_node2" class="node">
 <title>mpi_f08</title>
-<g id="a_module~~mod_mpi_radiation~~UsesGraph_node3"><a xlink:href="http://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node409.htm" xlink:title="mpi_f08">
-<polygon fill="#337ab7" stroke="#337ab7" points="190.66,-24.27 136.4,-24.27 136.4,0 190.66,0 190.66,-24.27"/>
-<text xml:space="preserve" text-anchor="middle" x="163.53" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_f08</text>
+<g id="a_module~~mod_mpi_radiation~~UsesGraph_node2"><a xlink:href="http://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node409.htm" xlink:title="mpi_f08">
+<polygon fill="#337ab7" stroke="#337ab7" points="190.66,-66.27 136.4,-66.27 136.4,-42 190.66,-42 190.66,-66.27"/>
+<text xml:space="preserve" text-anchor="middle" x="163.53" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_f08</text>
 </a>
 </g>
 </g>
 <!-- module~mod_mpi_radiation&#45;&gt;mpi_f08 -->
-<g id="module~~mod_mpi_radiation~~UsesGraph_edge2" class="edge">
+<g id="module~~mod_mpi_radiation~~UsesGraph_edge1" class="edge">
 <title>module~mod_mpi_radiation&#45;&gt;mpi_f08</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M233.46,-23.68C222.81,-21.9 211.92,-20.07 202.02,-18.41"/>
-<polygon fill="#000000" stroke="#000000" points="202.88,-15.01 192.44,-16.81 201.73,-21.91 202.88,-15.01"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M233.46,-42.59C222.81,-44.37 211.92,-46.2 202.02,-47.86"/>
+<polygon fill="#000000" stroke="#000000" points="201.73,-44.36 192.44,-49.46 202.88,-51.26 201.73,-44.36"/>
+</g>
+<!-- module~mod_kinds -->
+<g id="module~~mod_mpi_radiation~~UsesGraph_node3" class="node">
+<title>module~mod_kinds</title>
+<g id="a_module~~mod_mpi_radiation~~UsesGraph_node3"><a xlink:href=".././module/mod_kinds.html" xlink:title="mod_kinds">
+<polygon fill="#337ab7" stroke="#337ab7" points="197.79,-24.27 129.27,-24.27 129.27,0 197.79,0 197.79,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="163.53" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_kinds</text>
+</a>
+</g>
+</g>
+<!-- module~mod_mpi_radiation&#45;&gt;module~mod_kinds -->
+<g id="module~~mod_mpi_radiation~~UsesGraph_edge2" class="edge">
+<title>module~mod_mpi_radiation&#45;&gt;module~mod_kinds</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M233.46,-23.68C225.34,-22.32 217.08,-20.93 209.22,-19.62"/>
+<polygon fill="#000000" stroke="#000000" points="210.01,-16.2 199.57,-18 208.85,-23.11 210.01,-16.2"/>
 </g>
 <!-- iso_fortran_env -->
 <g id="module~~mod_mpi_radiation~~UsesGraph_node4" class="node">
 <title>iso_fortran_env</title>
 <g id="a_module~~mod_mpi_radiation~~UsesGraph_node4"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
-<polygon fill="#337ab7" stroke="#337ab7" points="93.27,-66.27 0,-66.27 0,-42 93.27,-42 93.27,-66.27"/>
-<text xml:space="preserve" text-anchor="middle" x="46.63" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+<polygon fill="#337ab7" stroke="#337ab7" points="93.27,-24.27 0,-24.27 0,0 93.27,0 93.27,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="46.63" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
 </a>
 </g>
 </g>
 <!-- module~mod_kinds&#45;&gt;iso_fortran_env -->
 <g id="module~~mod_mpi_radiation~~UsesGraph_edge3" class="edge">
 <title>module~mod_kinds&#45;&gt;iso_fortran_env</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M128.99,-54.13C121.34,-54.13 113,-54.13 104.67,-54.13"/>
-<polygon fill="#000000" stroke="#000000" points="104.9,-50.64 94.9,-54.14 104.9,-57.64 104.9,-50.64"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M128.99,-12.13C121.34,-12.13 113,-12.13 104.67,-12.13"/>
+<polygon fill="#000000" stroke="#000000" points="104.9,-8.64 94.9,-12.14 104.9,-15.64 104.9,-8.64"/>
 </g>
 </g>
 </svg>
@@ -414,6 +418,7 @@
      <div class="panel panel-default">
   <div class="panel-heading codesum"><span class="anchor" id="type-radiation_mpi_t"></span><h3>type, public :: <a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a>  </h3></div>
   <div class="panel-body">
+    <p>MPI context for radiation operations.</p>
      
   </div>
 </div>
@@ -427,7 +432,9 @@
       <div class="panel panel-default">
   <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_mpi_initialize"></span><h3>public subroutine <a href='../proc/radiation_mpi_initialize.html'>radiation_mpi_initialize</a>(rad, comm_parent, n_tasks)</h3></div>
   <div class="panel-body">
-           
+       
+<p>Initializes the radiation MPI context by duplicating a parent communicator.</p><a href="../proc/radiation_mpi_initialize.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+    
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
@@ -459,7 +466,9 @@
       <div class="panel panel-default">
   <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_mpi_finalize"></span><h3>public subroutine <a href='../proc/radiation_mpi_finalize.html'>radiation_mpi_finalize</a>(rad)</h3></div>
   <div class="panel-body">
-           
+       
+<p>Releases radiation MPI resources.</p>
+    
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>
@@ -479,7 +488,9 @@
       <div class="panel panel-default">
   <div class="panel-heading codesum"><span class="anchor" id="proc-radiation_task_bounds"></span><h3>public subroutine <a href='../proc/radiation_task_bounds.html'>radiation_task_bounds</a>(rad, n_tasks)</h3></div>
   <div class="panel-body">
-           
+       
+<p>Performs contiguous task decomposition for the radiation solver.</p><a href="../proc/radiation_task_bounds.html" class="pull-right"><emph>Read more&hellip;</emph></a>
+    
 <h4>Arguments</h4>      <table class="table table-striped varlist">
 <thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
 <tbody>

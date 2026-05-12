@@ -10,6 +10,7 @@ The current baseline implementation features:
 * **MPI decomposition** by owned cell ranges, with a globally replicated mesh to support spectral radiation solvers.
 * **Scale-on-Demand Species**: Dynamic species transport from 0 to 256+ species. Implements **Correction Velocity** for strict mass conservation. Supports manual selection or automatic discovery from Cantera mechanisms.
 * **Cantera 3.x integration**: Decoupled flags for viscosity/density and species diffusivity. Automatic mechanism loading for reacting flows.
+* **Integrated Profiling**: Hierarchical MPI-aware profiler for monitoring kernel execution time and communication overhead.
 * **VTU/PVD output** for visualization in ParaView and CSV diagnostics for quantitative monitoring.
 
 ## Governing Equations
@@ -62,6 +63,7 @@ Visualization files are written to the `output/` directory of the case. Open `fl
 *   **[Developer Guide](DEVELOPER_GUIDE.md)**: Strict rules, MPI architecture, and non-negotiable design principles.
 *   **[Architecture](doc_src/architecture.md)**: Detailed split of responsibilities and data structures.
 *   **[Numerics](doc_src/numerics.md)**: Mathematical discretization and solver details.
+*   **[Input Configuration](doc_src/input_configuration.md)**: Detailed guide on namelist parameters and input file preparation.
 
 To generate the full API documentation using FORD:
 ```bash

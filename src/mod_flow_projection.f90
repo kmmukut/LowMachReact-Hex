@@ -1,8 +1,27 @@
-!> Incompressible Navier-Stokes solver using the projection method.
+!> Incompressible Navier-Stokes solver using the Fractional-Step Projection method.
 !!
-!! This module implements the fractional-step projection method for 
-!! incompressible flows. It handles the momentum predictor step, 
-!! pressure Poisson solve using Conjugate Gradient, and velocity correction.
+!! This module implements the core hydrodynamic solver for the 
+!! LowMachReact-Hex framework. It solves the incompressible Navier-Stokes 
+!! equations using a semi-implicit fractional-step approach:
+!!
+!! 1. **Predictor Step**: An intermediate velocity $\mathbf{u}^*$ is 
+!!    calculated by advancing the momentum equation explicitly, excluding 
+!!     the new pressure gradient.
+!!    $$\frac{\mathbf{u}^* - \mathbf{u}^n}{\Delta t} = -(\mathbf{u} \cdot \nabla) \mathbf{u} + \nu \nabla^2 \mathbf{u} - \frac{1}{\rho} \nabla p^n + \mathbf{f}$$
+!!
+!! 2. **Poisson Solve**: A pressure correction potential $\phi = p^{n+1} - p^n$ 
+!!    is found by solving the Poisson equation derived from the 
+!!    continuity constraint ($\nabla \cdot \mathbf{u}^{n+1} = 0$).
+!!    $$\nabla^2 \phi = \frac{\rho}{\Delta t} \nabla \cdot \mathbf{u}^*$$
+!!
+!! 3. **Corrector Step**: The final velocity $\mathbf{u}^{n+1}$ and 
+!!    pressure $p^{n+1}$ are updated using the potential gradient.
+!!    $$\mathbf{u}^{n+1} = \mathbf{u}^* - \frac{\Delta t}{\rho} \nabla \phi$$
+!!    $$p^{n+1} = p^n + \phi$$
+!!
+!! The linear system for the Poisson equation is solved using a 
+!! **Preconditioned Conjugate Gradient (PCG)** method with a 
+!! diagonal (Jacobi) preconditioner.
 module mod_flow_projection
    use mpi_f08
    use mod_kinds, only : rk, zero, one, half, tiny_safe, fatal_error
@@ -10,55 +29,73 @@ module mod_flow_projection
    use mod_mesh_types, only : mesh_t
    use mod_mpi_flow, only : flow_mpi_t, flow_allreduce_global_vector, &
                             flow_allreduce_global_scalar, flow_allgather_owned_scalar, &
-                            flow_global_dot_owned, flow_global_max_owned
+                            flow_allgather_owned_vector, flow_allgather_owned_v4, &
+                            flow_global_dot_owned, flow_global_dots_owned, flow_global_max_owned
    use mod_bc, only : bc_set_t, bc_periodic, bc_neumann, bc_dirichlet, &
                       patch_type_for_face, boundary_velocity, &
                       face_effective_neighbor, boundary_pressure_type, &
                       boundary_pressure
+   use mod_profiler, only : profiler_start, profiler_stop
    use mod_fields, only : flow_fields_t
    use mod_transport_properties, only : transport_properties_t
    implicit none
 
    private
 
-   !> Solver diagnostics and performance statistics.
+   !> Solver diagnostics and global physics statistics.
+   !!
+   !! Populated at the end of every timestep to monitor convergence 
+   !! and physical integrity (e.g., mass balance, energy decay).
    type, public :: solver_stats_t
-      integer :: pressure_iterations = 0 !< Number of CG iterations performed
-      real(rk) :: pressure_residual = zero !< Final pressure residual norm
-      real(rk) :: max_divergence = zero    !< Maximum velocity divergence [1/s]
-      real(rk) :: rms_divergence = zero    !< RMS velocity divergence [1/s]
-      real(rk) :: net_boundary_flux = zero !< Net mass flux across all boundaries
-      real(rk) :: kinetic_energy = zero    !< Total kinetic energy in domain [J]
-      real(rk) :: cfl = zero               !< Active CFL number
+      integer :: pressure_iterations = 0 !< Number of iterations taken by the PCG solver.
+      real(rk) :: pressure_residual = zero !< Final $L_2$ residual norm of the Poisson system.
+      real(rk) :: max_divergence = zero    !< Maximum local velocity divergence $\nabla \cdot \mathbf{u}$ [1/s].
+      real(rk) :: rms_divergence = zero    !< Root-mean-square divergence across the domain.
+      real(rk) :: net_boundary_flux = zero !< Global mass flux imbalance across all boundaries [kg/s].
+      real(rk) :: kinetic_energy = zero    !< Total domain kinetic energy $\int \frac{1}{2} \rho |\mathbf{u}|^2 dV$ [J].
+      real(rk) :: cfl = zero               !< Current Courant-Friedrichs-Lewy number.
+      real(rk) :: wall_time = zero         !< Cumulative solver wall-clock time [s].
+      real(rk) :: max_velocity = zero      !< Maximum velocity magnitude $|\mathbf{u}|_{max}$ [m/s].
+      real(rk) :: total_mass = zero        !< Total integrated mass in the domain [kg].
+      real(rk) :: min_species_y = zero     !< Global minimum species mass fraction (diagnostic for boundedness).
    end type solver_stats_t
 
+   !> Cached sparse matrix coefficients for the Pressure Poisson operator.
+   !!
+   !! Since the mesh geometry and BC types are static, the Laplacian 
+   !! coefficients are computed once at startup to accelerate the PCG matvec.
    type :: pressure_operator_cache_t
-      logical :: initialized = .false.
-      logical :: has_dirichlet_pressure = .false.
-      integer :: ncells = 0
-      integer :: max_faces = 0
-      integer, allocatable :: nb(:,:)       ! (max_faces,ncells)
-      real(rk), allocatable :: coeff(:,:)   ! (max_faces,ncells)
-      real(rk), allocatable :: diag(:)      ! (ncells)
+      logical :: initialized = .false.      !< Initialization toggle.
+      logical :: has_dirichlet_pressure = .false. !< True if at least one patch has a fixed pressure.
+      integer :: ncells = 0                 !< Number of cells.
+      integer :: max_faces = 0              !< Max faces per cell.
+      integer, allocatable :: nb(:,:)       !< Neighbor indices for each cell face.
+      real(rk), allocatable :: coeff(:,:)   !< Off-diagonal Laplacian coefficients $A_{ij} = \frac{Area}{dist}$.
+      real(rk), allocatable :: diag(:)      !< Diagonal Laplacian coefficients $A_{ii} = \sum A_{ij}$.
    end type pressure_operator_cache_t
 
+   !> Temporary workspace for projection step calculations.
+   !!
+   !! Holds intermediate vectors (RHS, residuals, search directions) 
+   !! to avoid repeated allocation during the simulation loop.
    type :: projection_workspace_t
       logical :: initialized = .false.
       integer :: ncells = 0
       integer :: nfaces = 0
 
-      real(rk), allocatable :: local_vec(:,:)
-      real(rk), allocatable :: momentum_rhs(:,:)
-      real(rk), allocatable :: local_scalar(:)
-      real(rk), allocatable :: rhs_poisson(:)
-      real(rk), allocatable :: local_face_flux(:)
-      real(rk), allocatable :: predicted_face_flux(:)
+      real(rk), allocatable :: local_vec(:,:)      !< Local momentum RHS.
+      real(rk), allocatable :: local_vec_star(:,:) !< Local intermediate velocity.
+      real(rk), allocatable :: momentum_rhs(:,:)   !< Global momentum RHS.
+      real(rk), allocatable :: local_scalar(:)     !< Local divergence scalar.
+      real(rk), allocatable :: rhs_poisson(:)      !< Source term for Poisson solve.
+      real(rk), allocatable :: local_face_flux(:)  !< Face fluxes on owned faces.
+      real(rk), allocatable :: predicted_face_flux(:) !< Global intermediate face fluxes.
 
-      real(rk), allocatable :: r(:)
-      real(rk), allocatable :: z(:)
-      real(rk), allocatable :: pvec(:)
-      real(rk), allocatable :: ap(:)
-      real(rk), allocatable :: local_ap(:)
+      real(rk), allocatable :: r(:)                !< PCG residual vector.
+      real(rk), allocatable :: z(:)                !< PCG preconditioned residual.
+      real(rk), allocatable :: pvec(:)             !< PCG search direction.
+      real(rk), allocatable :: ap(:)               !< PCG operator-applied vector.
+      real(rk), allocatable :: local_ap(:)         !< PCG local operator-applied vector.
    end type projection_workspace_t
 
    type(pressure_operator_cache_t), save :: pressure_cache
@@ -67,29 +104,22 @@ module mod_flow_projection
    public :: advance_projection_step, compute_flow_diagnostics
    public :: compute_and_update_cfl
    public :: finalize_flow_projection_workspace, face_normal_distance
-   !> Compute distance from cell center to face center along normal.
-   !!
-   !! @param mesh Full mesh.
-   !! @param bc Boundary conditions.
-   !! @param face_id Face ID.
-   !! @param cell_id ID of the cell from which distance is measured.
-   !! @param neighbor_id ID of the neighbor cell (used for periodic handling).
 
 contains
 
-   !> Advance the flow solution by one projection step.
+   !> Orchestrates one full fractional-step iteration.
    !!
-   !! 1. Compute explicit momentum RHS.
-   !! 2. Predict intermediate velocity (u*).
-   !! 3. Solve pressure Poisson equation for potential (phi).
-   !! 4. Correct velocity and update pressure.
+   !! This routine implements the high-level logic of the projection method. 
+   !! It coordinates the explicit momentum update, the elliptic pressure 
+   !! solve, and the final divergence-free correction.
    !!
-   !! @param mesh Full replicated mesh.
-   !! @param flow MPI flow decomposition data.
+   !! @param mesh The computational mesh.
+   !! @param flow MPI decomposition context.
    !! @param bc Boundary condition set.
-   !! @param params Case configuration parameters.
-   !! @param fields Flow fields to update.
-   !! @param stats Solver statistics to populate.
+   !! @param params Case parameters (dt, rho, etc).
+   !! @param transport Physical property fields.
+   !! @param fields Flow field containers to be updated.
+   !! @param stats Diagnostic stats to be populated.
    subroutine advance_projection_step(mesh, flow, bc, params, transport, fields, stats)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(inout) :: flow
@@ -110,45 +140,36 @@ contains
          local_scalar => projection_work%local_scalar, &
          rhs_poisson => projection_work%rhs_poisson, &
          local_face_flux => projection_work%local_face_flux, &
+         local_vec_star => projection_work%local_vec_star, &
          predicted_face_flux => projection_work%predicted_face_flux)
 
          fields%u_old = fields%u
 
-         ! ------------------------------------------------------------
-         ! 1. Explicit momentum RHS using old pressure gradient.
-         ! ------------------------------------------------------------
+         ! 1. Predictor: Compute Explicit momentum RHS and Advance intermediate velocity u*
          call compute_momentum_rhs(mesh, flow, bc, params, transport, fields%u, fields%p, local_vec)
-         call flow_allreduce_global_vector(flow, local_vec, momentum_rhs)
-
-         ! ------------------------------------------------------------
-         ! 2. AB2 update for predicted cell velocity.
-         !    First step falls back to forward Euler.
-         ! ------------------------------------------------------------
-         call advance_ab2(mesh, flow, params, fields, momentum_rhs, local_vec)
-         call flow_allreduce_global_vector(flow, local_vec, fields%u_star)
-
-         fields%rhs_old = momentum_rhs
+         
+         ! 2. Advance intermediate velocity u* locally
+         ! This uses the PREVIOUS fields%rhs_old and the CURRENT local_vec
+         call advance_ab2(mesh, flow, params, fields, local_vec, local_vec_star)
+         
+         ! Store current RHS for next step (AB2)
+         ! rhs_old is effectively partitioned; each rank only needs its owned cell values.
+         fields%rhs_old = local_vec
          fields%rhs_old_valid = .true.
 
-         ! ------------------------------------------------------------
-         ! 3. Predicted conservative face flux.
-         ! ------------------------------------------------------------
+         ! Synchronize global u_star field using efficient Allgather
+         call flow_allgather_owned_vector(flow, local_vec_star, fields%u_star)
+
+         ! 3. Interpolate predicted cell velocity to intermediate face fluxes
          call compute_predicted_face_flux(mesh, flow, bc, fields%u_star, local_face_flux)
          call flow_allreduce_global_scalar(flow, local_face_flux, predicted_face_flux)
 
-         ! ------------------------------------------------------------
-         ! 3b. Open-boundary mass balance.
-         ! ------------------------------------------------------------
+         ! 3b. Balance mass at open boundaries to prevent drift in closed-loop systems
          call balance_neumann_outlet_flux(mesh, flow, bc, predicted_face_flux)
 
-         ! ------------------------------------------------------------
-         ! 4. Conservative pressure-correction RHS.
-         !
-         ! fields%div is flux_sum / cell_volume. For the symmetric
-         ! unnormalized FV Poisson operator, use flux_sum.
-         ! ------------------------------------------------------------
+         ! 4. Construct the Poisson RHS: b = -rho/dt * div(u*)
          call compute_flux_divergence(mesh, flow, predicted_face_flux, local_scalar)
-         call flow_allreduce_global_scalar(flow, local_scalar, fields%div)
+         call flow_allgather_owned_scalar(flow, local_scalar, fields%div)
 
          rhs_poisson = zero
          do c = 1, mesh%ncells
@@ -156,38 +177,28 @@ contains
                              fields%div(c) * mesh%cells(c)%volume
          end do
 
+         ! Floating pressure handle: pin first cell if no Dirichlet BC exists
          if (.not. pressure_cache%has_dirichlet_pressure) then
             rhs_poisson(1) = zero
          end if
          fields%phi = zero
 
+         ! Solve Laplacian system for potential phi
          call solve_pressure_correction(mesh, flow, bc, params, rhs_poisson, fields%phi, stats)
 
-         ! ------------------------------------------------------------
-         ! 5. Incremental pressure update.
-         ! ------------------------------------------------------------
+         ! 5. Update Pressure: p(n+1) = p(n) + phi
          fields%p = fields%p + fields%phi
          if (.not. pressure_cache%has_dirichlet_pressure) then
             fields%p(1) = zero
          end if
 
-         ! ------------------------------------------------------------
-         ! 6. Correct conservative face flux.
-         ! ------------------------------------------------------------
+         ! 6. Correct face fluxes and cell-centered velocity locally
          call correct_face_flux(mesh, flow, bc, params, predicted_face_flux, fields%phi, local_face_flux)
-         call flow_allreduce_global_scalar(flow, local_face_flux, fields%face_flux)
-
-         ! ------------------------------------------------------------
-         ! 7. Correct cell-centered velocity.
-         ! ------------------------------------------------------------
          call correct_cell_velocity(mesh, flow, bc, params, fields%u_star, fields%phi, local_vec)
-         call flow_allreduce_global_vector(flow, local_vec, fields%u)
 
-         ! ------------------------------------------------------------
-         ! 8. Final divergence diagnostic from corrected flux.
-         ! ------------------------------------------------------------
-         call compute_flux_divergence(mesh, flow, fields%face_flux, local_scalar)
-         call flow_allreduce_global_scalar(flow, local_scalar, fields%div)
+         ! 7. Synchronize corrections across the global mesh using fused V4 gather
+         call flow_allreduce_global_scalar(flow, local_face_flux, fields%face_flux)
+         call flow_allgather_owned_v4(flow, local_vec, local_scalar, fields%u, fields%div)
 
          call compute_flow_diagnostics(mesh, flow, bc, params, fields, stats)
 
@@ -195,6 +206,10 @@ contains
    end subroutine advance_projection_step
 
 
+   !> Advances velocity using the 2nd-order Adams-Bashforth scheme.
+   !!
+   !! Falls back to 1st-order Forward Euler on the very first timestep 
+   !! when previous RHS data is unavailable.
    subroutine advance_ab2(mesh, flow, params, fields, rhs, local_ustar)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -221,6 +236,11 @@ contains
    end subroutine advance_ab2
 
 
+   !> Evaluates the advective, diffusive, and pressure terms of the momentum equation.
+   !!
+   !! Supports both **Upwind** (stable) and **Central** (high-accuracy) 
+   !! convection schemes. Advection is computed using a flux-form 
+   !! discretization.
    subroutine compute_momentum_rhs(mesh, flow, bc, params, transport, u, p, local_rhs)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -256,6 +276,7 @@ contains
          conv = zero
          diff = zero
 
+         ! Compute local pressure gradient at cell center
          call pressure_gradient_cell(mesh, bc, p, c, gradp)
 
          do lf = 1, mesh%ncell_faces(c)
@@ -278,6 +299,7 @@ contains
 
             un_area = dot_product(uf, nhat) * mesh%faces(f)%area
 
+            ! Scheme selection for advection
             if (use_central) then
                advected = uf
             else
@@ -290,6 +312,7 @@ contains
 
             conv = conv + un_area * advected
 
+            ! Viscous diffusion Term
             if (nb > 0) then
                diff_face = half * (transport%nu(c) + transport%nu(nb))
             else
@@ -299,6 +322,7 @@ contains
             diff = diff + diff_face * mesh%faces(f)%area * (ub - u(:, c)) / dist
          end do
 
+         ! Assemble total RHS
          local_rhs(:, c) = -conv / mesh%cells(c)%volume + &
                             diff / mesh%cells(c)%volume + &
                             params%body_force - gradp / params%rho
@@ -306,6 +330,9 @@ contains
    end subroutine compute_momentum_rhs
 
 
+   !> Calculates the pressure gradient at a cell center using Gauss's Theorem.
+   !!
+   !! $$\nabla p = \frac{1}{V_c} \int_S p \mathbf{n} dS$$
    subroutine pressure_gradient_cell(mesh, bc, p, cell_id, gradp)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
@@ -343,6 +370,7 @@ contains
    end subroutine pressure_gradient_cell
 
 
+   !> Linearly interpolates cell-centered intermediate velocity to mesh faces.
    subroutine compute_predicted_face_flux(mesh, flow, bc, ustar, local_flux)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -374,6 +402,7 @@ contains
    end subroutine compute_predicted_face_flux
 
 
+   !> Corrects face fluxes using the pressure potential gradient.
    subroutine correct_face_flux(mesh, flow, bc, params, predicted_flux, phi, local_flux)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -413,6 +442,7 @@ contains
    end subroutine correct_face_flux
 
 
+   !> Computes the discrete divergence of face fluxes for each cell.
    subroutine compute_flux_divergence(mesh, flow, face_flux, local_div)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -440,6 +470,11 @@ contains
    end subroutine compute_flux_divergence
 
 
+   !> Iteratively solves the Pressure Poisson system using PCG.
+   !!
+   !! The solver uses a Diagonal Preconditioner to improve convergence 
+   !! speed on hexahedral meshes. For purely Neumann problems (closed boxes), 
+   !! the first cell is pinned to zero to remove the singularity.
    subroutine solve_pressure_correction(mesh, flow, bc, params, rhs, phi, stats)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(inout) :: flow
@@ -483,14 +518,19 @@ contains
                z(c) = r(c) / max(pressure_cache%diag(c), tiny_safe)
             end if
          end do
+          
+         block
+            real(rk) :: batch_a(mesh%ncells, 2), batch_b(mesh%ncells, 2), res(2)
+            batch_a(:, 1) = r; batch_b(:, 1) = r
+            batch_a(:, 2) = r; batch_b(:, 2) = z
+            call flow_global_dots_owned(flow, 2, batch_a, batch_b, res)
+            rr = res(1); rz = res(2)
+         end block
 
          pvec = z
          if (.not. pressure_cache%has_dirichlet_pressure) then
             pvec(1) = zero
          end if
-
-         rr = flow_global_dot_owned(flow, r, r)
-         rz = flow_global_dot_owned(flow, r, z)
 
          stats%pressure_iterations = 0
          stats%pressure_residual = sqrt(rr / max(real(mesh%ncells, rk), one))
@@ -515,13 +555,6 @@ contains
                r(1) = zero
             end if
 
-            rr_new = flow_global_dot_owned(flow, r, r)
-
-            stats%pressure_residual = sqrt(rr_new / max(real(mesh%ncells, rk), one))
-            stats%pressure_iterations = iter
-
-            if (stats%pressure_residual <= params%pressure_tol) exit
-
             do c = 1, mesh%ncells
                if (c == 1 .and. .not. pressure_cache%has_dirichlet_pressure) then
                   z(c) = zero
@@ -530,7 +563,18 @@ contains
                end if
             end do
 
-            rz_new = flow_global_dot_owned(flow, r, z)
+            block
+               real(rk) :: batch_a(mesh%ncells, 2), batch_b(mesh%ncells, 2), res(2)
+               batch_a(:, 1) = r; batch_b(:, 1) = r
+               batch_a(:, 2) = r; batch_b(:, 2) = z
+               call flow_global_dots_owned(flow, 2, batch_a, batch_b, res)
+               rr_new = res(1); rz_new = res(2)
+            end block
+
+            stats%pressure_residual = sqrt(rr_new / max(real(mesh%ncells, rk), one))
+            stats%pressure_iterations = iter
+
+            if (stats%pressure_residual <= params%pressure_tol) exit
 
             beta = rz_new / max(rz, tiny_safe)
 
@@ -551,7 +595,12 @@ contains
    end subroutine solve_pressure_correction
 
 
+   !> Sparse Matrix-Vector multiplication for the Laplacian operator.
+   !!
+   !! This routine uses the `pressure_cache` to perform efficient 
+   !! off-diagonal products on the MPI-owned partition.
    subroutine pressure_matvec(mesh, flow, bc, x, local_ax)
+      use mod_profiler, only : profiler_start, profiler_stop
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
       type(bc_set_t), intent(in) :: bc
@@ -560,6 +609,7 @@ contains
 
       integer :: c, lf, nb
 
+      call profiler_start('Pressure_Matvec')
       call ensure_pressure_operator_cache(mesh, flow, bc)
 
       local_ax = zero
@@ -579,9 +629,11 @@ contains
             local_ax(c) = local_ax(c) - pressure_cache%coeff(lf, c) * x(nb)
          end do
       end do
+      call profiler_stop('Pressure_Matvec')
    end subroutine pressure_matvec
 
 
+   !> Updates cell-centered velocity using the pressure potential gradient.
    subroutine correct_cell_velocity(mesh, flow, bc, params, ustar, phi, local_u)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -625,6 +677,7 @@ contains
    end subroutine correct_cell_velocity
 
 
+   !> Aggregates global residuals, kinetic energy, and mass balance data.
    subroutine compute_flow_diagnostics(mesh, flow, bc, params, fields, stats)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -668,6 +721,10 @@ contains
    end subroutine compute_flow_diagnostics
 
 
+   !> Adjusts flux at Neumann outlets to ensure strict global mass balance.
+   !!
+   !! This is critical for solvers without a pressure-pinned cell, 
+   !! as numerical drift in the Poisson RHS can lead to a singular system.
    subroutine balance_neumann_outlet_flux(mesh, flow, bc, face_flux)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -703,6 +760,7 @@ contains
          end if
       end do
 
+      call profiler_start('MPI_Communication')
       call MPI_Allreduce(local_net_flux, global_net_flux, 1, &
                          MPI_DOUBLE_PRECISION, MPI_SUM, flow%comm, ierr)
       call check_mpi(ierr, 'outlet balance net flux')
@@ -710,6 +768,7 @@ contains
       call MPI_Allreduce(local_outlet_area, global_outlet_area, 1, &
                          MPI_DOUBLE_PRECISION, MPI_SUM, flow%comm, ierr)
       call check_mpi(ierr, 'outlet balance outlet area')
+      call profiler_stop('MPI_Communication')
 
       if (global_outlet_area <= tiny_safe) then
          if (abs(global_net_flux) > tiny_safe) then
@@ -734,6 +793,7 @@ contains
    end subroutine balance_neumann_outlet_flux
 
 
+   !> Helper to integrated boundary flux on MPI-owned partitions.
    subroutine compute_boundary_flux(mesh, flow, bc, face_flux, local_flux)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -761,6 +821,7 @@ contains
    end subroutine compute_boundary_flux
 
 
+   !> Allocates and resets temporary solver vectors.
    subroutine ensure_projection_workspace(mesh)
       type(mesh_t), intent(in) :: mesh
 
@@ -775,6 +836,7 @@ contains
       projection_work%nfaces = mesh%nfaces
 
       allocate(projection_work%local_vec(3, mesh%ncells))
+      allocate(projection_work%local_vec_star(3, mesh%ncells))
       allocate(projection_work%momentum_rhs(3, mesh%ncells))
       allocate(projection_work%local_scalar(mesh%ncells))
       allocate(projection_work%rhs_poisson(mesh%ncells))
@@ -788,6 +850,7 @@ contains
       allocate(projection_work%local_ap(mesh%ncells))
 
       projection_work%local_vec = zero
+      projection_work%local_vec_star = zero
       projection_work%momentum_rhs = zero
       projection_work%local_scalar = zero
       projection_work%rhs_poisson = zero
@@ -807,6 +870,7 @@ contains
    !> Deallocate the persistent flow projection workspace.
    subroutine finalize_flow_projection_workspace()
       if (allocated(projection_work%local_vec)) deallocate(projection_work%local_vec)
+      if (allocated(projection_work%local_vec_star)) deallocate(projection_work%local_vec_star)
       if (allocated(projection_work%momentum_rhs)) deallocate(projection_work%momentum_rhs)
       if (allocated(projection_work%local_scalar)) deallocate(projection_work%local_scalar)
       if (allocated(projection_work%rhs_poisson)) deallocate(projection_work%rhs_poisson)
@@ -833,27 +897,18 @@ contains
    end subroutine finalize_flow_projection_workspace
 
 
+   !> Pre-computes Laplacian coefficients for the Poisson operator.
    subroutine ensure_pressure_operator_cache(mesh, flow, bc)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
       type(bc_set_t), intent(in) :: bc
-      integer :: c, lf, f, nb
-      real(rk) :: dist
-      real(rk) :: coeff
+      integer :: ierr, c, lf, f, nb
+      real(rk) :: dist, coeff
       integer :: local_dirichlet_flag, global_dirichlet_flag
-      integer :: ierr
-
-      associate(dummy => flow%nlocal)
-      end associate
 
       if (pressure_cache%initialized) then
          if (pressure_cache%ncells == mesh%ncells) return
-
-         if (allocated(pressure_cache%nb)) deallocate(pressure_cache%nb)
-         if (allocated(pressure_cache%coeff)) deallocate(pressure_cache%coeff)
-         if (allocated(pressure_cache%diag)) deallocate(pressure_cache%diag)
-
-         pressure_cache%initialized = .false.
+         call finalize_flow_projection_workspace()
       end if
 
       pressure_cache%ncells = mesh%ncells
@@ -904,6 +959,15 @@ contains
    end subroutine ensure_pressure_operator_cache
 
 
+   !> Calculates the normal distance between cell centers or cell-to-face.
+   !!
+   !! Handles periodic boundary logic by accounting for the face pair offset.
+   !!
+   !! @param mesh The mesh.
+   !! @param bc Boundary conditions.
+   !! @param face_id Face index.
+   !! @param cell_id Source cell index.
+   !! @param nb Neighbor cell index (or 0 for boundaries).
    function face_normal_distance(mesh, bc, face_id, cell_id, nb) result(dist)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
@@ -950,6 +1014,7 @@ contains
    end function face_normal_distance
 
 
+   !> Computes the linear interpolation weight for a neighbor cell.
    function face_neighbor_weight(mesh, bc, face_id, cell_id, nb) result(w_nb)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
@@ -1002,14 +1067,14 @@ contains
    end function face_neighbor_weight
 
 
+   !> Linearly interpolates a scalar field to a face.
    function face_linear_scalar(mesh, bc, face_id, cell_id, nb, owner_value, neighbor_value) result(face_value)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
       integer, intent(in) :: face_id
       integer, intent(in) :: cell_id
       integer, intent(in) :: nb
-      real(rk), intent(in) :: owner_value
-      real(rk), intent(in) :: neighbor_value
+      real(rk), intent(in) :: owner_value, neighbor_value
       real(rk) :: face_value
 
       real(rk) :: w_nb
@@ -1020,14 +1085,14 @@ contains
    end function face_linear_scalar
 
 
+   !> Linearly interpolates a vector field to a face.
    function face_linear_vector(mesh, bc, face_id, cell_id, nb, owner_value, neighbor_value) result(face_value)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
       integer, intent(in) :: face_id
       integer, intent(in) :: cell_id
       integer, intent(in) :: nb
-      real(rk), intent(in) :: owner_value(3)
-      real(rk), intent(in) :: neighbor_value(3)
+      real(rk), intent(in) :: owner_value(3), neighbor_value(3)
       real(rk) :: face_value(3)
 
       real(rk) :: w_nb
@@ -1038,6 +1103,7 @@ contains
    end function face_linear_vector
 
 
+   !> Determines the outward unit normal relative to a specific cell.
    pure function outward_normal(mesh, face_id, cell_id) result(nvec)
       type(mesh_t), intent(in) :: mesh
       integer, intent(in) :: face_id
@@ -1052,6 +1118,7 @@ contains
    end function outward_normal
 
 
+   !> Internal helper for MPI error checking.
    subroutine check_mpi(ierr, where)
       integer, intent(in) :: ierr
       character(len=*), intent(in) :: where
@@ -1059,6 +1126,11 @@ contains
       if (ierr /= MPI_SUCCESS) call fatal_error('flow', trim(where)//' MPI failure')
    end subroutine check_mpi
 
+
+   !> Calculates domain-wide CFL and optionally scales the timestep size.
+   !!
+   !! For stability in reacting flows, the timestep growth is capped 
+   !! to 2% per step when `use_dynamic_dt` is active.
    subroutine compute_and_update_cfl(mesh, flow, params, fields, stats)
       type(mesh_t), intent(in) :: mesh
       type(flow_mpi_t), intent(in) :: flow
@@ -1090,7 +1162,8 @@ contains
 
       if (params%use_dynamic_dt) then
          if (max_cfl_rate > tiny_safe) then
-            params%dt = params%max_cfl / max_cfl_rate
+            ! Tighten dt growth cap to 1.02x per step for stability starting from rest
+            params%dt = min(params%max_cfl / max_cfl_rate, params%dt * 1.02_rk)
          end if
       end if
 

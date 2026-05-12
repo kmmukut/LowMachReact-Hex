@@ -6,14 +6,14 @@
   nsteps = 2000
   dt = 5.0e-4
   output_interval = 100
-  use_dynamic_dt = .true.
+  use_dynamic_dt = .false.
   max_cfl = 0.5
 /
 
 &fluid_input
   rho = 1.0
   nu = 1.0e-2
-  enable_cantera = .true.
+  enable_cantera = .false.
   cantera_mech_file = "gri30.yaml"
   transport_update_interval = 100
 /
@@ -67,8 +67,10 @@
 
 &species_input
   enable_species = .true.
-  n_species = 3
+  enable_reactions = .false.
+  enable_cantera = .true.
+  nspecies = 3
   species_name = "O2", "N2", "CH4"
-  diffusivity = 1.0e-5, 1.0e-5, 1.0e-5
-  init_Y = 0.2, 0.8, 0.0
+  species_diffusivity = 1.0e-5, 1.0e-5, 1.0e-5
+  initial_Y = 0.2, 0.8, 0.0
 /

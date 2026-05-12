@@ -1,3 +1,9 @@
+!> Input/Output routines for native hexahedral mesh files.
+!!
+!! This module handles the parsing of the ASCII-based native mesh format 
+!! used by the solver. It reads node coordinates, cell connectivity, 
+!! face metrics, and boundary patches from the directory specified 
+!! in the case parameters.
 module mod_mesh_io
    use mod_kinds, only : rk, path_len, fatal_error
    use mod_mesh_types, only : mesh_t, mesh_finalize, max_cell_faces
@@ -9,6 +15,10 @@ module mod_mesh_io
 
 contains
 
+   !> Orchestrates the reading of all mesh components from a directory.
+   !!
+   !! @param mesh_dir Path to the directory containing `.dat` files.
+   !! @param m The mesh structure to populate.
    subroutine read_native_mesh(mesh_dir, m)
       character(len=*), intent(in) :: mesh_dir
       type(mesh_t), intent(inout) :: m
@@ -23,6 +33,7 @@ contains
    end subroutine read_native_mesh
 
 
+   !> Reads node coordinates from `points.dat`.
    subroutine read_points(filename, m)
       character(len=*), intent(in) :: filename
       type(mesh_t), intent(inout) :: m
@@ -48,6 +59,7 @@ contains
    end subroutine read_points
 
 
+   !> Reads cell definitions from `cells.dat`.
    subroutine read_cells(filename, m)
       character(len=*), intent(in) :: filename
       type(mesh_t), intent(inout) :: m
@@ -78,6 +90,7 @@ contains
    end subroutine read_cells
 
 
+   !> Reads face metrics and owner/neighbor connectivity from `faces.dat`.
    subroutine read_faces(filename, m)
       character(len=*), intent(in) :: filename
       type(mesh_t), intent(inout) :: m
@@ -113,6 +126,7 @@ contains
    end subroutine read_faces
 
 
+   !> Reads boundary patch definitions and face lists from `patches.dat`.
    subroutine read_patches(filename, m)
       character(len=*), intent(in) :: filename
       type(mesh_t), intent(inout) :: m
@@ -147,6 +161,7 @@ contains
    end subroutine read_patches
 
 
+   !> Reads periodic link data from `periodic.dat` if it exists.
    subroutine read_periodic_optional(filename, m)
       character(len=*), intent(in) :: filename
       type(mesh_t), intent(inout) :: m
@@ -174,6 +189,7 @@ contains
    end subroutine read_periodic_optional
 
 
+   !> Builds the cell-to-face mapping by inverting the face owner/neighbor data.
    subroutine build_cell_faces(m)
       type(mesh_t), intent(inout) :: m
 
@@ -200,6 +216,7 @@ contains
    end subroutine build_cell_faces
 
 
+   !> Helper to safely add a face to a cell's local face list.
    subroutine append_cell_face(m, cell_id, face_id)
       type(mesh_t), intent(inout) :: m
       integer, intent(in) :: cell_id

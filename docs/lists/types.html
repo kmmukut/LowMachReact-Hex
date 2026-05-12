@@ -85,19 +85,26 @@
 			 <thead>
 			 <tr><th>Type</th><th>Location</th><th>Extends</th><th>Description</th></tr>
 			 </thead><tbody>
-			   <tr><td><a href='../type/bc_patch_t.html'>bc_patch_t</a></td><td><a href='../module/mod_bc.html'>mod_bc</a></td><td>None</td><td><p>Individual boundary patch settings.</p></td></tr>
-			   <tr><td><a href='../type/bc_set_t.html'>bc_set_t</a></td><td><a href='../module/mod_bc.html'>mod_bc</a></td><td>None</td><td><p>Complete set of boundary conditions for all patches.</p></td></tr>
-			   <tr><td><a href='../type/case_params_t.html'>case_params_t</a></td><td><a href='../module/mod_input.html'>mod_input</a></td><td>None</td><td><p>Container for all case parameters.</p></td></tr>
-			   <tr><td><a href='../type/cell_t.html'>cell_t</a></td><td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td><td>None</td><td><p>Hexahedral cell data structure.</p></td></tr>
-			   <tr><td><a href='../type/face_t.html'>face_t</a></td><td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td><td>None</td><td><p>Mesh face data structure.</p></td></tr>
-			   <tr><td><a href='../type/flow_fields_t.html'>flow_fields_t</a></td><td><a href='../module/mod_fields.html'>mod_fields</a></td><td>None</td><td><p>Data structure for primary flow variables.</p></td></tr>
-			   <tr><td><a href='../type/flow_mpi_t.html'>flow_mpi_t</a></td><td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td><td>None</td><td></td></tr>
-			   <tr><td><a href='../type/mesh_t.html'>mesh_t</a></td><td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td><td>None</td><td><p>Top-level mesh container.</p></td></tr>
-			   <tr><td><a href='../type/patch_t.html'>patch_t</a></td><td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td><td>None</td><td><p>Boundary patch data structure.</p></td></tr>
-			   <tr><td><a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a></td><td><a href='../module/mod_mpi_radiation.html'>mod_mpi_radiation</a></td><td>None</td><td></td></tr>
-			   <tr><td><a href='../type/solver_stats_t.html'>solver_stats_t</a></td><td><a href='../module/mod_flow_projection.html'>mod_flow_projection</a></td><td>None</td><td><p>Solver diagnostics and performance statistics.</p></td></tr>
-			   <tr><td><a href='../type/species_fields_t.html'>species_fields_t</a></td><td><a href='../module/mod_species.html'>mod_species</a></td><td>None</td><td><p>Data structure for cell-centered species mass fractions.</p></td></tr>
-			   <tr><td><a href='../type/transport_properties_t.html'>transport_properties_t</a></td><td><a href='../module/mod_transport_properties.html'>mod_transport_properties</a></td><td>None</td><td><p>Transport property fields available for all cells.</p></td></tr>
+			   <tr><td><a href='../type/bc_patch_t.html'>bc_patch_t</a></td><td><a href='../module/mod_bc.html'>mod_bc</a></td><td>None</td><td><p>Container for boundary data assigned to a specific mesh patch.</p><a href="../type/bc_patch_t.html" class="pull-right"><emph>Read more&hellip;</emph></a></td></tr>
+			   <tr><td><a href='../type/bc_set_t.html'>bc_set_t</a></td><td><a href='../module/mod_bc.html'>mod_bc</a></td><td>None</td><td><p>Global set of boundary conditions covering all mesh patches.</p></td></tr>
+			   <tr><td><a href='../type/case_params_t.html'>case_params_t</a></td><td><a href='../module/mod_input.html'>mod_input</a></td><td>None</td><td><p>Global container for all parsed simulation parameters.</p><a href="../type/case_params_t.html" class="pull-right"><emph>Read more&hellip;</emph></a></td></tr>
+			   <tr><td><a href='../type/cell_t.html'>cell_t</a></td><td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td><td>None</td><td><p>Hexahedral cell data structure.
+Contains local geometric properties and node-based connectivity.</p></td></tr>
+			   <tr><td><a href='../type/face_t.html'>face_t</a></td><td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td><td>None</td><td><p>Mesh face data structure.
+Faces are the primary entities for flux calculation. Each face is 
+associated with an 'owner' and potentially a 'neighbor' cell.</p></td></tr>
+			   <tr><td><a href='../type/flow_fields_t.html'>flow_fields_t</a></td><td><a href='../module/mod_fields.html'>mod_fields</a></td><td>None</td><td><p>Container for all primary hydrodynamic fields.</p></td></tr>
+			   <tr><td><a href='../type/flow_mpi_t.html'>flow_mpi_t</a></td><td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td><td>None</td><td><p>MPI context for hydrodynamic operations.</p><a href="../type/flow_mpi_t.html" class="pull-right"><emph>Read more&hellip;</emph></a></td></tr>
+			   <tr><td><a href='../type/mesh_t.html'>mesh_t</a></td><td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td><td>None</td><td><p>Top-level mesh container.
+This structure holds all geometric data and connectivity arrays for 
+the entire computational domain.</p></td></tr>
+			   <tr><td><a href='../type/patch_t.html'>patch_t</a></td><td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td><td>None</td><td><p>Boundary patch data structure.
+Patches group faces together to allow bulk application of boundary 
+conditions (e.g., all faces in the "inlet" patch).</p></td></tr>
+			   <tr><td><a href='../type/radiation_mpi_t.html'>radiation_mpi_t</a></td><td><a href='../module/mod_mpi_radiation.html'>mod_mpi_radiation</a></td><td>None</td><td><p>MPI context for radiation operations.</p></td></tr>
+			   <tr><td><a href='../type/solver_stats_t.html'>solver_stats_t</a></td><td><a href='../module/mod_flow_projection.html'>mod_flow_projection</a></td><td>None</td><td><p>Solver diagnostics and global physics statistics.</p><a href="../type/solver_stats_t.html" class="pull-right"><emph>Read more&hellip;</emph></a></td></tr>
+			   <tr><td><a href='../type/species_fields_t.html'>species_fields_t</a></td><td><a href='../module/mod_species.html'>mod_species</a></td><td>None</td><td><p>Container for multi-species mass fraction fields.</p></td></tr>
+			   <tr><td><a href='../type/transport_properties_t.html'>transport_properties_t</a></td><td><a href='../module/mod_transport_properties.html'>mod_transport_properties</a></td><td>None</td><td><p>Container for cell-centered transport properties.</p><a href="../type/transport_properties_t.html" class="pull-right"><emph>Read more&hellip;</emph></a></td></tr>
 			 </tbody></table>
              <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
@@ -105,173 +112,173 @@
 <!-- Generated by graphviz version 14.1.2 (20260126.1125)
  -->
 <!-- Title: type~~graph~~TypeGraph Pages: 1 -->
-<svg id="typegraphTypeGraph" width="281pt" height="410pt"
- viewBox="0.00 0.00 281.00 410.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="type~~graph~~TypeGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 406.27)">
+<svg id="typegraphTypeGraph" width="281pt" height="456pt"
+ viewBox="0.00 0.00 281.00 456.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="type~~graph~~TypeGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 452.27)">
 <title>type~~graph~~TypeGraph</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-406.27 276.79,-406.27 276.79,4 -4,4"/>
-<!-- type~case_params_t -->
+<polygon fill="white" stroke="none" points="-4,4 -4,-452.27 276.79,-452.27 276.79,4 -4,4"/>
+<!-- type~cell_t -->
 <g id="type~~graph~~TypeGraph_node1" class="node">
-<title>type~case_params_t</title>
-<g id="a_type~~graph~~TypeGraph_node1"><a xlink:href=".././type/case_params_t.html" xlink:title="case_params_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="254.04,-24.27 163.02,-24.27 163.02,0 254.04,0 254.04,-24.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">case_params_t</text>
+<title>type~cell_t</title>
+<g id="a_type~~graph~~TypeGraph_node1"><a xlink:href=".././type/cell_t.html" xlink:title="cell_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="62.01,-108.27 8.01,-108.27 8.01,-84 62.01,-84 62.01,-108.27"/>
+<text xml:space="preserve" text-anchor="middle" x="35.01" y="-92.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">cell_t</text>
 </a>
 </g>
+</g>
+<!-- type~mesh_t -->
+<g id="type~~graph~~TypeGraph_node2" class="node">
+<title>type~mesh_t</title>
+<g id="a_type~~graph~~TypeGraph_node2"><a xlink:href=".././type/mesh_t.html" xlink:title="mesh_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="235.53,-66.27 181.53,-66.27 181.53,-42 235.53,-42 235.53,-66.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mesh_t</text>
+</a>
+</g>
+</g>
+<!-- type~mesh_t&#45;&gt;type~cell_t -->
+<g id="type~~graph~~TypeGraph_edge1" class="edge">
+<title>type~mesh_t&#45;&gt;type~cell_t</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M181.11,-60.61C152.27,-67.67 105.89,-79.02 73.35,-86.99"/>
+<polygon fill="#000000" stroke="#000000" points="72.81,-83.52 63.93,-89.3 74.48,-90.32 72.81,-83.52"/>
+<text xml:space="preserve" text-anchor="middle" x="107.14" y="-84.77" font-family="Helvetica,sans-Serif" font-size="9.50">cells</text>
+</g>
+<!-- type~face_t -->
+<g id="type~~graph~~TypeGraph_node9" class="node">
+<title>type~face_t</title>
+<g id="a_type~~graph~~TypeGraph_node9"><a xlink:href=".././type/face_t.html" xlink:title="face_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="62.01,-66.27 8.01,-66.27 8.01,-42 62.01,-42 62.01,-66.27"/>
+<text xml:space="preserve" text-anchor="middle" x="35.01" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">face_t</text>
+</a>
+</g>
+</g>
+<!-- type~mesh_t&#45;&gt;type~face_t -->
+<g id="type~~graph~~TypeGraph_edge2" class="edge">
+<title>type~mesh_t&#45;&gt;type~face_t</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M181.11,-54.13C152.4,-54.13 106.3,-54.13 73.77,-54.13"/>
+<polygon fill="#000000" stroke="#000000" points="73.98,-50.64 63.98,-54.14 73.98,-57.64 73.98,-50.64"/>
+<text xml:space="preserve" text-anchor="middle" x="107.14" y="-56.36" font-family="Helvetica,sans-Serif" font-size="9.50">faces</text>
 </g>
 <!-- type~patch_t -->
-<g id="type~~graph~~TypeGraph_node2" class="node">
+<g id="type~~graph~~TypeGraph_node12" class="node">
 <title>type~patch_t</title>
-<g id="a_type~~graph~~TypeGraph_node2"><a xlink:href=".././type/patch_t.html" xlink:title="patch_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="62.01,-108.27 8.01,-108.27 8.01,-84 62.01,-84 62.01,-108.27"/>
-<text xml:space="preserve" text-anchor="middle" x="35.01" y="-92.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">patch_t</text>
+<g id="a_type~~graph~~TypeGraph_node12"><a xlink:href=".././type/patch_t.html" xlink:title="patch_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="62.01,-24.27 8.01,-24.27 8.01,0 62.01,0 62.01,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="35.01" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">patch_t</text>
 </a>
 </g>
 </g>
-<!-- type~bc_set_t -->
+<!-- type~mesh_t&#45;&gt;type~patch_t -->
+<g id="type~~graph~~TypeGraph_edge3" class="edge">
+<title>type~mesh_t&#45;&gt;type~patch_t</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M181.11,-47.66C152.27,-40.6 105.89,-29.25 73.35,-21.28"/>
+<polygon fill="#000000" stroke="#000000" points="74.48,-17.95 63.93,-18.97 72.81,-24.75 74.48,-17.95"/>
+<text xml:space="preserve" text-anchor="middle" x="107.14" y="-35.36" font-family="Helvetica,sans-Serif" font-size="9.50">patches</text>
+</g>
+<!-- type~flow_mpi_t -->
 <g id="type~~graph~~TypeGraph_node3" class="node">
-<title>type~bc_set_t</title>
-<g id="a_type~~graph~~TypeGraph_node3"><a xlink:href=".././type/bc_set_t.html" xlink:title="bc_set_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="235.66,-150.27 181.39,-150.27 181.39,-126 235.66,-126 235.66,-150.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-134.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bc_set_t</text>
-</a>
-</g>
-</g>
-<!-- type~bc_patch_t -->
-<g id="type~~graph~~TypeGraph_node9" class="node">
-<title>type~bc_patch_t</title>
-<g id="a_type~~graph~~TypeGraph_node9"><a xlink:href=".././type/bc_patch_t.html" xlink:title="bc_patch_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="69.27,-150.27 0.75,-150.27 0.75,-126 69.27,-126 69.27,-150.27"/>
-<text xml:space="preserve" text-anchor="middle" x="35.01" y="-134.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bc_patch_t</text>
-</a>
-</g>
-</g>
-<!-- type~bc_set_t&#45;&gt;type~bc_patch_t -->
-<g id="type~~graph~~TypeGraph_edge1" class="edge">
-<title>type~bc_set_t&#45;&gt;type~bc_patch_t</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M181.11,-138.13C154.41,-138.13 112.66,-138.13 80.79,-138.13"/>
-<polygon fill="#000000" stroke="#000000" points="81.05,-134.64 71.05,-138.14 81.05,-141.64 81.05,-134.64"/>
-<text xml:space="preserve" text-anchor="middle" x="107.14" y="-140.36" font-family="Helvetica,sans-Serif" font-size="9.50">patches</text>
-</g>
-<!-- type~solver_stats_t -->
-<g id="type~~graph~~TypeGraph_node4" class="node">
-<title>type~solver_stats_t</title>
-<g id="a_type~~graph~~TypeGraph_node4"><a xlink:href=".././type/solver_stats_t.html" xlink:title="solver_stats_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="249.91,-192.27 167.14,-192.27 167.14,-168 249.91,-168 249.91,-192.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-176.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">solver_stats_t</text>
-</a>
-</g>
-</g>
-<!-- type~transport_properties_t -->
-<g id="type~~graph~~TypeGraph_node5" class="node">
-<title>type~transport_properties_t</title>
-<g id="a_type~~graph~~TypeGraph_node5"><a xlink:href=".././type/transport_properties_t.html" xlink:title="transport_properties_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="272.79,-234.27 144.27,-234.27 144.27,-210 272.79,-210 272.79,-234.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-218.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">transport_properties_t</text>
-</a>
-</g>
-</g>
-<!-- type~radiation_mpi_t -->
-<g id="type~~graph~~TypeGraph_node6" class="node">
-<title>type~radiation_mpi_t</title>
-<g id="a_type~~graph~~TypeGraph_node6"><a xlink:href=".././type/radiation_mpi_t.html" xlink:title="radiation_mpi_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="255.54,-318.27 161.52,-318.27 161.52,-294 255.54,-294 255.54,-318.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-302.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">radiation_mpi_t</text>
+<title>type~flow_mpi_t</title>
+<g id="a_type~~graph~~TypeGraph_node3"><a xlink:href=".././type/flow_mpi_t.html" xlink:title="flow_mpi_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="242.41,-196.27 174.64,-196.27 174.64,-172 242.41,-172 242.41,-196.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-180.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_mpi_t</text>
 </a>
 </g>
 </g>
 <!-- MPI_Comm -->
 <g id="type~~graph~~TypeGraph_node14" class="node">
 <title>MPI_Comm</title>
-<polygon fill="#5cb85c" stroke="#5cb85c" points="70.02,-297.27 0,-297.27 0,-273 70.02,-273 70.02,-297.27"/>
-<text xml:space="preserve" text-anchor="middle" x="35.01" y="-281.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">MPI_Comm</text>
-</g>
-<!-- type~radiation_mpi_t&#45;&gt;MPI_Comm -->
-<g id="type~~graph~~TypeGraph_edge2" class="edge">
-<title>type~radiation_mpi_t&#45;&gt;MPI_Comm</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M161.11,-300.45C136.45,-297.43 106.24,-293.73 81.68,-290.73"/>
-<polygon fill="#000000" stroke="#000000" points="82.34,-287.28 71.99,-289.54 81.49,-294.23 82.34,-287.28"/>
-<text xml:space="preserve" text-anchor="middle" x="107.14" y="-297.86" font-family="Helvetica,sans-Serif" font-size="9.50">comm</text>
-</g>
-<!-- type~flow_fields_t -->
-<g id="type~~graph~~TypeGraph_node7" class="node">
-<title>type~flow_fields_t</title>
-<g id="a_type~~graph~~TypeGraph_node7"><a xlink:href=".././type/flow_fields_t.html" xlink:title="flow_fields_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="246.54,-360.27 170.52,-360.27 170.52,-336 246.54,-336 246.54,-360.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-344.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_fields_t</text>
-</a>
-</g>
-</g>
-<!-- type~cell_t -->
-<g id="type~~graph~~TypeGraph_node8" class="node">
-<title>type~cell_t</title>
-<g id="a_type~~graph~~TypeGraph_node8"><a xlink:href=".././type/cell_t.html" xlink:title="cell_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="62.01,-66.27 8.01,-66.27 8.01,-42 62.01,-42 62.01,-66.27"/>
-<text xml:space="preserve" text-anchor="middle" x="35.01" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">cell_t</text>
-</a>
-</g>
-</g>
-<!-- type~mesh_t -->
-<g id="type~~graph~~TypeGraph_node10" class="node">
-<title>type~mesh_t</title>
-<g id="a_type~~graph~~TypeGraph_node10"><a xlink:href=".././type/mesh_t.html" xlink:title="mesh_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="235.53,-66.27 181.53,-66.27 181.53,-42 235.53,-42 235.53,-66.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mesh_t</text>
-</a>
-</g>
-</g>
-<!-- type~mesh_t&#45;&gt;type~patch_t -->
-<g id="type~~graph~~TypeGraph_edge5" class="edge">
-<title>type~mesh_t&#45;&gt;type~patch_t</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M181.11,-60.61C152.27,-67.67 105.89,-79.02 73.35,-86.99"/>
-<polygon fill="#000000" stroke="#000000" points="72.81,-83.52 63.93,-89.3 74.48,-90.32 72.81,-83.52"/>
-<text xml:space="preserve" text-anchor="middle" x="107.14" y="-84.77" font-family="Helvetica,sans-Serif" font-size="9.50">patches</text>
-</g>
-<!-- type~mesh_t&#45;&gt;type~cell_t -->
-<g id="type~~graph~~TypeGraph_edge3" class="edge">
-<title>type~mesh_t&#45;&gt;type~cell_t</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M181.11,-54.13C152.4,-54.13 106.3,-54.13 73.77,-54.13"/>
-<polygon fill="#000000" stroke="#000000" points="73.98,-50.64 63.98,-54.14 73.98,-57.64 73.98,-50.64"/>
-<text xml:space="preserve" text-anchor="middle" x="107.14" y="-56.36" font-family="Helvetica,sans-Serif" font-size="9.50">cells</text>
-</g>
-<!-- type~face_t -->
-<g id="type~~graph~~TypeGraph_node12" class="node">
-<title>type~face_t</title>
-<g id="a_type~~graph~~TypeGraph_node12"><a xlink:href=".././type/face_t.html" xlink:title="face_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="62.01,-24.27 8.01,-24.27 8.01,0 62.01,0 62.01,-24.27"/>
-<text xml:space="preserve" text-anchor="middle" x="35.01" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">face_t</text>
-</a>
-</g>
-</g>
-<!-- type~mesh_t&#45;&gt;type~face_t -->
-<g id="type~~graph~~TypeGraph_edge4" class="edge">
-<title>type~mesh_t&#45;&gt;type~face_t</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M181.11,-47.66C152.27,-40.6 105.89,-29.25 73.35,-21.28"/>
-<polygon fill="#000000" stroke="#000000" points="74.48,-17.95 63.93,-18.97 72.81,-24.75 74.48,-17.95"/>
-<text xml:space="preserve" text-anchor="middle" x="107.14" y="-35.36" font-family="Helvetica,sans-Serif" font-size="9.50">faces</text>
-</g>
-<!-- type~flow_mpi_t -->
-<g id="type~~graph~~TypeGraph_node11" class="node">
-<title>type~flow_mpi_t</title>
-<g id="a_type~~graph~~TypeGraph_node11"><a xlink:href=".././type/flow_mpi_t.html" xlink:title="flow_mpi_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="242.41,-276.27 174.64,-276.27 174.64,-252 242.41,-252 242.41,-276.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-260.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_mpi_t</text>
-</a>
-</g>
+<polygon fill="#5cb85c" stroke="#5cb85c" points="70.02,-167.27 0,-167.27 0,-143 70.02,-143 70.02,-167.27"/>
+<text xml:space="preserve" text-anchor="middle" x="35.01" y="-151.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">MPI_Comm</text>
 </g>
 <!-- type~flow_mpi_t&#45;&gt;MPI_Comm -->
-<g id="type~~graph~~TypeGraph_edge6" class="edge">
+<g id="type~~graph~~TypeGraph_edge4" class="edge">
 <title>type~flow_mpi_t&#45;&gt;MPI_Comm</title>
-<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M174.25,-267.23C150.24,-269.57 117.08,-273.03 88.02,-276.88 85.97,-277.16 83.87,-277.45 81.76,-277.75"/>
-<polygon fill="#000000" stroke="#000000" points="81.26,-274.28 71.88,-279.21 82.29,-281.2 81.26,-274.28"/>
-<text xml:space="preserve" text-anchor="middle" x="107.14" y="-279.11" font-family="Helvetica,sans-Serif" font-size="9.50">comm</text>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M174.46,-178.54C148.08,-174.08 110.83,-167.79 81.61,-162.85"/>
+<polygon fill="#000000" stroke="#000000" points="82.38,-159.43 71.94,-161.21 81.22,-166.33 82.38,-159.43"/>
+<text xml:space="preserve" text-anchor="middle" x="107.14" y="-171.86" font-family="Helvetica,sans-Serif" font-size="9.50">comm</text>
+</g>
+<!-- type~transport_properties_t -->
+<g id="type~~graph~~TypeGraph_node4" class="node">
+<title>type~transport_properties_t</title>
+<g id="a_type~~graph~~TypeGraph_node4"><a xlink:href=".././type/transport_properties_t.html" xlink:title="transport_properties_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="272.79,-238.27 144.27,-238.27 144.27,-214 272.79,-214 272.79,-238.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-222.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">transport_properties_t</text>
+</a>
+</g>
+</g>
+<!-- type~radiation_mpi_t -->
+<g id="type~~graph~~TypeGraph_node5" class="node">
+<title>type~radiation_mpi_t</title>
+<g id="a_type~~graph~~TypeGraph_node5"><a xlink:href=".././type/radiation_mpi_t.html" xlink:title="radiation_mpi_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="255.54,-154.27 161.52,-154.27 161.52,-130 255.54,-130 255.54,-154.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-138.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">radiation_mpi_t</text>
+</a>
+</g>
+</g>
+<!-- type~radiation_mpi_t&#45;&gt;MPI_Comm -->
+<g id="type~~graph~~TypeGraph_edge5" class="edge">
+<title>type~radiation_mpi_t&#45;&gt;MPI_Comm</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M161.27,-145.43C139.11,-147.03 112.18,-149.01 88.02,-150.88 85.97,-151.04 83.88,-151.21 81.77,-151.37"/>
+<polygon fill="#000000" stroke="#000000" points="81.62,-147.88 71.93,-152.16 82.17,-154.85 81.62,-147.88"/>
+<text xml:space="preserve" text-anchor="middle" x="107.14" y="-153.11" font-family="Helvetica,sans-Serif" font-size="9.50">comm</text>
+</g>
+<!-- type~solver_stats_t -->
+<g id="type~~graph~~TypeGraph_node6" class="node">
+<title>type~solver_stats_t</title>
+<g id="a_type~~graph~~TypeGraph_node6"><a xlink:href=".././type/solver_stats_t.html" xlink:title="solver_stats_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="249.91,-280.27 167.14,-280.27 167.14,-256 249.91,-256 249.91,-280.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-264.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">solver_stats_t</text>
+</a>
+</g>
+</g>
+<!-- type~bc_set_t -->
+<g id="type~~graph~~TypeGraph_node7" class="node">
+<title>type~bc_set_t</title>
+<g id="a_type~~graph~~TypeGraph_node7"><a xlink:href=".././type/bc_set_t.html" xlink:title="bc_set_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="235.66,-322.27 181.39,-322.27 181.39,-298 235.66,-298 235.66,-322.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-306.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bc_set_t</text>
+</a>
+</g>
+</g>
+<!-- type~bc_patch_t -->
+<g id="type~~graph~~TypeGraph_node13" class="node">
+<title>type~bc_patch_t</title>
+<g id="a_type~~graph~~TypeGraph_node13"><a xlink:href=".././type/bc_patch_t.html" xlink:title="bc_patch_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="69.27,-322.27 0.75,-322.27 0.75,-298 69.27,-298 69.27,-322.27"/>
+<text xml:space="preserve" text-anchor="middle" x="35.01" y="-306.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">bc_patch_t</text>
+</a>
+</g>
+</g>
+<!-- type~bc_set_t&#45;&gt;type~bc_patch_t -->
+<g id="type~~graph~~TypeGraph_edge6" class="edge">
+<title>type~bc_set_t&#45;&gt;type~bc_patch_t</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M181.11,-310.13C154.41,-310.13 112.66,-310.13 80.79,-310.13"/>
+<polygon fill="#000000" stroke="#000000" points="81.05,-306.64 71.05,-310.14 81.05,-313.64 81.05,-306.64"/>
+<text xml:space="preserve" text-anchor="middle" x="107.14" y="-312.36" font-family="Helvetica,sans-Serif" font-size="9.50">patches</text>
 </g>
 <!-- type~species_fields_t -->
-<g id="type~~graph~~TypeGraph_node13" class="node">
+<g id="type~~graph~~TypeGraph_node8" class="node">
 <title>type~species_fields_t</title>
-<g id="a_type~~graph~~TypeGraph_node13"><a xlink:href=".././type/species_fields_t.html" xlink:title="species_fields_t">
-<polygon fill="#5cb85c" stroke="#5cb85c" points="255.54,-402.27 161.52,-402.27 161.52,-378 255.54,-378 255.54,-402.27"/>
-<text xml:space="preserve" text-anchor="middle" x="208.53" y="-386.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">species_fields_t</text>
+<g id="a_type~~graph~~TypeGraph_node8"><a xlink:href=".././type/species_fields_t.html" xlink:title="species_fields_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="255.54,-364.27 161.52,-364.27 161.52,-340 255.54,-340 255.54,-364.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-348.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">species_fields_t</text>
+</a>
+</g>
+</g>
+<!-- type~flow_fields_t -->
+<g id="type~~graph~~TypeGraph_node10" class="node">
+<title>type~flow_fields_t</title>
+<g id="a_type~~graph~~TypeGraph_node10"><a xlink:href=".././type/flow_fields_t.html" xlink:title="flow_fields_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="246.54,-406.27 170.52,-406.27 170.52,-382 246.54,-382 246.54,-406.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-390.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_fields_t</text>
+</a>
+</g>
+</g>
+<!-- type~case_params_t -->
+<g id="type~~graph~~TypeGraph_node11" class="node">
+<title>type~case_params_t</title>
+<g id="a_type~~graph~~TypeGraph_node11"><a xlink:href=".././type/case_params_t.html" xlink:title="case_params_t">
+<polygon fill="#5cb85c" stroke="#5cb85c" points="254.04,-448.27 163.02,-448.27 163.02,-424 254.04,-424 254.04,-448.27"/>
+<text xml:space="preserve" text-anchor="middle" x="208.53" y="-432.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">case_params_t</text>
 </a>
 </g>
 </g>

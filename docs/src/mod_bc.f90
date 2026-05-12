@@ -1,8 +1,23 @@
-!> Boundary condition management and evaluation.
+!> Boundary condition (BC) management, parsing, and physical evaluation.
 !!
-!! This module handles the mapping of case parameters to mesh patches
-!! and provides routines for evaluating boundary values for velocity,
-!! pressure, and species.
+!! This module provides the infrastructure to map user-defined case 
+!! configuration (`case.nml`) to the geometric patches of the mesh. 
+!! It handles the storage of boundary data (velocity, pressure, species) 
+!! and provides low-level evaluation routines used by the spatial operators 
+!! (e.g., flux calculation, gradient evaluation).
+!!
+!! Supported BC Types:
+!! 1. **`bc_wall`**: No-slip/No-penetration condition. 
+!!    - Velocity is set to the specified wall velocity (default zero).
+!!    - Pressure gradient is zero (Neumann).
+!! 2. **`bc_symmetry`**: Zero-gradient for parallel components, zero for normal.
+!!    - Enforces no-flow across the boundary while allowing slip.
+!! 3. **`bc_periodic`**: Topology-linked faces for repeating domains.
+!!    - Requires a valid `periodic.dat` file created by the mesh converter.
+!! 4. **`bc_dirichlet`**: Fixed value (Inlet).
+!!    - Explicitly sets the field value at the face.
+!! 5. **`bc_neumann`**: Fixed gradient (Zero-Gradient Outlet).
+!!    - Sets the face value equal to the adjacent interior cell value.
 module mod_bc
    use mod_kinds, only : rk, zero, name_len, fatal_error, lowercase
    use mod_input, only : case_params_t, max_species
@@ -11,46 +26,59 @@ module mod_bc
 
    private
 
-   integer, parameter, public :: bc_unknown   = 0
-   integer, parameter, public :: bc_wall      = 1
-   integer, parameter, public :: bc_symmetry  = 2
-   integer, parameter, public :: bc_periodic  = 3
-   integer, parameter, public :: bc_dirichlet = 4
-   integer, parameter, public :: bc_neumann   = 5
+   integer, parameter, public :: bc_unknown   = 0 !< Unspecified or invalid BC type.
+   integer, parameter, public :: bc_wall      = 1 !< Standard no-slip solid wall.
+   integer, parameter, public :: bc_symmetry  = 2 !< Symmetry plane / slip wall.
+   integer, parameter, public :: bc_periodic  = 3 !< Periodic (cyclic) boundary.
+   integer, parameter, public :: bc_dirichlet = 4 !< Fixed value (e.g., Inlet).
+   integer, parameter, public :: bc_neumann   = 5 !< Fixed gradient (e.g., Zero-Gradient Outlet).
 
-   !> Individual boundary patch settings.
+   !> Container for boundary data assigned to a specific mesh patch.
+   !!
+   !! Each patch in the mesh can have different BC types for different 
+   !! physical fields (U, P, Y). This structure stores the numeric type 
+   !! IDs and the associated physical values.
    type, public :: bc_patch_t
-      integer :: patch_id = 0                    !< Patch ID from mesh
-      character(len=name_len) :: name = ""       !< Patch name
-      character(len=name_len) :: type_name = ""  !< Boundary type name (e.g., "wall")
-      integer :: type_id = bc_unknown            !< Internal type ID
-      real(rk) :: velocity(3) = zero             !< Specified velocity vector
-      real(rk) :: pressure = zero                !< Specified pressure value
-      real(rk) :: dpdn = zero                    !< Specified pressure gradient
+      integer :: patch_id = 0                    !< Link to the geometric `mesh%patch(id)`.
+      character(len=name_len) :: name = ""       !< Human-readable name (e.g., "inlet").
+      character(len=name_len) :: type_name = ""  !< Input type string from namelist (e.g., "wall").
+      integer :: type_id = bc_unknown            !< Master BC type ID for the patch.
+      real(rk) :: velocity(3) = zero             !< Specified velocity vector $(u,v,w)$ [m/s].
+      real(rk) :: pressure = zero                !< Specified static pressure $P$ [Pa].
+      real(rk) :: dpdn = zero                    !< Specified pressure gradient $dP/dn$ [Pa/m].
 
-      !> Species boundary conditions
-      integer :: species_type_id = bc_unknown    !< BC type for species
-      real(rk) :: species_Y(max_species) = zero  !< Specified mass fractions
+      !> Species boundary settings.
+      integer :: species_type_id = bc_unknown    !< BC type applied to species transport.
+      real(rk) :: species_Y(max_species) = zero  !< Specified mass fractions $Y_k$ for Dirichlet boundaries.
+
+      !> Field-specific overrides.
+      integer :: velocity_type_id = bc_unknown   !< BC type for velocity (if different from master).
+      integer :: pressure_type_id = bc_unknown   !< BC type for pressure (if different from master).
    end type bc_patch_t
 
-   !> Complete set of boundary conditions for all patches.
+   !> Global set of boundary conditions covering all mesh patches.
    type :: bc_set_t
-      integer :: npatches = 0                        !< Number of patches
-      type(bc_patch_t), allocatable :: patches(:)    !< Array of patch BCs
+      integer :: npatches = 0                        !< Total number of patches defined in the mesh.
+      type(bc_patch_t), allocatable :: patches(:)    !< Array of boundary settings for each patch.
    end type bc_set_t
 
    public :: build_bc_set, finalize_bc_set, bc_set_t
    public :: patch_type_for_face, boundary_velocity, face_effective_neighbor
+   public :: boundary_pressure_type, boundary_pressure
    public :: boundary_species
    public :: is_periodic_face
 
 contains
 
-   !> Map case parameters to mesh patches to create the BC set.
+   !> Synchronizes namelist parameters with mesh patches to create a complete BC set.
    !!
-   !! @param mesh Mesh data structure.
-   !! @param params Case configuration parameters.
-   !! @param bc Boundary condition set to build.
+   !! This routine iterates through all patches in the `mesh_t` structure and 
+   !! searches for matching names in the `case_params_t` object. It converts 
+   !! string-based inputs into internal type IDs.
+   !!
+   !! @param mesh The computational mesh containing patch definitions.
+   !! @param params Parsed case configuration from `case.nml`.
+   !! @param bc The boundary condition set to be populated.
    subroutine build_bc_set(mesh, params, bc)
       type(mesh_t), intent(in) :: mesh
       type(case_params_t), intent(in) :: params
@@ -78,6 +106,18 @@ contains
                bc%patches(p)%pressure = params%patch_p(q)
                bc%patches(p)%dpdn = params%patch_dpdn(q)
 
+               if (trim(params%patch_velocity_type(q)) /= "") then
+                  bc%patches(p)%velocity_type_id = parse_bc_type(params%patch_velocity_type(q))
+               else
+                  bc%patches(p)%velocity_type_id = parse_bc_type(params%patch_type(q))
+               end if
+
+               if (trim(params%patch_pressure_type(q)) /= "") then
+                  bc%patches(p)%pressure_type_id = parse_bc_type(params%patch_pressure_type(q))
+               else
+                  bc%patches(p)%pressure_type_id = parse_bc_type(params%patch_type(q))
+               end if
+
                if (trim(params%patch_species_type(q)) /= "") then
                   bc%patches(p)%species_type_id = parse_bc_type(params%patch_species_type(q))
                else
@@ -101,17 +141,18 @@ contains
    end subroutine build_bc_set
 
 
-   !> Deallocate the boundary condition set.
-   !!
-   !! @param bc Boundary condition set to finalize.
+   !> Safely deallocates the boundary condition patch array.
    subroutine finalize_bc_set(bc)
       type(bc_set_t), intent(inout) :: bc
-
       if (allocated(bc%patches)) deallocate(bc%patches)
       bc%npatches = 0
    end subroutine finalize_bc_set
 
 
+   !> Converts a case-insensitive string to its corresponding internal BC type ID.
+   !!
+   !! @param text String representation (e.g., "Wall", "Periodic", "Dirichlet").
+   !! @result The integer type ID (e.g., `bc_wall`).
    integer function parse_bc_type(text) result(type_id)
       character(len=*), intent(in) :: text
       character(len=len(text)) :: key
@@ -135,6 +176,12 @@ contains
       end select
    end function parse_bc_type
 
+   !> Retrieves the master BC type for a given face ID.
+   !!
+   !! @param mesh The computational mesh.
+   !! @param bc The active BC set.
+   !! @param face_id Global index of the face.
+   !! @result The BC type ID of the patch containing the face.
    integer function patch_type_for_face(mesh, bc, face_id) result(type_id)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
@@ -151,15 +198,25 @@ contains
    end function patch_type_for_face
 
 
+   !> Returns true if the face belongs to a periodic boundary.
    logical function is_periodic_face(mesh, bc, face_id)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
       integer, intent(in) :: face_id
-
       is_periodic_face = patch_type_for_face(mesh, bc, face_id) == bc_periodic
    end function is_periodic_face
 
 
+   !> Returns the neighbor cell index, accounting for periodic connectivity.
+   !!
+   !! If the face is on a periodic boundary, this returns the `periodic_neighbor` 
+   !! stored in the face structure. Otherwise, it returns the standard neighbor.
+   !!
+   !! @param mesh The computational mesh.
+   !! @param bc The active BC set.
+   !! @param face_id Global index of the face.
+   !! @param cell_id Index of the cell requesting the neighbor.
+   !! @result The effective neighbor cell index.
    integer function face_effective_neighbor(mesh, bc, face_id, cell_id) result(neighbor)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
@@ -178,13 +235,18 @@ contains
    end function face_effective_neighbor
 
 
-   !> Evaluate velocity at a boundary face.
+   !> Evaluates the velocity vector at a boundary face.
+   !!
+   !! Implements standard FV boundary evaluations:
+   !! - **Wall/Dirichlet**: Returns the specified patch velocity.
+   !! - **Symmetry**: Subtracts the normal component from the interior velocity.
+   !! - **Neumann/Periodic**: Extrapolates the interior velocity to the face.
    !!
    !! @param mesh Mesh data structure.
    !! @param bc Boundary condition set.
    !! @param face_id ID of the boundary face.
-   !! @param interior_velocity Velocity in the owner cell.
-   !! @param value Resulting velocity at the face.
+   !! @param interior_velocity Velocity in the owner cell [m/s].
+   !! @param value Resulting velocity at the face [m/s].
    subroutine boundary_velocity(mesh, bc, face_id, interior_velocity, value)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
@@ -193,8 +255,7 @@ contains
       real(rk), intent(out) :: value(3)
 
       integer :: patch_id
-      real(rk) :: nhat(3)
-      real(rk) :: un
+      real(rk) :: nhat(3), un
 
       patch_id = mesh%faces(face_id)%patch
       if (patch_id <= 0) then
@@ -202,27 +263,23 @@ contains
          return
       end if
 
-      select case (bc%patches(patch_id)%type_id)
+      select case (bc%patches(patch_id)%velocity_type_id)
       case (bc_wall, bc_dirichlet)
          value = bc%patches(patch_id)%velocity
       case (bc_symmetry)
          nhat = mesh%faces(face_id)%normal
          un = dot_product(interior_velocity, nhat)
          value = interior_velocity - un * nhat
-      case (bc_neumann)
-         value = interior_velocity
-      case (bc_periodic)
-         value = interior_velocity
       case default
          value = interior_velocity
       end select
    end subroutine boundary_velocity
 
 
+   !> Validates that periodic patches have correctly established links.
    subroutine ensure_periodic_links(mesh, patch_id)
       type(mesh_t), intent(in) :: mesh
       integer, intent(in) :: patch_id
-
       integer :: i, face_id
 
       do i = 1, mesh%patches(patch_id)%nfaces
@@ -234,15 +291,9 @@ contains
       end do
    end subroutine ensure_periodic_links
 
-   !> Evaluate species mass fractions at a boundary face.
+   !> Evaluates species mass fractions at a boundary face.
    !!
-   !! @param mesh Mesh data structure.
-   !! @param bc Boundary condition set.
-   !! @param face_id ID of the boundary face.
-   !! @param k Species index.
-   !! @param interior_Y Mass fraction in the owner cell.
-   !! @param ext_Y Resulting mass fraction at the face (or external ghost state).
-   !! @param is_dirichlet Flag indicating if the boundary is Dirichlet.
+   !! Currently supports fixed-value (Dirichlet) and zero-gradient (Neumann) BCs.
    subroutine boundary_species(mesh, bc, face_id, k, interior_Y, ext_Y, is_dirichlet)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc
@@ -270,6 +321,50 @@ contains
          is_dirichlet = .false.
       end select
    end subroutine boundary_species
+
+   !> Returns the pressure BC type for a given face.
+   integer function boundary_pressure_type(mesh, bc, face_id) result(type_id)
+      type(mesh_t), intent(in) :: mesh
+      type(bc_set_t), intent(in) :: bc
+      integer, intent(in) :: face_id
+
+      integer :: patch_id
+
+      patch_id = mesh%faces(face_id)%patch
+      if (patch_id <= 0) then
+         type_id = bc_unknown
+      else
+         type_id = bc%patches(patch_id)%pressure_type_id
+      end if
+   end function boundary_pressure_type
+
+   !> Evaluates pressure at a boundary face.
+   subroutine boundary_pressure(mesh, bc, face_id, interior_p, ext_p, is_dirichlet)
+      type(mesh_t), intent(in) :: mesh
+      type(bc_set_t), intent(in) :: bc
+      integer, intent(in) :: face_id
+      real(rk), intent(in) :: interior_p
+      real(rk), intent(out) :: ext_p
+      logical, intent(out) :: is_dirichlet
+
+      integer :: patch_id
+
+      patch_id = mesh%faces(face_id)%patch
+      if (patch_id <= 0) then
+         ext_p = interior_p
+         is_dirichlet = .false.
+         return
+      end if
+
+      select case (bc%patches(patch_id)%pressure_type_id)
+      case (bc_dirichlet)
+         ext_p = bc%patches(patch_id)%pressure
+         is_dirichlet = .true.
+      case default
+         ext_p = interior_p
+         is_dirichlet = .false.
+      end select
+   end subroutine boundary_pressure
 
 end module mod_bc
 

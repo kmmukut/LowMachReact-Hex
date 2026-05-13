@@ -20,16 +20,24 @@ jobs:
         uses: xu-cheng/latex-action@v3
         with:
           root_file: reports/technical_report/main.tex
-          args: "-jobname=report -output-directory=reports/technical_report"
+          args: "-pdf -jobname=report -output-directory=reports/technical_report"
 
       - name: Compile Presentation
         uses: xu-cheng/latex-action@v3
         with:
           root_file: reports/presentation/main.tex
-          args: "-jobname=presentation -output-directory=reports/presentation"
+          args: "-pdf -jobname=presentation -output-directory=reports/presentation"
 
       - name: Auto Commit PDFs
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "docs: update compiled PDFs [skip ci]"
           file_pattern: 'reports/**/*.pdf'
+
+      - name: Upload compiled PDFs
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-reports
+          path: |
+            reports/technical_report/report.pdf
+            reports/presentation/presentation.pdf

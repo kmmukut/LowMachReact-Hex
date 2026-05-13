@@ -2,8 +2,10 @@ name: Compile Reports
 
 on:
   push:
+    branches: ["main", "dev"]
     paths:
       - 'reports/**/*.tex'
+      - '.github/workflows/compile-reports.yml'
   workflow_dispatch:
 
 permissions:

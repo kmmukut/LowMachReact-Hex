@@ -4,6 +4,13 @@
 !! - Flat timing report for all named regions.
 !! - Optional nested report based on profiler_start/profiler_stop call stack.
 !! - Runtime enable/disable via profiler_configure().
+!!
+!! Timings are inclusive. Flat profiler rows are not additive when nested
+!! timers are enabled. Current top-level timer names include
+!! `Transport_Update`, `Projection_Step`, `Species_Transport`,
+!! `Energy_Transport`, `Diagnostics_Write_Flow`, `Diagnostics_Write_Energy`,
+!! and `Output_Write_VTU`; energy Cantera sync timers are
+!! `Energy_Cantera_PreSync` and `Energy_Cantera_PostSync`.
 module mod_profiler
    use mpi_f08
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
@@ -264,7 +271,9 @@ contains
       if (rank /= 0) return
 
       write(output_unit,'(a)') ' ======================================================================'
-      write(output_unit,'(a)') '  PERFORMANCE PROFILING REPORT (Wall Time in Seconds)'
+      write(output_unit,'(a)') '  PERFORMANCE PROFILING REPORT'
+      write(output_unit,'(a)') '  Inclusive wall time in seconds; Avg% is relative to Total_Simulation.'
+      write(output_unit,'(a)') '  Flat rows are not additive when nested timers are enabled.'
       write(output_unit,'(a)') ' ======================================================================'
       write(output_unit,'(a)') '                      Kernel Name     Calls            Min            Max            Avg        Avg%'
       write(output_unit,'(a)') ' ----------------------------------------------------------------------'

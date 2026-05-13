@@ -6,7 +6,7 @@
 /
 
 &time_input
-  nsteps = 10000
+  nsteps = 16000
   dt = 2.5e-4
   output_interval = 1000
   use_dynamic_dt = .false.
@@ -16,11 +16,31 @@
 &fluid_input
   rho = 1.0
   nu = 1.0e-2
-  
+
+  ! Cantera flow viscosity off unless explicitly testing variable viscosity.
   enable_cantera = .false.
+
+  ! Keeps reference Re fixed.
+  enable_variable_nu = .false.
+
   cantera_mech_file = "gri30.yaml"
   background_temp = 300.0
   background_press = 101325.0
+  transport_update_interval = 1000
+/
+
+
+&energy_input
+  enable_energy = .true.
+  enable_cantera_thermo = .true.
+  ! Reserved for later optimization; currently must be 1.
+  thermo_update_interval = 1
+  thermo_default_species = "CO2"
+  initial_T = 300.0
+  energy_reference_T = 298.15
+  energy_reference_h = 0.0
+  energy_cp = 1005.0
+  energy_lambda = 0.026
 /
 
 &solver_input
@@ -35,16 +55,30 @@
 &boundary_input
   n_patches = 5
   patch_name = "inlet", "outlet", "wall", "zmin", "zmax"
-  
-  ! Open boundary flow case (Velocity Inlet / Floating Pressure)
+
   patch_type = "dirichlet", "neumann", "wall", "symmetric", "symmetric"
-  
+
   patch_velocity_type = "fixed_value", "zero_gradient", "no_slip", "symmetric", "symmetric"
   patch_pressure_type = "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
-  
-  patch_u = 10.0, 0.0, 0.0, 0.0, 0.0
+
+  ! Hot inlet, insulated outlet/walls.
+  patch_temperature_type = "fixed_value", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
+
+  patch_species_type = "fixed_value", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
+
+  ! Inlet species composition:
+  ! O2 = 0.2, N2 = 0.7, CO2 = 0.1
+  patch_Y(1,1) = 0.2
+  patch_Y(2,1) = 0.7
+  patch_Y(3,1) = 0.1
+
+
+  patch_T = 400.0, 300.0, 300.0, 300.0, 300.0
+
+  patch_u = 1.0, 0.0, 0.0, 0.0, 0.0
   patch_v = 0.0, 0.0, 0.0, 0.0, 0.0
   patch_w = 0.0, 0.0, 0.0, 0.0, 0.0
+
   patch_p = 0.0, 0.0, 0.0, 0.0, 0.0
   patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0
 /
@@ -56,9 +90,16 @@
 /
 
 &species_input
-  enable_species = .false.
+  enable_species = .true.
   enable_reactions = .false.
-  enable_cantera = .false.
+
+  !Keep species transport simple for the first Stage-2B test.
+  enable_cantera = .true.
+
+  nspecies = 3
+  species_name = "O2", "N2", "CO2"
+  initial_Y = 0.3, 0.4, 0.3
+  species_diffusivity = 5.0e-5, 2.0e-5, 3.0e-5
 /
 
 &profiling_input

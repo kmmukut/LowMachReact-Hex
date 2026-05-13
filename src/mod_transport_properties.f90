@@ -1,16 +1,19 @@
 !> Fluid transport properties and Cantera C++ bridge abstraction.
 !!
-!! This module manages cell-centered physical properties such as density, 
-!! viscosity, and species diffusivity. It acts as an isolation layer 
+!! This module manages cell-centered physical properties such as flow density,
+!! viscosity, and species diffusivity. It acts as an isolation layer
 !! between the high-level flow/species solvers and the external Cantera 
 !! C++ library.
 !!
 !! The module supports two primary modes:
 !! 1. **Constant Fallback**: Properties are pulled directly from `case.nml` 
 !!    and remain uniform and static.
-!! 2. **Cantera Dynamic**: Mixture-averaged properties ($\mu$, $\rho$, $D_k$) 
+!! 2. **Cantera Dynamic**: Mixture-averaged transport properties \(\mu\), \(D_k\)
 !!    are evaluated at every update interval using the current local 
 !!    composition, temperature, and pressure via the `cantera_interface`.
+!!    The flow/projection density remains `params%rho`; Cantera thermodynamic
+!!    density is stored separately as `energy%rho_thermo` for diagnostics and
+!!    future use.
 module mod_transport_properties
    use mod_kinds, only : rk, zero, one, fatal_error
    use mod_mesh_types, only : mesh_t
@@ -31,11 +34,11 @@ module mod_transport_properties
    !! to evaluate diffusion terms and calculate the local Reynolds/Peclet 
    !! numbers.
    type transport_properties_t
-      real(rk), allocatable :: rho(:)          !< Mixture density $\rho$ [kg/m^3].
-      real(rk), allocatable :: mu(:)           !< Dynamic viscosity $\mu$ [Pa*s].
-      real(rk), allocatable :: nu(:)           !< Kinematic viscosity $\nu = \mu/\rho$ [m^2/s].
-      real(rk), allocatable :: lambda(:)       !< Thermal conductivity $\lambda$ [W/m*K].
-      real(rk), allocatable :: diffusivity(:,:) !< Species-specific diffusivity $D_{k,i}$ [m^2/s]. Indexed as (species, cell).
+      real(rk), allocatable :: rho(:)          !< Constant flow/projection density [kg/m^3]; not Cantera rho_thermo.
+      real(rk), allocatable :: mu(:)           !< Dynamic viscosity \(\mu\) [Pa*s].
+      real(rk), allocatable :: nu(:)           !< Kinematic viscosity \(\nu = \mu/\rho\) [m^2/s].
+      real(rk), allocatable :: lambda(:)       !< Thermal conductivity \(\lambda\) [W/m*K].
+      real(rk), allocatable :: diffusivity(:,:) !< Species-specific diffusivity \(D_{k,i}\) [m^2/s]. Indexed as (species, cell).
    end type transport_properties_t
 
    !> C-Binding interface for the Cantera C++ bridge.
@@ -90,7 +93,7 @@ contains
       type(case_params_t), intent(inout) :: params
       type(transport_properties_t), intent(inout) :: transport
 
-      if (params%enable_cantera_fluid .or. params%enable_cantera_species) then
+      if (params%enable_cantera_fluid .or. params%enable_cantera_species .or. params%enable_cantera_thermo) then
          call initialize_cantera_wrapper(params)
       end if
 
@@ -104,7 +107,7 @@ contains
          transport%diffusivity = zero
       end if
 
-      transport%rho = zero
+      transport%rho = params%rho
       transport%mu = zero
       transport%nu = zero
       transport%lambda = zero
@@ -135,11 +138,14 @@ contains
          do k = 1, params%nspecies
             call cantera_get_species_name_c(k-1, params%species_name(k), n_len)
          end do
-      else if (params%enable_cantera_fluid .and. params%nspecies == 0) then
-         ! Single Species Fluid Mode: Default to the first species (e.g., N2)
+      else if (params%enable_cantera_thermo .and. params%nspecies == 0) then
+         ! No-species thermo mode: use user-selected inert/default species.
          params%nspecies = 1
-         n_len = len(params%species_name(1))
-         call cantera_get_species_name_c(0, params%species_name(1), n_len)
+         params%species_name(1) = trim(params%thermo_default_species)
+      else if (params%enable_cantera_fluid .and. params%nspecies == 0) then
+         ! Single Species Fluid Mode: default to N2 when no species list is provided.
+         params%nspecies = 1
+         params%species_name(1) = 'N2'
       end if
 
       ! Re-initialize with the finalized species list for future transport updates
@@ -171,16 +177,17 @@ contains
 
    !> Evaluates physical properties for the entire domain.
    !!
-   !! If Cantera is enabled, it calls the C++ bridge to calculate 
-   !! mixture-averaged viscosity and diffusivity. Otherwise, it applies 
-   !! the uniform constant values defined in `params`.
+   !! If Cantera transport is enabled, it calls the C++ bridge to calculate
+   !! mixture-averaged viscosity and diffusivity. Otherwise, it applies the
+   !! uniform constant values defined in `params`. In both cases,
+   !! `transport%rho` is the constant flow/projection density `params%rho`.
    !!
    !! @param mesh The computational mesh.
    !! @param flow MPI decomposition and halo metadata.
    !! @param params Simulation parameters and background conditions.
    !! @param Y Optional input mass fractions (ncells, nspecies).
    !! @param transport The property container to update.
-   subroutine update_transport_properties(mesh, flow, params, Y, transport)
+   subroutine update_transport_properties(mesh, flow, params, Y, transport, T_state)
       use iso_c_binding, only : c_char
       use mod_profiler, only : profiler_start, profiler_stop
       type(mesh_t), intent(in) :: mesh
@@ -188,6 +195,7 @@ contains
       type(case_params_t), intent(in) :: params
       real(rk), intent(in), optional :: Y(:,:)
       type(transport_properties_t), intent(inout) :: transport
+      real(rk), intent(in), optional :: T_state(:)
       integer :: c, k, i, n_len, nloc
       real(rk), allocatable :: T_arr(:), P_arr(:), Y_local(:,:), Y_pure(:,:)
       real(rk), allocatable :: mu_local(:), diff_local(:,:)
@@ -198,18 +206,29 @@ contains
       end if
 
       ! Constant density is assumed for the standard incompressible solver mode.
+      ! This is not a Cantera density update; energy%rho_thermo is diagnostic only.
       transport%rho = params%rho
       
       if (params%enable_cantera_fluid .or. params%enable_cantera_species) then
          call profiler_start('Transport_Setup')
 
-         ! Build owned-cell Temperature and Pressure arrays for the bridge call.
+         ! Build owned-cell Temperature and thermodynamic-pressure arrays for the bridge call.
          nloc = flow%nlocal
          allocate(T_arr(nloc))
          allocate(P_arr(nloc))
          allocate(mu_local(nloc))
          allocate(diff_local(max(1, params%nspecies), nloc))
-         T_arr = params%background_temp
+         if (present(T_state)) then
+            if (size(T_state) < mesh%ncells) then
+               call fatal_error('transport', 'T_state has incompatible size for Cantera transport update')
+            end if
+            do i = 1, nloc
+               c = flow%first_cell + i - 1
+               T_arr(i) = T_state(c)
+            end do
+         else
+            T_arr = params%background_temp
+         end if
          P_arr = params%background_press
          mu_local = zero
          diff_local = zero
@@ -313,6 +332,14 @@ contains
          end if
       end if
       
-   end subroutine update_transport_properties
+   
+      ! Validation-control option: keep flow viscosity/nu constant unless
+      ! variable viscosity is explicitly enabled. This still allows Cantera
+      ! species diffusivity D_k to be used when species Cantera transport is on.
+      if (.not. params%enable_variable_nu) then
+         transport%mu = params%rho * params%nu
+      end if
+
+end subroutine update_transport_properties
 
 end module mod_transport_properties

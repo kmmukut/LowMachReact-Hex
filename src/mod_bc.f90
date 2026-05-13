@@ -43,17 +43,21 @@ module mod_bc
       character(len=name_len) :: name = ""       !< Human-readable name (e.g., "inlet").
       character(len=name_len) :: type_name = ""  !< Input type string from namelist (e.g., "wall").
       integer :: type_id = bc_unknown            !< Master BC type ID for the patch.
-      real(rk) :: velocity(3) = zero             !< Specified velocity vector $(u,v,w)$ [m/s].
-      real(rk) :: pressure = zero                !< Specified static pressure $P$ [Pa].
-      real(rk) :: dpdn = zero                    !< Specified pressure gradient $dP/dn$ [Pa/m].
+      real(rk) :: velocity(3) = zero             !< Specified velocity vector \((u,v,w)\) [m/s].
+      real(rk) :: pressure = zero                !< Specified static pressure \(P\) [Pa].
+      real(rk) :: dpdn = zero                    !< Specified pressure gradient \(dP/dn\) [Pa/m].
 
       !> Species boundary settings.
       integer :: species_type_id = bc_unknown    !< BC type applied to species transport.
-      real(rk) :: species_Y(max_species) = zero  !< Specified mass fractions $Y_k$ for Dirichlet boundaries.
+      real(rk) :: species_Y(max_species) = zero  !< Specified mass fractions \(Y_k\) for Dirichlet boundaries.
 
       !> Field-specific overrides.
       integer :: velocity_type_id = bc_unknown   !< BC type for velocity (if different from master).
       integer :: pressure_type_id = bc_unknown   !< BC type for pressure (if different from master).
+
+      !> Temperature/enthalpy boundary settings.
+      integer :: temperature_type_id = bc_unknown !< BC type applied to temperature/enthalpy transport.
+      real(rk) :: temperature = 300.0_rk          !< Specified boundary temperature [K].
    end type bc_patch_t
 
    !> Global set of boundary conditions covering all mesh patches.
@@ -66,6 +70,7 @@ module mod_bc
    public :: patch_type_for_face, boundary_velocity, face_effective_neighbor
    public :: boundary_pressure_type, boundary_pressure
    public :: boundary_species
+   public :: boundary_temperature
    public :: is_periodic_face
 
 contains
@@ -105,6 +110,7 @@ contains
                bc%patches(p)%velocity = [params%patch_u(q), params%patch_v(q), params%patch_w(q)]
                bc%patches(p)%pressure = params%patch_p(q)
                bc%patches(p)%dpdn = params%patch_dpdn(q)
+               bc%patches(p)%temperature = params%patch_T(q)
 
                if (trim(params%patch_velocity_type(q)) /= "") then
                   bc%patches(p)%velocity_type_id = parse_bc_type(params%patch_velocity_type(q))
@@ -124,6 +130,12 @@ contains
                   bc%patches(p)%species_type_id = parse_bc_type(params%patch_type(q))
                end if
                bc%patches(p)%species_Y(:) = params%patch_Y(:, q)
+
+               if (trim(params%patch_temperature_type(q)) /= "") then
+                  bc%patches(p)%temperature_type_id = parse_bc_type(params%patch_temperature_type(q))
+               else
+                  bc%patches(p)%temperature_type_id = parse_bc_type(params%patch_type(q))
+               end if
 
                found = .true.
                exit
@@ -325,6 +337,38 @@ contains
    end subroutine boundary_species
 
    !> Returns the pressure BC type for a given face.
+
+   !> Evaluates temperature at a boundary face.
+   !!
+   !! Dirichlet/fixed_value boundaries return the configured patch_T.
+   !! All other boundary types currently behave as zero-gradient boundaries.
+   subroutine boundary_temperature(mesh, bc, face_id, interior_T, ext_T, is_dirichlet)
+      type(mesh_t), intent(in) :: mesh
+      type(bc_set_t), intent(in) :: bc
+      integer, intent(in) :: face_id
+      real(rk), intent(in) :: interior_T
+      real(rk), intent(out) :: ext_T
+      logical, intent(out) :: is_dirichlet
+
+      integer :: patch_id
+
+      patch_id = mesh%faces(face_id)%patch
+      if (patch_id <= 0) then
+         ext_T = interior_T
+         is_dirichlet = .false.
+         return
+      end if
+
+      select case (bc%patches(patch_id)%temperature_type_id)
+      case (bc_dirichlet)
+         ext_T = bc%patches(patch_id)%temperature
+         is_dirichlet = .true.
+      case default
+         ext_T = interior_T
+         is_dirichlet = .false.
+      end select
+   end subroutine boundary_temperature
+
    integer function boundary_pressure_type(mesh, bc, face_id) result(type_id)
       type(mesh_t), intent(in) :: mesh
       type(bc_set_t), intent(in) :: bc

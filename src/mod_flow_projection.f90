@@ -1,21 +1,23 @@
 !> Incompressible Navier-Stokes solver using the Fractional-Step Projection method.
 !!
 !! This module implements the core hydrodynamic solver for the 
-!! LowMachReact-Hex framework. It solves the incompressible Navier-Stokes 
-!! equations using a semi-implicit fractional-step approach:
+!! LowMachReact-Hex framework. The current projection/momentum path is
+!! constant-density, using `params%rho` for the pressure projection and
+!! momentum update. It solves the incompressible Navier-Stokes equations using
+!! a semi-implicit fractional-step approach:
 !!
-!! 1. **Predictor Step**: An intermediate velocity $\mathbf{u}^*$ is 
+!! 1. **Predictor Step**: An intermediate velocity \(\mathbf{u}^*\) is
 !!    calculated by advancing the momentum equation explicitly, excluding 
 !!     the new pressure gradient.
 !!    $$\frac{\mathbf{u}^* - \mathbf{u}^n}{\Delta t} = -(\mathbf{u} \cdot \nabla) \mathbf{u} + \nu \nabla^2 \mathbf{u} - \frac{1}{\rho} \nabla p^n + \mathbf{f}$$
 !!
-!! 2. **Poisson Solve**: A pressure correction potential $\phi = p^{n+1} - p^n$ 
+!! 2. **Poisson Solve**: A pressure correction potential \(\phi = p^{n+1} - p^n\)
 !!    is found by solving the Poisson equation derived from the 
-!!    continuity constraint ($\nabla \cdot \mathbf{u}^{n+1} = 0$).
+!!    continuity constraint \(\nabla \cdot \mathbf{u}^{n+1} = 0\).
 !!    $$\nabla^2 \phi = \frac{\rho}{\Delta t} \nabla \cdot \mathbf{u}^*$$
 !!
-!! 3. **Corrector Step**: The final velocity $\mathbf{u}^{n+1}$ and 
-!!    pressure $p^{n+1}$ are updated using the potential gradient.
+!! 3. **Corrector Step**: The final velocity \(\mathbf{u}^{n+1}\) and
+!!    pressure \(p^{n+1}\) are updated using the potential gradient.
 !!    $$\mathbf{u}^{n+1} = \mathbf{u}^* - \frac{\Delta t}{\rho} \nabla \phi$$
 !!    $$p^{n+1} = p^n + \phi$$
 !!
@@ -52,14 +54,14 @@ module mod_flow_projection
       integer :: pressure_iterations_max = 0 !< Maximum PCG iterations used by any pressure solve.
       integer :: pressure_solve_count = 0 !< Number of pressure solves completed.
       real(rk) :: pressure_iterations_avg = zero !< Average PCG iterations per pressure solve.
-      real(rk) :: pressure_residual = zero !< Final $L_2$ residual norm of the Poisson system.
-      real(rk) :: max_divergence = zero    !< Maximum local velocity divergence $\nabla \cdot \mathbf{u}$ [1/s].
+      real(rk) :: pressure_residual = zero !< Final \(L_2\) residual norm of the Poisson system.
+      real(rk) :: max_divergence = zero    !< Maximum local velocity divergence \(\nabla \cdot \mathbf{u}\) [1/s].
       real(rk) :: rms_divergence = zero    !< Root-mean-square divergence across the domain.
       real(rk) :: net_boundary_flux = zero !< Global mass flux imbalance across all boundaries [kg/s].
-      real(rk) :: kinetic_energy = zero    !< Total domain kinetic energy $\int \frac{1}{2} \rho |\mathbf{u}|^2 dV$ [J].
+      real(rk) :: kinetic_energy = zero    !< Total domain kinetic energy \(\int \frac{1}{2} \rho |\mathbf{u}|^2 dV\) [J].
       real(rk) :: cfl = zero               !< Current Courant-Friedrichs-Lewy number.
       real(rk) :: wall_time = zero         !< Cumulative solver wall-clock time [s].
-      real(rk) :: max_velocity = zero      !< Maximum velocity magnitude $|\mathbf{u}|_{max}$ [m/s].
+      real(rk) :: max_velocity = zero      !< Maximum velocity magnitude \(|\mathbf{u}|_{max}\) [m/s].
       real(rk) :: total_mass = zero        !< Total integrated mass in the domain [kg].
       real(rk) :: min_species_y = zero     !< Global minimum species mass fraction (diagnostic for boundedness).
    end type solver_stats_t
@@ -75,8 +77,8 @@ module mod_flow_projection
       integer :: ncells = 0                 !< Number of cells.
       integer :: max_faces = 0              !< Max faces per cell.
       integer, allocatable :: nb(:,:)       !< Neighbor indices for each cell face.
-      real(rk), allocatable :: coeff(:,:)   !< Off-diagonal Laplacian coefficients $A_{ij} = \frac{Area}{dist}$.
-      real(rk), allocatable :: diag(:)      !< Diagonal Laplacian coefficients $A_{ii} = \sum A_{ij}$.
+      real(rk), allocatable :: coeff(:,:)   !< Off-diagonal Laplacian coefficients \(A_{ij} = \frac{Area}{dist}\).
+      real(rk), allocatable :: diag(:)      !< Diagonal Laplacian coefficients \(A_{ii} = \sum A_{ij}\).
    end type pressure_operator_cache_t
 
    !> Temporary workspace for projection step calculations.

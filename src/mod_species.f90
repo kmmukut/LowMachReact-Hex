@@ -1,12 +1,12 @@
 !> Finite-Volume transport solver for chemical species mass fractions.
 !!
-!! This module implements the solution of the transport equation for $N$ 
-!! chemical species mass fractions $Y_k$. The solver supports:
+!! This module implements the solution of the transport equation for \(N\)
+!! chemical species mass fractions \(Y_k\). The solver supports:
 !! 1. **Upwind Advection**: A 1st-order stable scheme for robust transport 
 !!    of sharp scalar gradients.
 !! 2. **Corrected Diffusion**: Diffusive fluxes are explicitly corrected 
-!!    to ensure the net mass flux sums to zero ($\sum \mathbf{j}_k = 0$).
-!! 3. **Mass Conservation**: Enforces $\sum Y_k = 1$ and boundedness $[0, 1]$ 
+!!    to ensure the net mass flux sums to zero \(\sum \mathbf{j}_k = 0\).
+!! 3. **Mass Conservation**: Enforces \(\sum Y_k = 1\) and boundedness \([0, 1]\)
 !!    after every timestep.
 !! 4. **MPI Synchronization**: Efficiently gathers owned-cell updates into 
 !!    the globally replicated mesh field.
@@ -28,9 +28,9 @@ module mod_species
 
    !> Container for multi-species mass fraction fields.
    type :: species_fields_t
-      integer :: nspecies = 0                       !< Total number of transport species $N_s$.
-      real(rk), allocatable :: Y(:,:)               !< Current mass fractions $Y_k$ (nspecies, ncells).
-      real(rk), allocatable :: Y_old(:,:)           !< Mass fractions from previous step $n$.
+      integer :: nspecies = 0                       !< Total number of transport species \(N_s\).
+      real(rk), allocatable :: Y(:,:)               !< Current mass fractions \(Y_k\) (nspecies, ncells).
+      real(rk), allocatable :: Y_old(:,:)           !< Mass fractions from previous step \(n\).
       character(len=name_len), allocatable :: names(:) !< Array of species names (e.g., "H2", "O2", "N2").
    end type species_fields_t
 
@@ -40,7 +40,7 @@ contains
    !!
    !! Performs name-based matching between the transport registry and 
    !! namelist initial conditions. Normalizes the initial mixture to 
-   !! ensure the physical constraint $\sum Y_k = 1$ is met at $t=0$.
+   !! ensure the physical constraint \(\sum Y_k = 1\) is met at \(t=0\).
    !!
    !! @param mesh The computational mesh.
    !! @param params Input configuration.
@@ -112,10 +112,10 @@ contains
    !> Performs one explicit Euler step for species transport.
    !!
    !! This routine evaluates:
-   !! - **Advective Fluxes**: $J_{adv,k} = \dot{m}_f Y_{upwind,k}$.
-   !! - **Diffusive Fluxes**: $J_{diff,k} = -D_k A_f \nabla Y_k$.
-   !! - **Flux Correction**: Subtracts $Y_k \sum J_{diff,k}$ to satisfy mass conservation.
-   !! - **Bounding & Normalization**: Clamps $Y_k \in [0, 1]$ and enforces $\sum Y_k = 1$ locally.
+   !! - **Advective Fluxes**: \(J_{adv,k} = \dot{m}_f Y_{upwind,k}\).
+   !! - **Diffusive Fluxes**: \(J_{diff,k} = -D_k A_f \nabla Y_k\).
+   !! - **Flux Correction**: Subtracts \(Y_k \sum J_{diff,k}\) to satisfy mass conservation.
+   !! - **Bounding & Normalization**: Clamps \(Y_k \in [0, 1]\) and enforces \(\sum Y_k = 1\) locally.
    !!
    !! @param mesh The computational mesh.
    !! @param flow MPI decomposition data for synchronization.

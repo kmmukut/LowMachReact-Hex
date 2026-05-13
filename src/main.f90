@@ -1,10 +1,10 @@
-!> Main entry point for the LowMachReact-Hex hexahedral low-Mach FV solver.
+!> Main entry point for the LowMachReact-Hex constant-density FV solver.
 !!
 !! This program orchestrates the entire simulation lifecycle:
 !! 1. **Initialization**: Starts MPI, parses the `case.nml` namelist, and reads the mesh.
 !! 2. **Domain Decomposition**: Sets up the replicated mesh MPI ranks for flow and radiation.
-!! 3. **Field Setup**: Allocates and initializes velocity, pressure, and species mass fractions.
-!! 4. **Time Integration Loop**: Executes the fractional-step projection method and species transport.
+!! 3. **Field Setup**: Allocates and initializes velocity, pressure, species, and energy fields.
+!! 4. **Time Integration Loop**: Executes projection, species transport, and sensible-enthalpy transport.
 !! 5. **Diagnostics & Output**: Computes global observables and writes VTU/CSV files.
 !! 6. **Finalization**: Safely releases all allocated memory and shuts down MPI.
 program lowmach_react_hex
@@ -24,6 +24,9 @@ program lowmach_react_hex
                           write_vtu_unstructured, write_mesh_summary, write_pvd_collection
    use mod_species, only : species_fields_t, initialize_species, finalize_species, &
                            advance_species_transport
+   use mod_energy, only : energy_fields_t, initialize_energy, finalize_energy, &
+                           advance_energy_transport, &
+                           write_energy_diagnostics_header, write_energy_diagnostics_row
    use mod_transport_properties, only : transport_properties_t, initialize_transport, &
                                         finalize_transport, update_transport_properties
    use mod_profiler, only : profiler_start, profiler_stop, profiler_report, profiler_configure
@@ -37,6 +40,7 @@ program lowmach_react_hex
    type(flow_fields_t) :: fields    !< Hydrodynamic fields (U, P).
    type(solver_stats_t) :: stats    !< Runtime diagnostics and solver performance metrics.
    type(species_fields_t) :: species !< Species mass fractions.
+   type(energy_fields_t) :: energy   !< Enthalpy/temperature/radiation-source fields.
    type(transport_properties_t) :: transport !< Physical properties (rho, mu, Dk).
 
    character(len=256) :: case_file
@@ -76,6 +80,13 @@ program lowmach_react_hex
    if (params%enable_species) then
       call initialize_species(mesh, params, species)
    end if
+   if (params%enable_energy) then
+      if (params%enable_species) then
+         call initialize_energy(mesh, params, energy, species%Y)
+      else
+         call initialize_energy(mesh, params, energy)
+      end if
+   end if
 
    if (flow_mpi%rank == 0 .and. params%enable_species) then
       print *, "species: ", species%nspecies
@@ -85,13 +96,15 @@ program lowmach_react_hex
    call prepare_output(params, flow_mpi)
    call write_mesh_summary(params, flow_mpi, mesh)
    call write_diagnostics_header(params, flow_mpi)
+   call write_energy_diagnostics_header(params, flow_mpi)
    call write_pvd_collection(params, flow_mpi, params%nsteps, params%output_interval, params%dt)
 
    ! 6. Initial diagnostics and visualization snapshot.
    time = zero
    call compute_flow_diagnostics(mesh, flow_mpi, bc, params, fields, stats)
    call write_diagnostics_row(params, flow_mpi, 0, time, stats)
-   call write_vtu_unstructured(params, flow_mpi, mesh, fields, species, 0)
+   call write_energy_diagnostics_row(mesh, flow_mpi, params, energy, 0, time)
+   call write_vtu_unstructured(params, flow_mpi, mesh, fields, species, energy, transport, 0)
 
    if (flow_mpi%rank == 0) then
       write(output_unit,'(a)') 'LowMachReact-Hex hexahedral low-Mach FV solver'
@@ -99,6 +112,30 @@ program lowmach_react_hex
       write(output_unit,'(a,i0)') 'cells: ', mesh%ncells
       write(output_unit,'(a,i0)') 'flow/chemistry MPI ranks: ', flow_mpi%nprocs
       write(output_unit,'(a,i0)') 'radiation MPI ranks: ', rad_mpi%nprocs
+      write(output_unit,'(a,es12.5,a)') 'Flow density mode: constant rho = ', params%rho, ' kg/m^3'
+      if (params%enable_variable_nu) then
+         write(output_unit,'(a)') 'Flow viscosity mode: variable Cantera mu/nu enabled'
+      else
+         write(output_unit,'(a,es12.5,a)') 'Flow viscosity mode: constant nu = ', params%nu, ' m^2/s'
+      end if
+      if (params%enable_energy .and. params%enable_cantera_thermo) then
+         write(output_unit,'(a)') 'Cantera rho_thermo: diagnostic only, not used by projection'
+      end if
+      if (params%enable_cantera_fluid .or. params%enable_cantera_species) then
+         write(output_unit,'(a,i0,a)') 'Cantera transport update interval: ', &
+            params%transport_update_interval, ' step(s) [mu/D_k only]'
+         if (params%enable_energy) then
+            write(output_unit,'(a)') 'Cantera transport temperature source: energy%T'
+         else
+            write(output_unit,'(a,es12.5,a)') 'Cantera transport temperature source: background_temp = ', &
+               params%background_temp, ' K'
+         end if
+      end if
+      if (params%enable_energy .and. params%enable_cantera_thermo) then
+         write(output_unit,'(a)') 'Cantera thermo update interval: every energy step'
+         write(output_unit,'(a,es12.5,a)') 'Cantera thermodynamic pressure p0: ', &
+            params%background_press, ' Pa'
+      end if
    end if
 
    ! 7. Main Time-Stepping Loop
@@ -114,27 +151,48 @@ program lowmach_react_hex
          call profiler_stop('CFL_Update')
       end if
 
-      ! B. Dynamic physical properties update via Cantera.
+      ! B. Dynamic transport-property update via Cantera.
+      ! transport_update_interval gates Cantera mu/D_k refresh; enable_variable_nu controls whether mu affects flow; flow density remains params%rho.
+      ! Cantera h/T thermo recovery remains inside the energy update path.
       if (mod(step-1, params%transport_update_interval) == 0 .or. step == 1) then
-         call profiler_start('Chemistry_Cantera')
+         call profiler_start('Transport_Update')
          if (params%enable_species) then
-            call update_transport_properties(mesh, flow_mpi, params, species%Y, transport)
+            if (params%enable_energy) then
+               call update_transport_properties(mesh, flow_mpi, params, species%Y, transport, T_state=energy%T)
+            else
+               call update_transport_properties(mesh, flow_mpi, params, species%Y, transport)
+            end if
          else
-            call update_transport_properties(mesh, flow_mpi, params, transport=transport)
+            if (params%enable_energy) then
+               call update_transport_properties(mesh, flow_mpi, params, transport=transport, T_state=energy%T)
+            else
+               call update_transport_properties(mesh, flow_mpi, params, transport=transport)
+            end if
          end if
-         call profiler_stop('Chemistry_Cantera')
+         call profiler_stop('Transport_Update')
       end if
       
       ! C. Advance Momentum & Pressure (Projection Method).
-      call profiler_start('Pressure_Solve')
+      call profiler_start('Projection_Step')
       call advance_projection_step(mesh, flow_mpi, bc, params, transport, fields, stats)
-      call profiler_stop('Pressure_Solve')
+      call profiler_stop('Projection_Step')
       
       ! D. Advance Species Transport.
       if (params%enable_species) then
-         call profiler_start('Flow_Transport')
+         call profiler_start('Species_Transport')
          call advance_species_transport(mesh, flow_mpi, bc, params, fields, species, transport)
-         call profiler_stop('Flow_Transport')
+         call profiler_stop('Species_Transport')
+      end if
+      
+      ! E. Advance passive sensible-enthalpy transport.
+      if (params%enable_energy) then
+         call profiler_start('Energy_Transport')
+         if (params%enable_species) then
+            call advance_energy_transport(mesh, flow_mpi, bc, params, fields, energy, species%Y)
+         else
+            call advance_energy_transport(mesh, flow_mpi, bc, params, fields, energy)
+         end if
+         call profiler_stop('Energy_Transport')
       end if
       
       time = time + params%dt
@@ -146,10 +204,19 @@ program lowmach_react_hex
          call compute_global_observables(mesh, flow_mpi, fields, species, transport, stats)
          call profiler_stop('Flow_Diagnostics')
 
-         call profiler_start('MPI_I/O_Sync')
+         call profiler_start('Diagnostics_Write_Flow')
          call write_diagnostics_row(params, flow_mpi, step, time, stats)
-         call write_vtu_unstructured(params, flow_mpi, mesh, fields, species, step)
-         call profiler_stop('MPI_I/O_Sync')
+         call profiler_stop('Diagnostics_Write_Flow')
+
+         if (params%enable_energy) then
+            call profiler_start('Diagnostics_Write_Energy')
+            call write_energy_diagnostics_row(mesh, flow_mpi, params, energy, step, time)
+            call profiler_stop('Diagnostics_Write_Energy')
+         end if
+
+         call profiler_start('Output_Write_VTU')
+         call write_vtu_unstructured(params, flow_mpi, mesh, fields, species, energy, transport, step)
+         call profiler_stop('Output_Write_VTU')
 
          if (flow_mpi%rank == 0) then
             write(output_unit,'(a,i0,2x,a,es12.5,2x,a,f8.2,2x,a,es12.5,2x,a,es12.5,2x,a,es12.5,2x,a,es12.5,2x,a,i0,2x,a,es12.5)') &
@@ -164,6 +231,9 @@ program lowmach_react_hex
    call finalize_fields(fields)
    if (params%enable_species) then
       call finalize_species(species)
+   end if
+   if (params%enable_energy) then
+      call finalize_energy(energy)
    end if
    call finalize_transport(transport)
    call mesh_finalize(mesh)

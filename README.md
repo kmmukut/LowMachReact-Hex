@@ -8,9 +8,10 @@ The current baseline implementation features:
 * **Cell-centered finite-volume** formulation on axis-aligned cuboid cells.
 * **Fractional-step projection method** with corrected conservative face fluxes.
 * **MPI decomposition** by owned cell ranges, with a globally replicated mesh to support spectral radiation solvers.
-* **Scale-on-Demand Species**: Dynamic species transport from 0 to 256+ species. Implements **Correction Velocity** for strict mass conservation. Supports manual selection or automatic discovery from Cantera mechanisms.
-* **Cantera 3.x integration**: Decoupled flags for viscosity/density and species diffusivity. Automatic mechanism loading for reacting flows.
-* **Integrated Profiling**: Hierarchical MPI-aware profiler for monitoring kernel execution time and communication overhead.
+* **Scale-on-Demand Species**: Dynamic passive species transport from 0 to 256+ species. Implements diffusive-flux correction for strict mass-fraction consistency.
+* **Passive Sensible-Enthalpy Energy Transport**: Optional transport of sensible enthalpy `h`, with temperature recovered from `h`, composition `Y`, and thermodynamic pressure `p0`.
+* **Cantera 3.x Integration**: Decoupled Cantera paths for flow transport, species diffusivity, and energy thermodynamics. Cantera thermo provides `h <-> T`, `cp`, thermal conductivity, and diagnostic `rho_thermo`.
+* **Integrated Profiling**: Hierarchical MPI-aware profiler for monitoring projection, species, energy, Cantera thermo sync, I/O, and communication overhead.
 * **VTU/PVD output** for visualization in ParaView and CSV diagnostics for quantitative monitoring.
 
 ## Governing Equations
@@ -30,6 +31,34 @@ Passive species transport is also supported:
 $$
 \frac{\partial Y_k}{\partial t} + \nabla \cdot (\mathbf{u} Y_k) = \nabla \cdot (D_k \nabla Y_k)
 $$
+
+Optional passive sensible-enthalpy transport is available in the current staged solver:
+
+$$
+\frac{\partial h}{\partial t}
++
+\nabla \cdot (\mathbf{u}h)
+=
+\frac{1}{\rho}\nabla \cdot (\lambda \nabla T)
++
+\frac{q_{rad}}{\rho}
+$$
+
+The transported thermal state is `h`; temperature is recovered from `h`, `Y`, and uniform thermodynamic pressure `p0`. The flow/projection density remains the configured constant `rho`. Cantera `rho_thermo` is diagnostic/future-use only and is not used in the pressure projection.
+
+Optional passive sensible-enthalpy transport is available in the current staged solver:
+
+$$
+\frac{\partial h}{\partial t}
++
+\nabla \cdot (\mathbf{u}h)
+=
+\frac{1}{\rho}\nabla \cdot (\lambda \nabla T)
++
+\frac{q_{rad}}{\rho}
+$$
+
+The transported thermal state is `h`; temperature is recovered from `h`, `Y`, and uniform thermodynamic pressure `p0`. The flow/projection density remains the configured constant `rho`. Cantera `rho_thermo` is diagnostic/future-use only and is not used in the pressure projection.
 
 ## Installation & Environment
 
@@ -64,8 +93,10 @@ Visualization files are written to the `output/` directory of the case. Open `fl
 *   **[Architecture](doc_src/architecture.md)**: Detailed split of responsibilities and data structures.
 *   **[Numerics](doc_src/numerics.md)**: Mathematical discretization and solver details.
 *   **[Input Configuration](doc_src/input_configuration.md)**: Detailed guide on namelist parameters and input file preparation.
+*   **[Profiling Guide](doc_src/profiling.md)**: How to read the nested MPI-aware profiling report.
+*   **[Profiling Guide](doc_src/profiling.md)**: How to read the nested MPI-aware profiling report.
 
 To generate the full API documentation using FORD:
 ```bash
-ford ford.yml
+ford -g ford.yml
 ```

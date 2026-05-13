@@ -13,6 +13,8 @@ module mod_output
    use mod_fields, only : flow_fields_t
    use mod_flow_projection, only : solver_stats_t
    use mod_species, only : species_fields_t
+   use mod_energy, only : energy_fields_t
+   use mod_transport_properties, only : transport_properties_t
    implicit none
 
    private
@@ -128,12 +130,14 @@ contains
    !! - Pressure (Cell Scalar)
    !! - Divergence (Cell Scalar)
    !! - Species Mass Fractions (Cell Scalars, if enabled)
-   subroutine write_vtu_unstructured(params, flow, mesh, fields, species, step)
+   subroutine write_vtu_unstructured(params, flow, mesh, fields, species, energy, transport, step)
       type(case_params_t), intent(in) :: params
       type(flow_mpi_t), intent(inout) :: flow
       type(mesh_t), intent(in) :: mesh
       type(flow_fields_t), intent(in) :: fields
       type(species_fields_t), intent(in) :: species
+      type(energy_fields_t), intent(in) :: energy
+      type(transport_properties_t), intent(in) :: transport
       integer, intent(in) :: step
 
       integer :: unit_id
@@ -197,6 +201,13 @@ contains
       end do
       write(unit_id,'(a)') '        </DataArray>'
 
+
+      write(unit_id,'(a)') '        <DataArray type="Float64" Name="thermo_pressure" format="ascii">'
+      do n = 1, n_owned
+         write(unit_id,'(es24.16)') params%background_press
+      end do
+      write(unit_id,'(a)') '        </DataArray>'
+
       write(unit_id,'(a,a,a)') '        <DataArray type="Float64" Name="divergence" format="ascii">'
       do n = 1, n_owned
          c = owned_indices(n)
@@ -204,7 +215,74 @@ contains
       end do
       write(unit_id,'(a)') '        </DataArray>'
 
+      if (params%enable_energy) then
+         if (.not. allocated(energy%T) .or. .not. allocated(energy%h) .or. &
+             .not. allocated(energy%qrad)) then
+            call fatal_error('output', 'energy output requested but energy arrays are not allocated')
+         end if
+
+         write(unit_id,'(a)') '        <DataArray type="Float64" Name="temperature" format="ascii">'
+         do n = 1, n_owned
+            c = owned_indices(n)
+            write(unit_id,'(es24.16)') energy%T(c)
+         end do
+         write(unit_id,'(a)') '        </DataArray>'
+
+         write(unit_id,'(a)') '        <DataArray type="Float64" Name="enthalpy" format="ascii">'
+         do n = 1, n_owned
+            c = owned_indices(n)
+            write(unit_id,'(es24.16)') energy%h(c)
+         end do
+         write(unit_id,'(a)') '        </DataArray>'
+
+         write(unit_id,'(a)') '        <DataArray type="Float64" Name="qrad" format="ascii">'
+         do n = 1, n_owned
+            c = owned_indices(n)
+            write(unit_id,'(es24.16)') energy%qrad(c)
+         end do
+         write(unit_id,'(a)') '        </DataArray>'
+
+         if (allocated(energy%cp)) then
+            write(unit_id,'(a)') '        <DataArray type="Float64" Name="cp" format="ascii">'
+            do n = 1, n_owned
+               c = owned_indices(n)
+               write(unit_id,'(es24.16)') energy%cp(c)
+            end do
+            write(unit_id,'(a)') '        </DataArray>'
+         end if
+
+         if (allocated(energy%lambda)) then
+            write(unit_id,'(a)') '        <DataArray type="Float64" Name="thermal_conductivity" format="ascii">'
+            do n = 1, n_owned
+               c = owned_indices(n)
+               write(unit_id,'(es24.16)') energy%lambda(c)
+            end do
+            write(unit_id,'(a)') '        </DataArray>'
+         end if
+
+
+         if (allocated(energy%lambda) .and. allocated(energy%cp)) then
+            write(unit_id,'(a)') '        <DataArray type="Float64" Name="thermal_diffusivity" format="ascii">'
+            do n = 1, n_owned
+               c = owned_indices(n)
+               write(unit_id,'(es24.16)') energy%lambda(c) / max(params%rho * energy%cp(c), tiny(1.0_rk))
+            end do
+            write(unit_id,'(a)') '        </DataArray>'
+         end if
+
+         if (allocated(energy%rho_thermo)) then
+            write(unit_id,'(a)') '        <DataArray type="Float64" Name="rho_thermo" format="ascii">'
+            do n = 1, n_owned
+               c = owned_indices(n)
+               write(unit_id,'(es24.16)') energy%rho_thermo(c)
+            end do
+            write(unit_id,'(a)') '        </DataArray>'
+         end if
+
+      end if
+
       if (params%enable_species .and. params%nspecies > 0) then
+
          do k = 1, params%nspecies
             write(unit_id,'(a,a,a)') '        <DataArray type="Float64" Name="Y_', &
                trim(params%species_name(k)), '" format="ascii">'
@@ -221,6 +299,19 @@ contains
             write(unit_id,'(es24.16)') sum(species%Y(:,c))
          end do
          write(unit_id,'(a)') '        </DataArray>'
+
+         if (allocated(transport%diffusivity)) then
+            do k = 1, params%nspecies
+               write(unit_id,'(a,a,a)') '        <DataArray type="Float64" Name="D_', &
+                  trim(params%species_name(k)), '" format="ascii">'
+               do n = 1, n_owned
+                  c = owned_indices(n)
+                  write(unit_id,'(es24.16)') transport%diffusivity(k,c)
+               end do
+               write(unit_id,'(a)') '        </DataArray>'
+            end do
+         end if
+
       end if
 
       ! Helpful debug scalar so you can color by cell_id in ParaView.
@@ -302,13 +393,27 @@ contains
       write(unit_id,'(a)') '    <PCellData Scalars="pressure" Vectors="velocity">'
       write(unit_id,'(a)') '      <PDataArray type="Float64" Name="velocity" NumberOfComponents="3" format="ascii"/>'
       write(unit_id,'(a)') '      <PDataArray type="Float64" Name="pressure" format="ascii"/>'
+      write(unit_id,'(a)') '      <PDataArray type="Float64" Name="thermo_pressure" format="ascii"/>'
       write(unit_id,'(a)') '      <PDataArray type="Float64" Name="divergence" format="ascii"/>'
+      if (params%enable_energy) then
+         write(unit_id,'(a)') '      <PDataArray type="Float64" Name="temperature" format="ascii"/>'
+         write(unit_id,'(a)') '      <PDataArray type="Float64" Name="enthalpy" format="ascii"/>'
+         write(unit_id,'(a)') '      <PDataArray type="Float64" Name="qrad" format="ascii"/>'
+         write(unit_id,'(a)') '      <PDataArray type="Float64" Name="cp" format="ascii"/>'
+         write(unit_id,'(a)') '      <PDataArray type="Float64" Name="thermal_conductivity" format="ascii"/>'
+         write(unit_id,'(a)') '      <PDataArray type="Float64" Name="thermal_diffusivity" format="ascii"/>'
+         write(unit_id,'(a)') '      <PDataArray type="Float64" Name="rho_thermo" format="ascii"/>'
+      end if
       if (params%enable_species .and. params%nspecies > 0) then
          do k = 1, params%nspecies
             write(unit_id,'(a,a,a)') '      <PDataArray type="Float64" Name="Y_', &
                trim(params%species_name(k)), '" format="ascii"/>'
          end do
          write(unit_id,'(a)') '      <PDataArray type="Float64" Name="sum_Y" format="ascii"/>'
+         do k = 1, params%nspecies
+            write(unit_id,'(a,a,a)') '      <PDataArray type="Float64" Name="D_', &
+               trim(params%species_name(k)), '" format="ascii"/>'
+         end do
       end if
       write(unit_id,'(a)') '      <PDataArray type="Int32" Name="cell_id" format="ascii"/>'
       write(unit_id,'(a)') '    </PCellData>'

@@ -1,3 +1,5 @@
+title: Developer Guide
+
 # DEVELOPER_GUIDE.md (LowMachReact-Hex)
 
 ## Project summary
@@ -10,8 +12,10 @@ The solver currently simulates low-Mach flow using a fractional-step projection 
 
 *   **Momentum Predictor**: Explicit AB2/Forward-Euler advection and diffusion.
 *   **Pressure Poisson Solve**: Matrix-free Conjugate Gradient using distance-weighted face interpolation.
-*   **Scale-on-Demand Species**: Dynamic, memory-safe multi-species transport with formal mass conservation via **Correction Velocity**.
-*   **Open Boundary Support**: Handles Dirichlet velocity inlets and Neumann pressure outlets.
+*   **Scale-on-Demand Species**: Dynamic, memory-safe passive multi-species transport with diffusive-flux correction.
+*   **Passive Sensible-Enthalpy Energy**: Optional transport of sensible enthalpy `h`; temperature is recovered from `h`, `Y`, and `p0`.
+*   **Cantera Thermo Sync**: Optional Cantera recovery of `T`, `cp`, `lambda`, and diagnostic `rho_thermo` from `h,Y,p0`, using a combined sync path where possible.
+*   **Open Boundary Support**: Handles Dirichlet velocity inlets, Neumann pressure outlets, fixed species, and fixed-temperature boundaries.
 *   **Numerical Robustness**: Corrected flux interpolation for nonuniform hexahedral grids.
 
 > [!NOTE]
@@ -23,19 +27,19 @@ Current baseline:
 - Projection method with corrected conservative face fluxes.
 - Conservative face-flux divergence diagnostic.
 - Scale-on-Demand Species Transport:
-  - **`mod_species`**: Manages the transport of passive scalars ($Y_k$). Supports **Scale-on-Demand** architecture with dynamic allocation for 0 to 256+ species. Implements a **Correction Velocity** (diffusive flux correction) to ensure strict mass conservation when using different species diffusivities ($D_k$).
-- **`mod_transport_properties`**: Abstracts property evaluation. It provides a bridge to the **Cantera 3.x C++ API** for dynamic evaluation of viscosity and species diffusivity. Features include:
-    - **Automatic Mechanism Discovery**: Automatically identifies all species from a `.yaml` mechanism when `enable_reactions` is active.
-    - **Decoupled Control**: Independent toggles for Cantera-calculated fluid properties (viscosity/density) and species transport properties (diffusivity).
-    - **Name-Based Initialization**: Maps namelist-provided mass fractions to the correct indices in complex mechanisms at runtime.
-- **`mod_profiler`**: A hierarchical performance profiling module used to track execution time for critical kernels and MPI communication. It provides a terminal summary at the end of each simulation.
+  - **`mod_species`**: Manages the transport of passive scalars (\(Y_k\)). Supports **Scale-on-Demand** architecture with dynamic allocation for 0 to 256+ species. Implements a **Correction Velocity** (diffusive flux correction) to ensure strict mass conservation when using different species diffusivities (\(D_k\)).
+- **`mod_energy`**: Owns sensible-enthalpy transport, temperature recovery, `qrad`, `cp`, thermal conductivity, and diagnostic `rho_thermo`. The transported energy state is `h`, not `T`.
+- **`mod_transport_properties`**: Abstracts transport-property evaluation. It provides a bridge to the **Cantera 3.x C++ API** for dynamic evaluation of viscosity and species diffusivity. Flow/projection density remains the configured constant density in the current solver.
+- **Cantera thermo bridge**: Supports sensible enthalpy `h(T,Y,p0)`, temperature recovery `T(h,Y,p0)`, and combined thermo sync `(T, cp, lambda, rho_thermo) = sync(h,Y,p0)`.
+- **`mod_profiler`**: A hierarchical performance profiling module used to track execution time for critical kernels, Cantera thermo sync, output, and MPI communication. It provides a terminal summary at the end of each simulation.
 - **`mod_bc`**: A unified boundary condition manager that supports field-specific types (Velocity, Pressure, Species) for every patch.
 - VTU/PVD output working.
-- Stage 2 boundary-condition split:
+- Field-specific boundary-condition split:
   - legacy `patch_type`
   - `patch_velocity_type`
   - `patch_pressure_type`
-  - `patch_species_type` (New)
+  - `patch_species_type`
+  - `patch_temperature_type`
 - MPI model:
   - full mesh replicated on all ranks
   - flow computation decomposed by owned cell ranges
@@ -43,11 +47,56 @@ Current baseline:
   - lid-driven cavity (Pure, Passive Species, and Cantera modes)
   - periodic body-force channel flow
 - Long-term extensions:
-  - energy equation and variable-density low-Mach coupling
-  - radiation support with wavenumber-domain decomposition
-  - chemistry source terms (finite-rate or equilibrium)
+  - variable-density low-Mach coupling
+  - species-diffusion enthalpy correction
+  - reaction source terms and heat release
+  - radiation physics with wavenumber-domain decomposition coupled through `qrad`
 
 The current solver should be described as a **laminar incompressible / low-Mach-style constant-density finite-volume solver**, not as a full reacting low-Mach solver yet.
+
+---
+
+## Energy and Cantera thermo rules
+
+Current energy/thermo rules:
+
+```text
+h is the transported thermodynamic state
+T is recovered from h, Y, and p0
+p0 = background_press
+rho_flow = params%rho
+rho_thermo = diagnostic only
+thermo_update_interval = 1
+```
+
+When species transport updates composition, preserve transported enthalpy and recover the new temperature:
+
+```text
+T_new = T(h_transported, Y_new, p0)
+```
+
+Do not preserve old temperature by recomputing:
+
+```text
+h_new = h(T_old, Y_new, p0)
+```
+
+The energy path may use a combined Cantera thermo sync:
+
+```text
+(T, cp, lambda, rho_thermo) = sync(h, Y, p0)
+```
+
+This sync must preserve `h`.
+
+Current missing physics:
+
+```text
+variable-density low-Mach divergence constraint
+reactions and reaction heat release
+species-diffusion enthalpy correction: -div(sum_k h_k J_k)
+external radiation physics
+```
 
 ---
 
@@ -91,6 +140,18 @@ $$
 \frac{\partial Y_k}{\partial t} + \nabla \cdot (\mathbf{u} Y_k) = \nabla \cdot (D_k \nabla Y_k)
 $$
 
+When energy is enabled, the current passive sensible-enthalpy equation is:
+
+$$
+\frac{\partial h}{\partial t}
++
+\nabla \cdot (\mathbf{u} h)
+=
+\frac{1}{\rho}\nabla \cdot (\lambda \nabla T)
++
+\frac{q_{rad}}{\rho}
+$$
+
 where:
 
 - `u` is velocity
@@ -99,6 +160,10 @@ where:
 - `rho` is constant density
 - `nu` is kinematic viscosity (constant or Cantera-derived)
 - `D_k` is species diffusivity (constant or Cantera-derived)
+- `h` is transported sensible enthalpy
+- `T = T(h,Y,p0)` is recovered temperature
+- `lambda` is thermal conductivity
+- `qrad` is a volumetric source term, currently zero unless a future coupling fills it
 - `body_force` is used to drive periodic channel flow
 
 ---
@@ -107,9 +172,9 @@ where:
 
 The solver uses a semi-implicit fractional-step method to decouple velocity and pressure:
 
-1.  **Predictor Step**: Compute an intermediate velocity $\mathbf{u}^*$ by advancing the momentum equation explicitly, excluding the new pressure gradient.
+1.  **Predictor Step**: Compute an intermediate velocity \(\mathbf{u}^*\) by advancing the momentum equation explicitly, excluding the new pressure gradient.
     $$\frac{\mathbf{u}^* - \mathbf{u}^n}{\Delta t} = -(\mathbf{u}^n \cdot \nabla) \mathbf{u}^n + \nu \nabla^2 \mathbf{u}^n + \mathbf{f}$$
-2.  **Poisson Equation**: Solve for the pressure potential $\phi = p^{n+1} - p^n$ to enforce the divergence-free constraint.
+2.  **Poisson Equation**: Solve for the pressure potential \(\phi = p^{n+1} - p^n\) to enforce the divergence-free constraint.
     $$\nabla^2 \phi = \frac{\rho}{\Delta t} \nabla \cdot \mathbf{u}^*$$
 3.  **Corrector Step**: Update the velocity and pressure fields.
     $$\mathbf{u}^{n+1} = \mathbf{u}^* - \frac{\Delta t}{\rho} \nabla \phi$$
@@ -335,6 +400,7 @@ After modifying any of the following:
 - mesh generator
 - output routines
 - species routines
+- energy/thermo routines
 - radiation infrastructure
 - input parsing
 - mesh connectivity logic
@@ -347,7 +413,8 @@ Run these checks:
 4. Run cavity with 8 ranks.
 5. Run channel with 1 rank.
 6. Run channel with 8 ranks.
-7. Confirm:
+7. If energy or thermo changed, run constant-property energy and Cantera thermo smoke tests.
+8. Confirm:
    - no crash
    - VTU files are produced
    - PVD file points to the correct output files
@@ -729,7 +796,7 @@ if (params%enable_radiation) then
 end if
 ```
 
-Radiation should not affect the flow until an energy equation exists. Until then, it may be computed and output for diagnostics/postprocessing.
+Radiation should not affect the flow until the passive enthalpy path and manufactured `qrad` tests are validated. Until then, it may be computed and output for diagnostics/postprocessing.
 
 ---
 
@@ -769,8 +836,9 @@ Development path:
 3. validate against known mixture values (Done)
 4. Scale-on-Demand dynamic discovery (Done)
 5. use transport properties in species and energy equations (Done)
+6. use combined Cantera thermo sync for energy-step `T/cp/lambda/rho_thermo` updates (Done)
 
-**Note**: Calling Cantera cell-by-cell at every step introduces significant overhead. Future work should implement sub-cycling, tolerance checks, or tabulation for evaluating transport properties to restore performance.
+**Note**: Calling Cantera cell-by-cell at every step introduces significant overhead. The current energy thermo path uses a combined sync and conservative cache. Future work may add diagnostics for cache hit/miss behavior, tabulation, or stronger tolerance-based update strategies after validation.
 
 ---
 
@@ -828,9 +896,9 @@ Species validation tests:
 
 ---
 
-## Stage 3E energy and variable-density low-Mach formulation
+## Stage 3E variable-density low-Mach formulation
 
-Current constraint:
+Energy transport is now available as passive sensible enthalpy in the constant-density solver. The current projection constraint remains:
 
 ```text
 div(u) = 0
@@ -847,11 +915,12 @@ Variable-density low-Mach reacting flow will generally require:
 
 This is a major architecture change and should come after:
 
-- species works
-- radiation scaffold works
-- Cantera properties work
+- passive species works
+- passive enthalpy works
+- Cantera thermo sync is validated
+- boundary enthalpy and species coupling tests pass
 - chemistry source terms are understood
-- energy equation design is documented
+- radiation coupling through `qrad` is validated with manufactured sources
 
 Do not patch variable-density behavior into the current incompressible projection without a written formulation.
 
@@ -1013,139 +1082,53 @@ When adding a derived type, document:
 
 Codex should add comments that improve generated FORD documentation, not decorative comments that repeat obvious code.
 
+### FORD / MathJax inline math delimiter rule
+
+FORD/MathJax renders display equations correctly, but inline math in Markdown files and
+Fortran documentation/source comments may be emitted literally when single-dollar
+delimiters are used. Do not wrap inline math in single-dollar delimiters in documentation or source
+comments. Use `\(...\)` for all inline math instead.
+
+Examples of the required inline form:
+
+```text
+\(V_c\)
+\(f \in \partial c\)
+\(\rho_f\)
+\(\psi_{\text{other}}\)
+```
+
+For Fortran source comments, write documentation like this:
+
+```fortran
+!> Cell control volume \(V_c\).
+!! Face \(f \in \partial c\) uses density \(\rho_f\).
+!! Other-side interpolation weight is \(\psi_{\text{other}}\).
+```
+
+Display equations may continue to use display-math delimiters where FORD/MathJax
+renders them correctly. This rule is specifically about inline math. Before
+committing documentation, grep Markdown and Fortran comments for single-dollar
+inline math and replace those instances with `\(...\)`.
+
 ---
 
 ## Planned development sequence
 
-1. Stage 3A: passive species transport, no reactions.
-2. Stage 3B: radiation API/driver/kernel scaffold.
-3. Stage 3C: Cantera transport-property interface.
-4. Stage 3D: Cantera chemistry source terms.
-5. Stage 3E: energy equation and variable-density low-Mach coupling.
-6. Stage 4: performance and scalable output.
+Completed or active staged capabilities:
 
----
+1. Passive species transport, no reactions.
+2. Cantera transport-property interface.
+3. Passive sensible-enthalpy energy transport.
+4. Cantera thermo sync for `h <-> T`, `cp`, `lambda`, and diagnostic `rho_thermo`.
+5. Profiling for projection, species, energy, Cantera sync, output, and MPI communication.
 
-## Good Codex task style
+Near-term future work:
 
-Prefer bounded tasks such as:
+1. Manufactured `qrad` tests.
+2. Radiation API/driver/kernel scaffold coupled through `qrad`.
+3. Species-diffusion enthalpy correction.
+4. Cantera chemistry source terms and heat release.
+5. Variable-density low-Mach formulation.
+6. Performance and scalable output.
 
-```text
-Add `mod_species.f90` with species field allocation/finalization only. Do not modify the time loop yet.
-```
-
-Good staged Codex tasks:
-
-```text
-Task 1:
-Read AGENTS.md. Add `mod_species.f90` with `species_fields_t`, allocation/finalization, and initialization from constants. Update Makefile. Add FORD comments. Do not modify main loop yet.
-```
-
-```text
-Task 2:
-Add species input parsing to `mod_input.f90`: `nspecies`, `species_name`, `species_diffusivity`, and `initial_Y`. Preserve backward compatibility for existing case files. Add FORD comments for new public types/routines.
-```
-
-```text
-Task 3:
-Implement passive species transport using `fields%face_flux`. Use upwind advection, central diffusion, boundedness clamp, and renormalization. Add species diagnostics. Keep MPI behavior consistent with the current replicated-field model.
-```
-
-```text
-Task 4:
-Add species output to VTU as CellData arrays. Include `Y_CO2`, `Y_H2O`, `Y_CO`, and `sum_Y`.
-```
-
-```text
-Task 5:
-Add radiation scaffold with `mod_radiation_api`, `mod_radiation_driver`, and `mod_radiation_kernel`. Keep the kernel MPI-free. Add FORD documentation that clearly states the radiation developer contract.
-```
-
-Avoid broad tasks such as:
-
-```text
-Add full chemistry, radiation, Cantera, and validation.
-```
-
-Keep each change reviewable and testable.
-
----
-
-## When asked to implement a feature
-
-Before coding:
-
-1. Inspect relevant modules.
-2. State which files will change.
-3. Keep changes minimal.
-4. Add or update input examples.
-5. Add diagnostics/output if needed.
-6. Add FORD documentation comments.
-7. Update Makefile dependencies.
-8. Run build and smoke tests when possible.
-9. Report what passed, what failed, and what was not tested.
-
-When editing solver internals:
-
-- preserve serial behavior
-- preserve 8-rank behavior
-- avoid changing numerical methods silently
-- document any mathematical change
-- compare diagnostics before/after
-
-When editing MPI internals:
-
-- explain communication pattern
-- document whether arrays are global, owned-only, or partial
-- preserve `np=1`
-- preserve multi-rank behavior
-- avoid MPI calls in physics kernels when practical
-
-When editing radiation code:
-
-- MPI calls belong in the radiation driver only
-- radiation kernel must remain MPI-free
-- radiation kernel receives full mesh and full fields
-- radiation work is decomposed by wavenumber
-- `qrad` reduction happens in the driver
-
----
-
-## Definition of done for Stage 3A
-
-Stage 3A is complete when:
-
-- code builds in debug and release
-- cavity still runs
-- channel still runs
-- species fields are output to VTU
-- uniform species remain uniform
-- periodic/no-flux species mass is conserved
-- `sum(Y_k)` remains close to 1
-- serial and parallel species results are consistent
-- validation scripts still run
-- old case files still work
-- new modules and public APIs have FORD documentation comments
-
----
-
-## Definition of done for Stage 3B
-
-Stage 3B is complete when:
-
-- `mod_radiation_api` exists
-- `mod_radiation_driver` exists
-- `mod_radiation_kernel` exists
-- radiation kernel contains no MPI calls
-- radiation driver partitions wavenumber ranges
-- radiation driver calls kernel with `k_first:k_last`
-- radiation driver reduces partial `qrad(:)` into total `qrad(:)`
-- `qrad` can be output to VTU
-- radiation can run every `radiation_interval` steps
-- flow-only cases still work with radiation disabled
-- documentation clearly states full-mesh/full-field radiation assumptions
-- public radiation APIs have FORD documentation comments
-
-```
-
-```

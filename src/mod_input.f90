@@ -36,14 +36,16 @@ module mod_input
       real(rk) :: max_cfl = 0.5_rk       !< Target maximum CFL number for stability.
 
       !> @name Fluid Properties
-      real(rk) :: rho = one              !< Constant density [kg/m^3].
+      real(rk) :: rho = one              !< Constant flow/projection density [kg/m^3].
+      logical :: enable_variable_density = .false. !< Reserved: variable-density/low-Mach flow is not enabled yet.
       real(rk) :: nu = 1.0e-2_rk         !< Constant kinematic viscosity [m^2/s].
-      integer :: transport_update_interval = 1 !< Frequency of property re-evaluation (in steps).
+      logical :: enable_variable_nu = .false.    !< Allow Cantera-updated flow viscosity/nu; default keeps validation Re fixed.
+      integer :: transport_update_interval = 1 !< Cantera transport-property update interval for mu/D_k only [steps].
 
       !> @name Linear Solver & Numerics
       integer :: pressure_max_iter = 300 !< Maximum Conjugate Gradient iterations for the Poisson solver.
       real(rk) :: pressure_tol = 1.0e-10_rk !< Relative residual tolerance for pressure convergence.
-      real(rk) :: body_force(3) = zero   !< Constant volumetric acceleration vector $(a_x, a_y, a_z)$ [m/s^2].
+      real(rk) :: body_force(3) = zero   !< Constant volumetric acceleration vector \((a_x, a_y, a_z)\) [m/s^2].
       character(len=name_len) :: convection_scheme = "upwind" !< Scheme for advection: "upwind" (stable) or "central" (accurate).
 
       !> @name Boundary Condition Mapping
@@ -54,16 +56,18 @@ module mod_input
       !> Field-specific BC Overrides
       character(len=name_len) :: patch_velocity_type(max_patches) = "" !< Override BC type for velocity.
       character(len=name_len) :: patch_pressure_type(max_patches) = "" !< Override BC type for pressure.
+      character(len=name_len) :: patch_temperature_type(max_patches) = "" !< Override BC type for temperature/enthalpy.
 
       real(rk) :: patch_u(max_patches) = zero    !< Specified x-velocity on patch [m/s].
       real(rk) :: patch_v(max_patches) = zero    !< Specified y-velocity on patch [m/s].
       real(rk) :: patch_w(max_patches) = zero    !< Specified z-velocity on patch [m/s].
       real(rk) :: patch_p(max_patches) = zero    !< Specified static pressure on patch [Pa].
       real(rk) :: patch_dpdn(max_patches) = zero !< Specified pressure gradient on patch [Pa/m].
+      real(rk) :: patch_T(max_patches) = 300.0_rk !< Specified temperature on patch [K].
 
       !> Species Boundary Conditions
       character(len=name_len) :: patch_species_type(max_patches) = "" !< Override BC type for mass fractions.
-      real(rk) :: patch_Y(max_species, max_patches) = zero           !< Specified $Y_k$ mass fractions on patch.
+      real(rk) :: patch_Y(max_species, max_patches) = zero           !< Specified \(Y_k\) mass fractions on patch.
 
       !> @name Data Output
       character(len=path_len) :: output_dir = "output" !< Directory for result storage.
@@ -72,10 +76,10 @@ module mod_input
 
       !> @name Multi-Species Transport
       logical :: enable_species = .false.                         !< Enable advection-diffusion of mass fractions.
-      logical :: enable_reactions = .false.                       !< Enable chemical source terms (Cantera).
+      logical :: enable_reactions = .false.                       !< Reserved for chemical source terms; reactions are not implemented yet.
       integer :: nspecies = 0                                     !< Total number of transport species.
       character(len=name_len) :: species_name(max_species) = ""   !< List of species names.
-      real(rk) :: species_diffusivity(max_species) = 0.0_rk       !< Constant species diffusivity $D_k$ [m^2/s].
+      real(rk) :: species_diffusivity(max_species) = 0.0_rk       !< Constant species diffusivity \(D_k\) [m^2/s].
       real(rk) :: initial_Y(max_species) = 0.0_rk                 !< Global initial mass fractions in the domain.
       
       !> @name Internal Registry (Reacting discovery)
@@ -83,11 +87,22 @@ module mod_input
       character(len=name_len) :: namelist_species_name(max_species) = "" !< Names specified in `case.nml`.
       
       !> @name Cantera Bridge Integration
-      logical :: enable_cantera_fluid = .false.                   !< Use Cantera for mixture-averaged $(\mu, \rho)$.
-      logical :: enable_cantera_species = .false.                 !< Use Cantera for mixture-averaged $D_k$.
+      logical :: enable_cantera_fluid = .false.                   !< Use Cantera for mixture-averaged viscosity; flow density remains `rho`.
+      logical :: enable_cantera_species = .false.                 !< Use Cantera for mixture-averaged \(D_k\).
       character(len=path_len) :: cantera_mech_file = "gri30.yaml" !< Path to YAML/CTI mechanism file.
       real(rk) :: background_temp = 300.0_rk                      !< Fixed temperature for property evaluation [K].
       real(rk) :: background_press = 101325.0_rk                  !< Fixed pressure for property evaluation [Pa].
+
+      !> @name Enthalpy Energy Equation Controls
+      logical :: enable_energy = .false.                         !< Enable enthalpy/temperature field storage.
+      logical :: enable_cantera_thermo = .false.                 !< Use Cantera for sensible h(T,Y,p0) and T(h,Y,p0).
+      integer :: thermo_update_interval = 1                     !< Reserved Cantera thermo interval [steps]; must remain 1.
+      character(len=name_len) :: thermo_default_species = 'N2'   !< Single-species Cantera thermo fallback when species transport is off.
+      real(rk) :: initial_T = 300.0_rk                           !< Initial gas temperature [K].
+      real(rk) :: energy_reference_T = 298.15_rk                 !< Reference temperature for sensible enthalpy [K].
+      real(rk) :: energy_reference_h = zero                      !< Reference sensible enthalpy for constant-cp mode [J/kg].
+      real(rk) :: energy_cp = 1005.0_rk                          !< Constant heat capacity for non-Cantera thermo [J/kg/K].
+      real(rk) :: energy_lambda = 2.6e-2_rk                      !< Constant thermal conductivity for non-Cantera thermo [W/m/K].
 
       !> @name Profiling Controls
       logical :: enable_profiling = .true.                       !< Enable wall-clock profiling.
@@ -115,6 +130,7 @@ contains
       call read_solver_input(filename, params)
       call read_boundary_input(filename, params)
       call read_species_input(filename, params)
+      call read_energy_input(filename, params)
       call read_output_input(filename, params)
       call read_profiling_input(filename, params)
       call validate_params(params)
@@ -193,8 +209,9 @@ contains
       real(rk) :: background_press
       integer :: transport_update_interval
       integer :: unit_id, ios
-
-      namelist /fluid_input/ rho, nu, enable_cantera, cantera_mech_file, background_temp, background_press, transport_update_interval
+      logical :: enable_variable_density
+      logical :: enable_variable_nu
+      namelist /fluid_input/ rho, nu, enable_cantera, cantera_mech_file, background_temp, background_press, transport_update_interval, enable_variable_density, enable_variable_nu
 
       rho = params%rho
       nu = params%nu
@@ -207,6 +224,8 @@ contains
       call open_namelist_file(filename, unit_id, ios)
 
       if (ios == 0) then
+      enable_variable_density = params%enable_variable_density
+      enable_variable_nu = params%enable_variable_nu
          read(unit_id, nml=fluid_input, iostat=ios)
          close(unit_id)
       end if
@@ -216,6 +235,8 @@ contains
       params%rho = rho
       params%nu = nu
       params%enable_cantera_fluid = enable_cantera
+         params%enable_variable_density = enable_variable_density
+         params%enable_variable_nu = enable_variable_nu
       params%cantera_mech_file = cantera_mech_file
       params%background_temp = background_temp
       params%background_press = background_press
@@ -271,31 +292,35 @@ contains
       character(len=name_len) :: patch_type(max_patches)
       character(len=name_len) :: patch_velocity_type(max_patches)
       character(len=name_len) :: patch_pressure_type(max_patches)
+      character(len=name_len) :: patch_temperature_type(max_patches)
       character(len=name_len) :: patch_species_type(max_patches)
       real(rk) :: patch_u(max_patches)
       real(rk) :: patch_v(max_patches)
       real(rk) :: patch_w(max_patches)
       real(rk) :: patch_p(max_patches)
       real(rk) :: patch_dpdn(max_patches)
+      real(rk) :: patch_T(max_patches)
       real(rk), save :: patch_Y(max_species, max_patches) = zero
       integer :: unit_id, ios, i
 
       namelist /boundary_input/ n_patches, patch_name, patch_type, &
                                  patch_velocity_type, patch_pressure_type, &
-                                 patch_species_type, &
-                                 patch_u, patch_v, patch_w, patch_p, patch_dpdn, patch_Y
+                                 patch_temperature_type, patch_species_type, &
+                                 patch_u, patch_v, patch_w, patch_p, patch_dpdn, patch_T, patch_Y
 
       n_patches = params%n_patches
       patch_name = params%patch_name
       patch_type = params%patch_type
       patch_velocity_type = params%patch_velocity_type
       patch_pressure_type = params%patch_pressure_type
+      patch_temperature_type = params%patch_temperature_type
       patch_species_type = params%patch_species_type
       patch_u = params%patch_u
       patch_v = params%patch_v
       patch_w = params%patch_w
       patch_p = params%patch_p
       patch_dpdn = params%patch_dpdn
+      patch_T = params%patch_T
       patch_Y = params%patch_Y
 
       call open_namelist_file(filename, unit_id, ios)
@@ -312,12 +337,14 @@ contains
       params%patch_type = patch_type
       params%patch_velocity_type = patch_velocity_type
       params%patch_pressure_type = patch_pressure_type
+      params%patch_temperature_type = patch_temperature_type
       params%patch_species_type = patch_species_type
 
       do i = 1, max_patches
          params%patch_type(i) = trim(lowercase(params%patch_type(i)))
          params%patch_velocity_type(i) = trim(lowercase(params%patch_velocity_type(i)))
          params%patch_pressure_type(i) = trim(lowercase(params%patch_pressure_type(i)))
+         params%patch_temperature_type(i) = trim(lowercase(params%patch_temperature_type(i)))
          params%patch_species_type(i) = trim(lowercase(params%patch_species_type(i)))
       end do
 
@@ -326,6 +353,7 @@ contains
       params%patch_w = patch_w
       params%patch_p = patch_p
       params%patch_dpdn = patch_dpdn
+      params%patch_T = patch_T
       params%patch_Y = patch_Y
    end subroutine read_boundary_input
 
@@ -424,6 +452,65 @@ contains
 
 
    !> Reads the `&output_input` namelist block.
+   !> Reads the `&energy_input` namelist block.
+   !!
+   !! Reads controls for sensible-enthalpy transport. Cantera thermo, when
+   !! enabled, preserves transported `h` and recovers `T(h,Y,p0)` every energy
+   !! step; `thermo_update_interval` is reserved and must remain 1.
+   subroutine read_energy_input(filename, params)
+      character(len=*), intent(in) :: filename
+      type(case_params_t), intent(inout) :: params
+
+      logical :: enable_energy
+      logical :: enable_cantera_thermo
+      integer :: thermo_update_interval
+      character(len=name_len) :: thermo_default_species
+      real(rk) :: initial_T
+      real(rk) :: energy_reference_T
+      real(rk) :: energy_reference_h
+      real(rk) :: energy_cp
+      real(rk) :: energy_lambda
+      integer :: unit_id, ios
+
+      namelist /energy_input/ enable_energy, enable_cantera_thermo, thermo_default_species, thermo_update_interval, &
+                               initial_T, energy_reference_T, energy_reference_h, &
+                               energy_cp, energy_lambda
+
+      enable_energy = params%enable_energy
+      enable_cantera_thermo = params%enable_cantera_thermo
+      thermo_update_interval = params%thermo_update_interval
+      thermo_default_species = params%thermo_default_species
+      initial_T = params%initial_T
+      energy_reference_T = params%energy_reference_T
+      energy_reference_h = params%energy_reference_h
+      energy_cp = params%energy_cp
+      energy_lambda = params%energy_lambda
+
+      call open_namelist_file(filename, unit_id, ios)
+
+      if (ios == 0) then
+         read(unit_id, nml=energy_input, iostat=ios)
+         close(unit_id)
+      end if
+
+      if (ios /= 0 .and. ios /= -1) then
+         call fatal_error('input', 'failed reading &energy_input. Check for unknown variables or typos.')
+      end if
+
+      if (ios == 0) then
+         params%enable_energy = enable_energy
+         params%enable_cantera_thermo = enable_cantera_thermo
+         params%thermo_update_interval = thermo_update_interval
+         params%thermo_default_species = trim(thermo_default_species)
+         params%initial_T = initial_T
+         params%energy_reference_T = energy_reference_T
+         params%energy_reference_h = energy_reference_h
+         params%energy_cp = energy_cp
+         params%energy_lambda = energy_lambda
+      end if
+   end subroutine read_energy_input
+
+
    subroutine read_output_input(filename, params)
       character(len=*), intent(in) :: filename
       type(case_params_t), intent(inout) :: params
@@ -529,9 +616,27 @@ contains
       if (params%dt <= zero) call fatal_error('input', 'dt must be positive')
       if (params%output_interval <= 0) call fatal_error('input', 'output_interval must be positive')
       if (params%rho <= zero) call fatal_error('input', 'rho must be positive')
+      if (params%enable_variable_density) then
+         call fatal_error('input', 'enable_variable_density=.true. requested, but variable-density flow is not implemented yet; rho_thermo is diagnostic only')
+      end if
       if (params%nu < zero) call fatal_error('input', 'nu must be non-negative')
+      if (params%enable_variable_nu .and. .not. params%enable_cantera_fluid) then
+         call fatal_error('input', 'enable_variable_nu=.true. requires fluid_input enable_cantera=.true.; otherwise use constant nu')
+      end if
+      if (params%transport_update_interval <= 0) call fatal_error('input', 'transport_update_interval must be positive')
       if (params%pressure_max_iter <= 0) call fatal_error('input', 'pressure_max_iter must be positive')
       if (params%pressure_tol <= zero) call fatal_error('input', 'pressure_tol must be positive')
+
+      if (params%initial_T <= zero) call fatal_error('input', 'initial_T must be positive')
+      if (params%energy_reference_T <= zero) call fatal_error('input', 'energy_reference_T must be positive')
+      if (params%energy_cp <= zero) call fatal_error('input', 'energy_cp must be positive')
+      if (params%energy_lambda < zero) call fatal_error('input', 'energy_lambda must be non-negative')
+      if (params%thermo_update_interval <= 0) call fatal_error('input', 'thermo_update_interval must be positive')
+      if (params%enable_cantera_thermo .and. params%thermo_update_interval /= 1) then
+         call fatal_error('input', 'thermo_update_interval values other than 1 are reserved; Cantera thermo is currently updated every energy step')
+      end if
+      if (params%enable_cantera_thermo .and. len_trim(params%thermo_default_species) == 0) &
+         call fatal_error('input', 'thermo_default_species must not be empty when enable_cantera_thermo is true')
 
       if (params%n_patches < 0 .or. params%n_patches > max_patches) then
          call fatal_error('input', 'n_patches is outside supported range')
@@ -566,6 +671,10 @@ contains
 
          if (len_trim(params%patch_type(i)) == 0) then
             call fatal_error('input', 'patch_type entry cannot be empty')
+         end if
+
+         if (params%enable_energy .and. params%patch_T(i) <= zero) then
+            call fatal_error('input', 'patch_T entry must be positive when energy is enabled')
          end if
       end do
    end subroutine validate_boundary_arrays

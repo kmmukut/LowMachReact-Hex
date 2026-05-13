@@ -1,3 +1,5 @@
+title: Architecture
+
 # LowMachReact-Hex Architecture
 
 This repository implements a clean hydrodynamic foundation for reacting-flow simulations, incorporating Cantera for thermodynamics/transport and providing a scaffold for future radiation coupling.
@@ -41,7 +43,8 @@ The solver is organized into functional modules to separate concerns:
 *   **`mod_bc`**: Maps namelist boundary conditions to geometric mesh patches.
 *   **`mod_flow_projection`**: Implements the fractional-step projection method and Poisson solver.
 *   **`mod_species`**: Manages the advection-diffusion of chemical mass fractions.
-*   **`mod_transport_properties`**: Evaluates physical properties (viscosity, density) via constant models or Cantera.
+*   **`mod_energy`**: Owns sensible-enthalpy transport, temperature recovery, thermal conductivity, heat capacity, diagnostic thermodynamic density, and `qrad` storage.
+*   **`mod_transport_properties`**: Evaluates transport properties through constant models or Cantera. The flow density remains the configured constant `rho`; Cantera `rho_thermo` is diagnostic and owned by the energy path.
 
 ### Parallel & Performance
 *   **`mod_mpi_flow`**: Provides the replicated-mesh MPI infrastructure and global synchronizers.
@@ -59,12 +62,12 @@ The solver is organized into functional modules to separate concerns:
     > [!NOTE]
     > **Boundary Conditions:** The solver supports field-specific conditions (Dirichlet, Neumann, Periodic) for Velocity, Pressure, and Species. Dirichlet pressure boundaries automatically remove the Poisson matrix null space, ensuring unique solutions for open flow systems.
 
-*   **`mod_species`**: Manages the transport of passive scalars ($Y_k$). Supports **Scale-on-Demand** architecture with dynamic allocation for 0 to 256+ species. Implements a **Correction Velocity** (diffusive flux correction) to ensure strict mass conservation when using different species diffusivities ($D_k$).
+*   **`mod_species`**: Manages the transport of passive scalars (\(Y_k\)). Supports **Scale-on-Demand** architecture with dynamic allocation for 0 to 256+ species. Implements a **Correction Velocity** (diffusive flux correction) to ensure strict mass conservation when using different species diffusivities (\(D_k\)).
 *   **`mod_transport_properties`**: Abstracts property evaluation. It provides a bridge to the **Cantera 3.x C++ API** for dynamic evaluation of viscosity and species diffusivity. Features include:
     *   **Automatic Mechanism Discovery**: Automatically identifies all species from a `.yaml` mechanism when `enable_reactions` is active.
     *   **Decoupled Control**: Independent toggles for Cantera-calculated fluid properties (viscosity/density) and species transport properties (diffusivity).
     *   **Name-Based Initialization**: Maps namelist-provided mass fractions to the correct indices in complex mechanisms at runtime.
-*   **`mod_profiler`**: A hierarchical performance profiling module used to track execution time for critical kernels and MPI communication. It provides a terminal summary at the end of each simulation.
+*   **`mod_profiler`**: A hierarchical, MPI-aware profiling module used to track execution time for critical kernels, Cantera thermo sync, and MPI communication. The report uses inclusive timings; flat rows are not additive when nested timers are enabled.
 *   **`mod_bc`**: A unified boundary condition manager that supports field-specific types (Velocity, Pressure, Species) for every patch.
 
 ## Boundary Condition System
@@ -75,10 +78,11 @@ Boundary patches are configured in `case.nml` and mapped to mesh patches at runt
 *   **`patch_velocity_type`**: Supports `no_slip`, `moving_wall`, `symmetry`, `periodic`.
 *   **`patch_pressure_type`**: Supports `zero_gradient`, `dirichlet`, `periodic`.
 *   **`patch_species_type`**: Supports `zero_gradient`, `dirichlet`, `periodic`.
+*   **`patch_temperature_type`**: Supports fixed-temperature and zero-gradient temperature/enthalpy boundaries.
 
 ## Future Growth
 
-1.  **Energy Equation:** Coupling temperature/enthalpy into the projection method.
-2.  **Variable Density:** Transitioning from incompressible to the low-Mach formulation.
-3.  **Chemistry Source Terms:** Integrating Cantera reaction rates into `mod_species`.
-4.  **Radiation Integration:** Coupling the wavenumber-decomposed `q_rad` source term into the energy equation.
+1.  **Variable Density:** Transitioning from the current constant-density projection to a validated variable-density low-Mach formulation.
+2.  **Chemistry Source Terms:** Integrating Cantera reaction rates and reaction heat release after passive species/enthalpy validation.
+3.  **Species-Diffusion Enthalpy Flux:** Adding `-div(sum_k h_k J_k)` once passive energy/species tests pass.
+4.  **Radiation Integration:** Coupling a wavenumber-decomposed radiation model into the existing `qrad` volumetric source field.

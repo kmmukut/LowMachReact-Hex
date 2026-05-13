@@ -8,7 +8,7 @@
 !! 1. **`u`**: The soluable, divergence-free velocity field at the new time level.
 !! 2. **`u_star`**: The intermediate predicted velocity (contains advection and diffusion).
 !! 3. **`phi`**: The scalar potential used to project `u_star` onto a divergence-free space.
-!! 4. **`face_flux`**: The mass/volume flux at cell faces, used for conservative transport.
+!! 4. **`face_flux`**: The volumetric flux at cell faces, used for conservative transport.
 module mod_fields
    use mod_kinds, only : rk, zero
    use mod_mesh_types, only : mesh_t
@@ -20,21 +20,21 @@ module mod_fields
 
    !> Container for all primary hydrodynamic fields.
    type, public :: flow_fields_t
-      real(rk), allocatable :: u(:,:)        !< Current cell-centered velocity vector $(u, v, w)$ [m/s].
-      real(rk), allocatable :: u_old(:,:)    !< Velocity vector from the previous time step $n$ [m/s].
+      real(rk), allocatable :: u(:,:)        !< Current cell-centered velocity vector \((u, v, w)\) [m/s].
+      real(rk), allocatable :: u_old(:,:)    !< Velocity vector from the previous time step \(n\) [m/s].
       real(rk), allocatable :: u_star(:,:)   !< Intermediate predicted velocity field [m/s].
 
-      real(rk), allocatable :: p(:)          !< Static pressure field $P$ [Pa].
-      real(rk), allocatable :: phi(:)        !< Pressure correction potential $\phi$. Used in the Poisson solver.
-      real(rk), allocatable :: div(:)        !< Local velocity divergence $\nabla \cdot \mathbf{u}$. Should be $\approx 0$ after projection.
+      real(rk), allocatable :: p(:)          !< Static pressure field \(P\) [Pa].
+      real(rk), allocatable :: phi(:)        !< Pressure correction potential \(\phi\). Used in the Poisson solver.
+      real(rk), allocatable :: div(:)        !< Local velocity divergence \(\nabla \cdot \mathbf{u}\). Should be \(\approx 0\) after projection.
 
-      !> Conservative face-centered flux $U_f = \mathbf{u}_f \cdot \mathbf{n}_f$.
-      !! Oriented according to the face normal (owner $\rightarrow$ neighbor).
+      !> Conservative face-centered volumetric flux \(U_f = \mathbf{u}_f \cdot \mathbf{n}_f A_f\).
+      !! Oriented according to the face normal (owner \(\rightarrow\) neighbor).
       real(rk), allocatable :: face_flux(:)  !< Volumetric flux across faces [m^3/s].
 
       !> Storage for the previous explicit RHS (Advection + Diffusion).
       !! Required for 2nd-order Adams-Bashforth (AB2) time marching.
-      real(rk), allocatable :: rhs_old(:,:)  !< Momentum RHS from step $n-1$.
+      real(rk), allocatable :: rhs_old(:,:)  !< Momentum RHS from step \(n-1\).
       logical :: rhs_old_valid = .false.     !< False on the first step (triggers Euler fallback).
    end type flow_fields_t
 

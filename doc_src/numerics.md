@@ -27,7 +27,7 @@ The currently supported model contains:
 - optional passive species mass-fraction transport,
 - optional passive sensible-enthalpy transport,
 - Fourier heat conduction driven by temperature gradients,
-- Cantera evaluation of \(h(T,Y,p_0)\), \(T(h,Y,p_0)\), \(c_p\), \(\lambda\), and diagnostic \(\rho_{\text{thermo}}\),
+- Cantera evaluation of \(h(T,Y,p*0)\), \(T(h,Y,p_0)\), \(c_p\), \(\lambda\), and diagnostic \(\rho*{\text{thermo}}\),
 - radiation-source storage through `qrad`, with `qrad = 0` unless filled by a future coupling.
 
 The following are intentionally not part of the current model:
@@ -45,7 +45,7 @@ $$
 -\nabla \cdot \left(\sum_k h_k \mathbf{J}_k\right)
 $$
 
-where \(h_k\) is the species enthalpy and \(\mathbf{J}_k\) is the diffusive species mass flux. Therefore, composition diffusion is modeled, but enthalpy transport carried by diffusing species is not yet modeled.
+where \(h_k\) is the species enthalpy and \(\mathbf{J}\_k\) is the diffusive species mass flux. Therefore, composition diffusion is modeled, but enthalpy transport carried by diffusing species is not yet modeled.
 
 ## Notation
 
@@ -55,10 +55,10 @@ Cell-centered quantities are stored at control-volume centers. For a cell \(c\):
 - \(f \in \partial c\) denotes a face of cell \(c\).
 - \(A_f\) is the face area.
 - \(d_f\) is the normal distance used for the face gradient.
-- \(\mathbf{n}_{f,c}\) is the unit normal pointing outward from cell \(c\).
-- \(F_{f,c}\) is the volumetric face flux oriented outward from cell \(c\).
+- \(\mathbf{n}\_{f,c}\) is the unit normal pointing outward from cell \(c\).
+- \(F\_{f,c}\) is the volumetric face flux oriented outward from cell \(c\).
 
-The stored face flux is oriented from owner cell to neighbor cell. During cell updates, the solver reorients it locally so that positive \(F_{f,c}\) always means flow leaving the current cell.
+The stored face flux is oriented from owner cell to neighbor cell. During cell updates, the solver reorients it locally so that positive \(F\_{f,c}\) always means flow leaving the current cell.
 
 For a scalar \(\psi\) transported by upwind advection:
 
@@ -70,7 +70,7 @@ $$
 \end{cases}
 $$
 
-Here \(\psi_{\text{other}}\) is either the neighboring-cell value or a boundary value.
+Here \(\psi\_{\text{other}}\) is either the neighboring-cell value or a boundary value.
 
 ## Governing Equations
 
@@ -146,7 +146,7 @@ $$
 \frac{q_{\text{rad}}}{\rho_f}
 $$
 
-where \(\lambda\) is thermal conductivity and \(q_{\text{rad}}\) is a volumetric source term in W/m\(^3\).
+where \(\lambda\) is thermal conductivity and \(q\_{\text{rad}}\) is a volumetric source term in W/m\(^3\).
 
 The conduction operator uses \(\nabla T\), not \(\nabla h\).
 
@@ -162,7 +162,7 @@ h_{\text{abs}}^{\text{Cantera}}(T,Y,p_0)
 h_{\text{abs}}^{\text{Cantera}}(T_{\text{ref}},Y,p_0)
 $$
 
-where \(T_{\text{ref}}\) is `energy_reference_T`.
+where \(T\_{\text{ref}}\) is `energy_reference_T`.
 
 Temperature recovery is performed by converting the stored sensible enthalpy back to an absolute Cantera enthalpy target:
 
@@ -285,7 +285,7 @@ F_{f,c}\mathbf{u}_f^{\text{adv}}
 \mathbf{f}.
 $$
 
-The advected velocity \(\mathbf{u}_f^{\text{adv}}\) is selected by either the configured upwind or central scheme. The pressure gradient is evaluated by a finite-volume Gauss reconstruction:
+The advected velocity \(\mathbf{u}\_f^{\text{adv}}\) is selected by either the configured upwind or central scheme. The pressure gradient is evaluated by a finite-volume Gauss reconstruction:
 
 $$
 \nabla p_c
@@ -452,7 +452,6 @@ $$
 The correction term is:
 
 $$
--
 Y_{k,f}^{\text{lin}}
 \sum_j G_{j,f},
 $$
@@ -563,7 +562,7 @@ $$
 
 After the update:
 
-1. synchronize \(T^{n+1}\), \(c_p\), \(\lambda\), and diagnostic \(\rho_{\text{thermo}}\) from \(h^{n+1}\), current \(Y\), and \(p_0\);
+1. synchronize \(T^{n+1}\), \(c*p\), \(\lambda\), and diagnostic \(\rho*{\text{thermo}}\) from \(h^{n+1}\), current \(Y\), and \(p_0\);
 2. restore the transported \(h^{n+1}\) to protect it from roundoff introduced during the thermo sync.
 
 The synchronization is logically equivalent to temperature recovery followed by property refresh, but the implementation may combine both operations into one Cantera pass and may reuse cached dependent thermo state when `h`, `Y`, and `p0` are unchanged within tight tolerances.
@@ -774,7 +773,7 @@ When energy is enabled, additional diagnostics include:
 - maximum temperature change,
 - relative enthalpy update residual.
 
-The diagnostic mass integral uses \(\rho_f\), not \(\rho_{\text{thermo}}\).
+The diagnostic mass integral uses \(\rho*f\), not \(\rho*{\text{thermo}}\).
 
 ## Current Limitations
 

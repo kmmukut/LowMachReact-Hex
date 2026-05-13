@@ -1,0 +1,35 @@
+name: Compile Reports
+
+on:
+  push:
+    paths:
+      - 'reports/**/*.tex'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Git repository
+        uses: actions/checkout@v4
+
+      - name: Compile Technical Report
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: reports/technical_report/main.tex
+          args: "-jobname=report -output-directory=reports/technical_report"
+
+      - name: Compile Presentation
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: reports/presentation/main.tex
+          args: "-jobname=presentation -output-directory=reports/presentation"
+
+      - name: Auto Commit PDFs
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: update compiled PDFs [skip ci]"
+          file_pattern: 'reports/**/*.pdf'

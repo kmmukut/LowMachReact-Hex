@@ -1,0 +1,563 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+
+% --- Custom color scheme ---
+\definecolor{solvernavy}{RGB}{0,58,108}
+\definecolor{solveraccentorange}{RGB}{220,100,0}
+\definecolor{solverlight}{RGB}{235,243,255}
+
+\usetheme{Madrid}
+\usecolortheme{whale}
+\setbeamercolor{palette primary}{bg=solvernavy,fg=white}
+\setbeamercolor{palette secondary}{bg=solvernavy!80,fg=white}
+\setbeamercolor{palette tertiary}{bg=solvernavy!60,fg=white}
+\setbeamercolor{palette quaternary}{bg=solvernavy,fg=white}
+\setbeamercolor{structure}{fg=solvernavy}
+\setbeamercolor{block title alerted}{bg=solveraccentorange,fg=white}
+\setbeamercolor{block body alerted}{bg=solveraccentorange!10,fg=black}
+\setbeamercolor{block title}{bg=solvernavy,fg=white}
+\setbeamercolor{block body}{bg=solverlight,fg=black}
+
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codebg}{RGB}{245,245,245}
+
+\lstdefinestyle{terminal}{
+  basicstyle=\ttfamily\scriptsize,
+  columns=fullflexible,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{codebg}
+}
+
+\lstdefinestyle{profiletree}{
+  basicstyle=\ttfamily\tiny,
+  columns=fullflexible,
+  breaklines=false,
+  frame=none,
+  backgroundcolor=\color{codebg}
+}
+
+\title[LowMachReact-Hex]{\textbf{LowMachReact-Hex} Technical Overview}
+\subtitle{Architecture, Numerics, Thermodynamics, and Performance --- v0.5.0}
+\author{LowMachReact-Hex Development Notes}
+\date{May 2026}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+  \tableofcontents
+\end{frame}
+
+\section{Solver Scope}
+
+\begin{frame}{Current Solver Interpretation}
+  \begin{block}{Core statement}
+    LowMachReact-Hex is currently a constant-density low-Mach /
+    incompressible finite-volume projection solver on hexahedral meshes.
+  \end{block}
+
+  \begin{itemize}
+    \item Optional passive species mass-fraction transport.
+    \item Optional passive sensible-enthalpy transport.
+    \item Optional Cantera thermodynamics and transport properties.
+    \item MPI-aware diagnostics, VTU/PVTU output, and profiling.
+  \end{itemize}
+
+  \vspace{0.5em}
+  \[
+    \rho_f = \rho_{\mathrm{params}}
+  \]
+
+  \begin{alertblock}{Important convention}
+    Cantera thermodynamic density \(\rho_{\mathrm{thermo}}\) is diagnostic /
+    future-use only and is not used by the pressure projection.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}{Enabled and Missing Physics}
+  \begin{columns}[T,totalwidth=\textwidth]
+    \begin{column}{0.48\textwidth}
+      \textbf{Currently enabled}
+      \begin{itemize}
+        \item Constant-density projection.
+        \item Passive species transport.
+        \item Passive sensible enthalpy.
+        \item Heat conduction via \(\nabla T\).
+        \item Cantera \(h\), \(T\), \(c_p\), \(\lambda\), \(\mu\), \(D_k\).
+        \item Diagnostic \(q_{\mathrm{rad}}\) storage.
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.48\textwidth}
+      \textbf{Not yet implemented}
+      \begin{itemize}
+        \item Variable-density low-Mach coupling.
+        \item Reactions.
+        \item Reaction heat release.
+        \item Species-diffusion enthalpy correction.
+        \item External radiation physics.
+        \item Radiation spectral decomposition.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{Architecture}
+
+\begin{frame}{Module Organization}
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Module} & \textbf{Responsibility} \\
+    \midrule
+    \texttt{mod\_input} & Namelist parsing and validation \\
+    \texttt{mod\_mesh\_types/io} & Mesh structures and native mesh import \\
+    \texttt{mod\_bc} & Boundary-condition mapping and face states \\
+    \texttt{mod\_fields} & Velocity, pressure, divergence, face fluxes \\
+    \texttt{mod\_flow\_projection} & Momentum prediction and pressure projection \\
+    \texttt{mod\_species} & Passive species transport \\
+    \texttt{mod\_energy} & Sensible enthalpy and Cantera thermo sync \\
+    \texttt{mod\_transport\_properties} & Constant / Cantera transport properties \\
+    \texttt{mod\_mpi\_flow} & Replicated-mesh MPI utilities \\
+    \texttt{mod\_output/profiler} & VTU/CSV output and timing reports \\
+    \bottomrule
+  \end{tabular}
+\end{frame}
+
+\begin{frame}{Mesh and MPI Strategy}
+  \begin{block}{Mesh pipeline}
+    Gmsh mesh \(\rightarrow\) meshio conversion \(\rightarrow\) native files
+    \(\rightarrow\) Fortran \texttt{mesh\_t}.
+  \end{block}
+
+  \begin{itemize}
+    \item Every MPI rank stores the full mesh.
+    \item Flow work is split by contiguous owned cell ranges.
+    \item Owned cell updates are synchronized with exchanges, gathers, and
+          collective reductions.
+    \item The replicated mesh keeps the future radiation decomposition simple,
+          because every rank can see full geometry.
+  \end{itemize}
+
+  \[
+    \mathrm{rank}\ r:\quad c \in
+    [\,\texttt{flow\%first\_cell},\texttt{flow\%last\_cell}\,]
+  \]
+\end{frame}
+
+\section{Governing Equations}
+
+\begin{frame}{Incompressible Flow Model}
+  \begin{align*}
+    \nabla \cdot \mathbf{u} &= 0, \\
+    \frac{\partial \mathbf{u}}{\partial t}
+    +
+    \nabla \cdot (\mathbf{u}\mathbf{u})
+    &=
+    -\frac{1}{\rho_f}\nabla p
+    +
+    \nabla \cdot (\nu\nabla \mathbf{u})
+    +
+    \mathbf{f}.
+  \end{align*}
+
+  \begin{itemize}
+    \item \(\rho_f\) is always the configured flow/projection density.
+    \item Cantera may supply \(\mu\), but variable-viscosity flow is optional.
+    \item If variable viscosity is enabled:
+          \[
+            \nu = \frac{\mu}{\rho_f}.
+          \]
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Passive Species and Sensible Enthalpy}
+  \textbf{Species mass fraction}
+  \[
+    \frac{\partial Y_k}{\partial t}
+    +
+    \nabla \cdot (\mathbf{u}Y_k)
+    =
+    \nabla \cdot (D_k\nabla Y_k),
+    \qquad
+    \dot{\omega}_k = 0
+  \]
+
+  \vspace{1em}
+  \textbf{Sensible enthalpy}
+  \[
+    \frac{\partial h}{\partial t}
+    +
+    \nabla \cdot (\mathbf{u}h)
+    =
+    \frac{1}{\rho_f}\nabla \cdot (\lambda\nabla T)
+    +
+    \frac{q_{\mathrm{rad}}}{\rho_f}
+  \]
+
+  \begin{alertblock}{Energy convention}
+    \(h\) is transported. \(T\) is recovered from \(h\), \(Y\), and \(p_0\).
+    Conduction uses \(\nabla T\), not \(\nabla h\).
+  \end{alertblock}
+\end{frame}
+
+\section{Numerical Method}
+
+\begin{frame}{Finite-Volume Update}
+  For cell \(c\), face \(f\), volume \(V_c\), and outward local flux \(F_{f,c}\):
+
+  \[
+    \psi_f^{\mathrm{up}} =
+    \begin{cases}
+      \psi_c, & F_{f,c} \ge 0, \\
+      \psi_{\mathrm{other}}, & F_{f,c} < 0.
+    \end{cases}
+  \]
+
+  \begin{itemize}
+    \item Stored face flux is owner-to-neighbor.
+    \item During cell updates it is reoriented outward from the current cell.
+    \item Diffusive face gradients use normal cell-to-cell or cell-to-boundary
+          distances.
+    \item Species are bounded and renormalized after explicit update.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Projection Algorithm}
+  \begin{enumerate}
+    \item \textbf{Predict intermediate velocity}
+          \[
+            \frac{\mathbf{u}^{*}-\mathbf{u}^n}{\Delta t}
+            =
+            \mathcal{R}^{n,n-1}
+            -
+            \frac{1}{\rho_f}\nabla p^n.
+          \]
+
+    \item \textbf{Solve pressure correction}
+          \[
+            \nabla^2 \phi =
+            \frac{\rho_f}{\Delta t}\nabla\cdot\mathbf{u}^{*}.
+          \]
+
+    \item \textbf{Correct velocity and pressure}
+          \[
+            \mathbf{u}^{n+1}
+            =
+            \mathbf{u}^{*}
+            -
+            \frac{\Delta t}{\rho_f}\nabla\phi,
+            \qquad
+            p^{n+1}=p^n+\phi.
+          \]
+  \end{enumerate}
+\end{frame}
+
+\section{Cantera Coupling}
+
+\begin{frame}{Sensible Enthalpy Convention}
+  Cantera absolute enthalpy includes formation contributions.  The solver stores
+  sensible enthalpy relative to \(T_{\mathrm{ref}}\):
+
+  \[
+    h(T,Y,p_0)
+    =
+    h_{\mathrm{abs}}^{\mathrm{Cantera}}(T,Y,p_0)
+    -
+    h_{\mathrm{abs}}^{\mathrm{Cantera}}(T_{\mathrm{ref}},Y,p_0).
+  \]
+
+  Temperature recovery reconstructs an absolute enthalpy target:
+
+  \[
+    h_{\mathrm{target,abs}}
+    =
+    h
+    +
+    h_{\mathrm{abs}}^{\mathrm{Cantera}}(T_{\mathrm{ref}},Y,p_0).
+  \]
+
+  Then Cantera HPY inversion recovers \(T\).
+\end{frame}
+
+\begin{frame}{Option A: Preserve Transported Enthalpy}
+  \begin{block}{After species transport}
+    Species may change from \(Y^n\) to \(Y^{n+1}\). The solver preserves
+    transported \(h\) and recovers a new temperature:
+    \[
+      T^{*} = T(h,Y^{n+1},p_0).
+    \]
+  \end{block}
+
+  \begin{alertblock}{Do not do this}
+    Do not recompute enthalpy from old temperature and new composition:
+    \[
+      h^{*} = h(T^n,Y^{n+1},p_0).
+    \]
+  \end{alertblock}
+
+  This avoids adding or removing sensible enthalpy without an explicit energy
+  flux or source.
+\end{frame}
+
+\begin{frame}{Thermo Sync and Density Split}
+  Preferred energy-path sync:
+  \[
+    (T,c_p,\lambda,\rho_{\mathrm{thermo}})
+    =
+    \operatorname{sync}(h,Y,p_0).
+  \]
+
+  \begin{itemize}
+    \item Sync must preserve transported \(h\).
+    \item Pre-flux sync is needed only when transported species may have changed
+          \(Y\).
+    \item Species-disabled Cantera thermo can skip redundant pre-flux sync.
+    \item Post-flux sync refreshes thermo state after \(h\) transport.
+    \item \texttt{thermo\_update\_interval} is reserved and must remain 1.
+  \end{itemize}
+
+  \[
+    \rho_f = \texttt{params\%rho},
+    \qquad
+    \rho_{\mathrm{thermo}} = \text{diagnostic only}.
+  \]
+\end{frame}
+
+\section{Runtime}
+
+\begin{frame}{Main Timestep Ordering}
+  \begin{enumerate}
+    \item Update CFL or timestep diagnostics when needed.
+    \item Refresh transport properties on \texttt{transport\_update\_interval}.
+    \item Advance momentum and pressure projection.
+    \item Advance passive species, if enabled.
+    \item Advance passive sensible enthalpy, if enabled.
+    \item Recover or synchronize \(T\), \(c_p\), \(\lambda\), and
+          \(\rho_{\mathrm{thermo}}\).
+    \item Write diagnostics and VTU/PVTU output on output steps.
+  \end{enumerate}
+
+  \begin{block}{Transport update}
+    Cantera may update \(\mu\) and \(D_k\), but flow density remains
+    \(\rho_f=\texttt{params\%rho}\).
+  \end{block}
+\end{frame}
+
+\begin{frame}{Boundary Conditions}
+  Boundary patches are named in the mesh and configured through
+  \texttt{case.nml}.
+
+  \begin{itemize}
+    \item Legacy patch type can act as fallback.
+    \item Field-specific overrides exist for velocity, pressure, species, and
+          temperature/enthalpy.
+    \item Periodic connectivity can be loaded from native mesh data.
+  \end{itemize}
+
+  \begin{block}{Fixed-temperature Cantera boundary}
+    With species and Cantera thermo enabled:
+    \[
+      h_b = h(T_b,Y_b,p_0).
+    \]
+    Boundary composition \(Y_b\) comes from the species boundary condition.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Diagnostics and Profiling}
+  \begin{itemize}
+    \item Outputs include VTU/PVTU visualization and CSV diagnostics.
+    \item Energy output can include \(T\), \(h\), \(q_{\mathrm{rad}}\),
+          \(c_p\), \(\lambda\), and \(\rho_{\mathrm{thermo}}\).
+    \item Species output includes \(Y_k\), \(\sum_k Y_k\), and optionally \(D_k\).
+    \item Profiling reports inclusive wall-clock time.
+    \item Flat profiler rows are not additive when nested timers are enabled.
+  \end{itemize}
+
+  Common timers:
+  \[
+    \texttt{Projection\_Step},\quad
+    \texttt{Species\_Transport},\quad
+    \texttt{Energy\_Transport}.
+  \]
+\end{frame}
+
+\section{Build and Validation}
+
+\begin{frame}[fragile]{Build and Run}
+  \begin{lstlisting}[style=terminal]
+# Create once.
+conda env create -f environment.yml
+
+# Activate each session.
+conda activate react_env
+
+# Load OpenMPI if required on your system.
+module load openmpi
+
+# Build.
+make BUILD=release
+
+# Run.
+mpirun -np 4 ./lowmach_react_hex cases/channel_flow/case.nml
+  \end{lstlisting}
+
+  \begin{itemize}
+    \item Use the top-level \texttt{./lowmach\_react\_hex} launcher.
+    \item The launcher prioritizes Conda runtime libraries for Cantera.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Validation Ladder}
+  \begin{enumerate}
+    \item Debug build and startup smoke test.
+    \item Single-rank incompressible flow case.
+    \item Multi-rank repeat of the same case.
+    \item Passive species with constant diffusivity.
+    \item Constant-property energy transport.
+    \item Cantera thermo without transported species.
+    \item Species-coupled Cantera thermo.
+    \item Profiling comparison for performance changes.
+  \end{enumerate}
+
+  \begin{block}{Keep for comparison}
+    Case file, rank count, build mode, terminal output, CSV diagnostics, and
+    representative visualization output.
+  \end{block}
+\end{frame}
+
+\section{Performance}
+
+\begin{frame}{Performance: Granular Sub-Module Profile}
+  \begin{columns}[T,totalwidth=\textwidth]
+    \begin{column}{0.62\textwidth}
+      \textbf{Sub-Module Breakdown (83.6~s total wall time)}
+      \begin{itemize}
+        \item \textbf{Cantera PreSync (26.1\%)}: Per-cell HPY inversion before flux computation.
+        \item \textbf{Cantera PostSync (22.3\%)}: Full property refresh after $h$ update.
+        \item \textbf{PCG MPI (21.1\%)}: Global dot products $\rightarrow$ latency-bound.
+        \item \textbf{Matvec (6.9\%)}: Matrix-free Laplacian is efficient.
+        \item \textbf{Energy Comm (6.9\%)}: Sync of $T, h, c_p, \lambda$ across ranks.
+      \end{itemize}
+    \end{column}
+
+    \begin{column}{0.35\textwidth}
+      \begin{tabular}{@{}lr@{}}
+        \toprule
+        \textbf{Sub-Region} & \textbf{\%} \\
+        \midrule
+        Cantera PreSync & 26.1 \\
+        Cantera PostSync & 22.3 \\
+        PCG MPI Comm & 21.1 \\
+        Matvec & 6.9 \\
+        Energy Comm & 6.9 \\
+        Predictor & 2.5 \\
+        Species & 1.8 \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Performance: Full Profiling Tree}
+  \begin{lstlisting}[style=profiletree]
+Region                          Calls    Avg(s)    Avg%
+-------------------------------------------------------
+Total_Simulation                    1   83.564   100.00
+  Projection_Step             16000   33.994    40.68
+    Projection_PCG            16000   28.053    33.57
+      MPI_Communication     6629753   17.609    21.07
+      Pressure_Matvec       2199251    5.786     6.92
+    Projection_Predict_Flux  16000    2.105     2.52
+    Projection_Momentum_RHS  16000    1.732     2.07
+  Energy_Transport            16000   47.180    56.46
+    Energy_Cantera_PreSync   16000   21.847    26.14
+    Energy_Cantera_PostSync  16000   18.591    22.25
+    Energy_PreFlux_Exchange  16000    3.794     4.54
+      MPI_Communication      32000    3.773     4.52
+    Energy_Final_Exchange    16000    2.029     2.43
+      MPI_Communication      48000    2.002     2.40
+  Species_Transport           16000    1.531     1.83
+    MPI_Communication         16000    0.209     0.25
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{Performance: Deep-Dive Observations}
+  \begin{itemize}
+    \item \textbf{Thermodynamic Dominance}: Cantera sync (48.4\%) costs \textbf{20$\times$} more than the full hydrodynamic predictor.
+    \item \textbf{Interconnect Bound}: 63\% of PCG wall time is MPI --- solver is latency-sensitive to global reductions.
+    \item \textbf{Exchange Disparity}: Energy comm (6.9\%) vs species comm (0.25\%) --- 4-field vs 1-field halo exchange.
+  \end{itemize}
+
+  \begin{alertblock}{Optimization Priority}
+    \begin{enumerate}
+      \item Batch Cantera HPY calls across cells (est. $-$50\% energy cost).
+      \item Pipelined/CA-CG to overlap global reductions with compute.
+      \item Fuse PreFlux + Final energy exchanges into one non-blocking op.
+    \end{enumerate}
+  \end{alertblock}
+\end{frame}
+
+
+\section{Summary}
+
+\begin{frame}{Key Takeaways: State Conventions}
+  \begin{columns}[T,totalwidth=\textwidth]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Flow Density}
+        \(\rho_f = \texttt{params\%rho}\) always.\\[0.3em]
+        \(\rho_{\mathrm{thermo}}\) is \emph{diagnostic only}.
+      \end{block}
+      \begin{block}{Energy Convention}
+        \(h\) (sensible, relative to $T_{\mathrm{ref}}$) is transported.\\[0.3em]
+        \(T\) is recovered via HPY inversion: $T = T(h,Y,p_0)$.
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Architecture Warning}
+        Do NOT couple variable-density flow by replacing $\rho_f$ with $\rho_{\mathrm{thermo}}$. The divergence constraint and pressure equation must be redesigned.
+      \end{alertblock}
+      \begin{block}{Option A Rule}
+        After species transport, preserve $h$ and re-solve for $T^* = T(h, Y^{n+1}, p_0)$.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Roadmap: Future Extensions}
+  \begin{columns}[T,totalwidth=\textwidth]
+    \begin{column}{0.48\textwidth}
+      \textbf{Short-term}
+      \begin{itemize}
+        \item Batch Cantera HPY inversions.
+        \item Pipelined PCG implementation.
+        \item Fused energy halo exchanges.
+        \item Regression test suite expansion.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{Long-term}
+      \begin{itemize}
+        \item Variable-density low-Mach coupling.
+        \item Chemical reaction source terms ($\dot{\omega}_k$).
+        \item Species-diffusion enthalpy correction.
+        \item Radiation physics via $q_{\mathrm{rad}}$.
+        \item Higher-order bounded advection.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \centering
+  \Large\textbf{Questions?}\\[1em]
+  \normalsize\texttt{reports/technical\_report/main.tex} --- full technical reference
+\end{frame}
+
+\end{document}

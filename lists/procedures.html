@@ -1,0 +1,508 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="Fortran 2008 MPI finite-volume solver for low-Mach flows.">
+    <meta name="author" content="Khaled Mosharraf Mukut" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>All Procedures &ndash; LowMachReact-Hex
+</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">LowMachReact-Hex </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/namelists.html">Namelists</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../program/lowmach_react_hex.html">Program</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-12" id='text'>
+			 <h1>Procedures</h1>
+			 <table class="table table-striped">
+			 <thead><tr><th>Procedure</th><th>Location</th><th>Procedure Type</th><th>Description</th></tr></thead>
+			 <tbody>
+			   <tr>
+                 <td><a href='../proc/advance_projection_step.html'>advance_projection_step</a></td>
+                 <td><a href='../module/mod_flow_projection.html'>mod_flow_projection</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Orchestrates one full fractional-step iteration.</p><a href="../proc/advance_projection_step.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/advance_species_transport.html'>advance_species_transport</a></td>
+                 <td><a href='../module/mod_species.html'>mod_species</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Performs one explicit Euler step for species transport.</p><a href="../proc/advance_species_transport.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/allocate_fields.html'>allocate_fields</a></td>
+                 <td><a href='../module/mod_fields.html'>mod_fields</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Dynamically allocates all arrays within the flow fields container.</p><a href="../proc/allocate_fields.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/boundary_pressure.html'>boundary_pressure</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluates pressure at a boundary face.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/boundary_pressure_type.html'>boundary_pressure_type</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Function</td>
+                 <td><p>Returns the pressure BC type for a given face.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/boundary_species.html'>boundary_species</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluates species mass fractions at a boundary face.</p><a href="../proc/boundary_species.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/boundary_velocity.html'>boundary_velocity</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluates the velocity vector at a boundary face.</p><a href="../proc/boundary_velocity.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/build_bc_set.html'>build_bc_set</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Synchronizes namelist parameters with mesh patches to create a complete BC set.</p><a href="../proc/build_bc_set.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/compute_and_update_cfl.html'>compute_and_update_cfl</a></td>
+                 <td><a href='../module/mod_flow_projection.html'>mod_flow_projection</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Calculates domain-wide CFL and optionally scales the timestep size.</p><a href="../proc/compute_and_update_cfl.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/compute_flow_diagnostics.html'>compute_flow_diagnostics</a></td>
+                 <td><a href='../module/mod_flow_projection.html'>mod_flow_projection</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Aggregates global residuals, kinetic energy, and mass balance data.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/compute_global_observables.html'>compute_global_observables</a></td>
+                 <td><a href='../program/lowmach_react_hex.html'>lowmach_react_hex</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Computes global integral quantities for diagnostic reporting.</p><a href="../proc/compute_global_observables.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/face_effective_neighbor.html'>face_effective_neighbor</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Function</td>
+                 <td><p>Returns the neighbor cell index, accounting for periodic connectivity.</p><a href="../proc/face_effective_neighbor.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/face_normal_distance.html'>face_normal_distance</a></td>
+                 <td><a href='../module/mod_flow_projection.html'>mod_flow_projection</a></td>
+                 <td>Function</td>
+                 <td><p>Calculates the normal distance between cell centers or cell-to-face.</p><a href="../proc/face_normal_distance.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/fatal_error.html'>fatal_error</a></td>
+                 <td><a href='../module/mod_kinds.html'>mod_kinds</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Aborts the simulation with a formatted error message.</p><a href="../proc/fatal_error.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/finalize_bc_set.html'>finalize_bc_set</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Safely deallocates the boundary condition patch array.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/finalize_fields.html'>finalize_fields</a></td>
+                 <td><a href='../module/mod_fields.html'>mod_fields</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Deallocates all arrays and resets validity flags.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/finalize_flow_projection_workspace.html'>finalize_flow_projection_workspace</a></td>
+                 <td><a href='../module/mod_flow_projection.html'>mod_flow_projection</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Deallocate the persistent flow projection workspace.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/finalize_species.html'>finalize_species</a></td>
+                 <td><a href='../module/mod_species.html'>mod_species</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Safely deallocates species fields and names.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/finalize_transport.html'>finalize_transport</a></td>
+                 <td><a href='../module/mod_transport_properties.html'>mod_transport_properties</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Safely deallocates transport property fields.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_allgather_owned_matrix.html'>flow_allgather_owned_matrix</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Gathers locally-updated matrix cell values and broadcasts to the global mesh.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_allgather_owned_matrix_inplace.html'>flow_allgather_owned_matrix_inplace</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>In-place variant for fields that already hold owned-cell updates.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_allgather_owned_scalar.html'>flow_allgather_owned_scalar</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Gathers locally-updated cell values and broadcasts to the global mesh.</p><a href="../proc/flow_allgather_owned_scalar.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_allgather_owned_v4.html'>flow_allgather_owned_v4</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Gathers 4-component cell values (e.g., Velocity + Scalar) in one call.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_allgather_owned_vector.html'>flow_allgather_owned_vector</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Gathers locally-updated 3D vector cell values and broadcasts to the global mesh.</p><a href="../proc/flow_allgather_owned_vector.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_allreduce_global_scalar.html'>flow_allreduce_global_scalar</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Sum-Allreduce for a global scalar field.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_allreduce_global_vector.html'>flow_allreduce_global_vector</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Sum-Allreduce for a 3D global vector field.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_exchange_cell_matrix.html'>flow_exchange_cell_matrix</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Exchanges owned cell matrix values to ranks that keep them as ghosts.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_exchange_cell_scalar.html'>flow_exchange_cell_scalar</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Exchanges owned cell scalar values to ranks that keep them as ghosts.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_exchange_face_scalar.html'>flow_exchange_face_scalar</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Exchanges owner-computed face scalar values to ranks owning the neighbor cell.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_gather_owned_matrix_root.html'>flow_gather_owned_matrix_root</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Gathers owned matrix cell values to rank 0 only.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_gather_owned_scalar_root.html'>flow_gather_owned_scalar_root</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Gathers owned scalar cell values to rank 0 only.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_global_dot_owned.html'>flow_global_dot_owned</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Function</td>
+                 <td><p>Computes the global dot product of two vectors over owned cells.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_global_dots_owned.html'>flow_global_dots_owned</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Computes multiple global dot products in a single MPI_Allreduce.</p><a href="../proc/flow_global_dots_owned.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_global_max_owned.html'>flow_global_max_owned</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Function</td>
+                 <td><p>Computes the global maximum magnitude of a field over owned cells.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_global_sum_owned.html'>flow_global_sum_owned</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Function</td>
+                 <td><p>Computes the global sum of a field over owned cells.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_global_two_dots_owned.html'>flow_global_two_dots_owned</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Computes two global dot products without constructing temporary full-size batches.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_mpi_finalize.html'>flow_mpi_finalize</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Releases all MPI resources and buffers.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/flow_mpi_initialize.html'>flow_mpi_initialize</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Sets up domain decomposition for a given mesh.</p><a href="../proc/flow_mpi_initialize.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/get_case_filename.html'>get_case_filename</a></td>
+                 <td><a href='../program/lowmach_react_hex.html'>lowmach_react_hex</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Parses command line arguments to find the case configuration file.</p><a href="../proc/get_case_filename.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/initialize_fields.html'>initialize_fields</a></td>
+                 <td><a href='../module/mod_fields.html'>mod_fields</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Initializes flow fields and sets simulation initial conditions.</p><a href="../proc/initialize_fields.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/initialize_species.html'>initialize_species</a></td>
+                 <td><a href='../module/mod_species.html'>mod_species</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Populates species fields with initial mass fractions and handles naming.</p><a href="../proc/initialize_species.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/initialize_transport.html'>initialize_transport</a></td>
+                 <td><a href='../module/mod_transport_properties.html'>mod_transport_properties</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Allocates property arrays and initializes the Cantera bridge if required.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/is_periodic_face.html'>is_periodic_face</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Function</td>
+                 <td><p>Returns true if the face belongs to a periodic boundary.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/lowercase.html'>lowercase</a></td>
+                 <td><a href='../module/mod_kinds.html'>mod_kinds</a></td>
+                 <td>Function</td>
+                 <td><p>Converts an input string to all lowercase characters.</p><a href="../proc/lowercase.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/mesh_finalize.html'>mesh_finalize</a></td>
+                 <td><a href='../module/mod_mesh_types.html'>mod_mesh_types</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Safely deallocates all heap-allocated arrays in the mesh structure.</p><a href="../proc/mesh_finalize.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/mpi_flow_shutdown.html'>mpi_flow_shutdown</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Shuts down the MPI environment if it was started by this module.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/mpi_flow_startup.html'>mpi_flow_startup</a></td>
+                 <td><a href='../module/mod_mpi_flow.html'>mod_mpi_flow</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Initializes the MPI environment if not already active.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/patch_type_for_face.html'>patch_type_for_face</a></td>
+                 <td><a href='../module/mod_bc.html'>mod_bc</a></td>
+                 <td>Function</td>
+                 <td><p>Retrieves the master BC type for a given face ID.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/prepare_output.html'>prepare_output</a></td>
+                 <td><a href='../module/mod_output.html'>mod_output</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Creates the output directory specified in the case parameters.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/profiler_configure.html'>profiler_configure</a></td>
+                 <td><a href='../module/mod_profiler.html'>mod_profiler</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Configure profiling behavior at runtime.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/profiler_report.html'>profiler_report</a></td>
+                 <td><a href='../module/mod_profiler.html'>mod_profiler</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Generates a collective performance report across all MPI ranks.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/profiler_reset.html'>profiler_reset</a></td>
+                 <td><a href='../module/mod_profiler.html'>mod_profiler</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Reset all profiler state.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/profiler_start.html'>profiler_start</a></td>
+                 <td><a href='../module/mod_profiler.html'>mod_profiler</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Starts a timer for a named kernel.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/profiler_stop.html'>profiler_stop</a></td>
+                 <td><a href='../module/mod_profiler.html'>mod_profiler</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Stops a timer and accumulates the elapsed time.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/radiation_mpi_finalize.html'>radiation_mpi_finalize</a></td>
+                 <td><a href='../module/mod_mpi_radiation.html'>mod_mpi_radiation</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Releases radiation MPI resources.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/radiation_mpi_initialize.html'>radiation_mpi_initialize</a></td>
+                 <td><a href='../module/mod_mpi_radiation.html'>mod_mpi_radiation</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Initializes the radiation MPI context by duplicating a parent communicator.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/radiation_task_bounds.html'>radiation_task_bounds</a></td>
+                 <td><a href='../module/mod_mpi_radiation.html'>mod_mpi_radiation</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Performs contiguous task decomposition for the radiation solver.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/read_case_params.html'>read_case_params</a></td>
+                 <td><a href='../module/mod_input.html'>mod_input</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Orchestrates the reading of all namelist blocks from the configuration file.</p><a href="../proc/read_case_params.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/read_native_mesh.html'>read_native_mesh</a></td>
+                 <td><a href='../module/mod_mesh_io.html'>mod_mesh_io</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Orchestrates the reading of all mesh components from a directory.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/update_transport_properties.html'>update_transport_properties</a></td>
+                 <td><a href='../module/mod_transport_properties.html'>mod_transport_properties</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Evaluates physical properties for the entire domain.</p><a href="../proc/update_transport_properties.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/write_diagnostics_header.html'>write_diagnostics_header</a></td>
+                 <td><a href='../module/mod_output.html'>mod_output</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Writes the CSV header for global simulation diagnostics.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/write_diagnostics_row.html'>write_diagnostics_row</a></td>
+                 <td><a href='../module/mod_output.html'>mod_output</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Appends a new row of diagnostic data to the CSV file.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/write_mesh_summary.html'>write_mesh_summary</a></td>
+                 <td><a href='../module/mod_output.html'>mod_output</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Writes a human-readable summary of the mesh connectivity and patches.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/write_pvd_collection.html'>write_pvd_collection</a></td>
+                 <td><a href='../module/mod_output.html'>mod_output</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Writes a PVD collection file to allow ParaView to load time-series data.</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../proc/write_vtu_unstructured.html'>write_vtu_unstructured</a></td>
+                 <td><a href='../module/mod_output.html'>mod_output</a></td>
+                 <td>Subroutine</td>
+                 <td><p>Writes the full flow field to an XML Unstructured Grid file (.vtu).</p><a href="../proc/write_vtu_unstructured.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			 </tbody></table>
+             
+        </div>
+      </div>
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              LowMachReact-Hex
+ was developed by Khaled Mosharraf Mukut<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+            </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

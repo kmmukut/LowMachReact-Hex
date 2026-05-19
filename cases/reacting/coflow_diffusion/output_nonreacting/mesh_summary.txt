@@ -1,0 +1,12 @@
+points: 24442
+cells: 12000
+faces: 48220
+patches: 8
+1 inlet_wall 32
+2 free_boundary 200
+3 zmin 12000
+4 zmax 12000
+5 air_inlet 56
+6 lip_wall 12
+7 fuel_inlet 20
+8 outlet 120

@@ -1,0 +1,194 @@
+======================================================================
+RUN CONFIGURATION SUMMARY
+======================================================================
+case: cases/coflow_laminar_diffusion_2D_optimized/case_nonreacting.nml
+mesh_dir: cases/coflow_laminar_diffusion_2D_optimized/mesh_native
+cells: 12000
+faces: 48220
+flow/chemistry MPI ranks: 24
+radiation MPI ranks: 24
+time: nsteps=352500 dt= 7.50000E-06 output_interval=10000 terminal_interval=100 terminal_detail=health dynamic_dt=F
+time limits: max_dt= 1.00000E-04 min_dt= 1.00000E-12 dt_growth_limit= 1.05000E+00
+  step rejection enabled           : T
+  max step retries                 : 8
+  step reject cut factor           :  5.00000E-01
+  step reject minimum dt           :  1.00000E-12
+  max KE growth per step           :  1.00000E+02
+  KE reject floor                  :  1.00000E-12
+  max CFL overshoot factor         :  2.00000E+00
+  reject on pressure max iter      : T
+  stop on min-dt failure           : T
+
+Numerical schemes:
+  legacy convection_scheme     : upwind
+  momentum convection          : upwind
+  species convection           : muscl
+  energy convection            : muscl
+  scalar limiter               : vanleer
+  species time scheme          : euler
+  energy time scheme           : euler
+  pressure max iterations      : 5000
+  pressure tolerance           :  1.00000E-06
+
+Flow and thermodynamics:
+  variable density             : T
+  density EOS                  : cantera
+  variable viscosity           : T
+  transport update interval    : 1
+  energy equation              : T
+  Cantera thermo               : T
+  species enthalpy diffusion   : T
+  upwind dilatation density    : T
+  background pressure [Pa]     :  1.01325E+05
+  background temperature [K]   :  3.00000E+02
+
+Chemistry timestep/source controls:
+  chemistry max dT per step [K]      :  2.50000E+01
+  chemistry max rel rho change       :  2.00000E-02
+  chemistry max dY per step          :  2.00000E-02
+  chemistry dt safety                :  5.00000E-01
+  chemistry source limiter           : F
+  chemistry source relaxation        :  1.00000E+00
+
+Species and chemistry:
+  species transport            : T
+  transported species count    : 6
+  reactions enabled            : F
+  Cantera mechanism            : mechanisms/2S_methane.yaml
+  Cantera phase                : CH4_CM2_mix
+  Cantera reaction count       : 2
+  chemistry update interval    : 1
+  chemistry rtol               :  1.00000E-06
+  chemistry atol               :  1.00000E-10
+  chemistry max steps          : 10000
+  chemistry energy enabled     : F
+  chemistry T cutoff [K]       :  6.00000E+02
+  chemistry min reactive Y     :  0.00000E+00
+  chemistry_active_screening   : T
+  chemistry_n_active_species   : 2
+  chemistry_active_species_threshold :  1.00000E-08
+  chemistry_active_species_name(1) : CH4
+  chemistry_active_species_name(2) : CO
+  initial composition          : O2:0.233,N2:0.767
+
+Ignition initialization:
+  enable_ignition_kernel    : F
+
+Boundary conditions:
+  number of patches            : 8
+  mass-flux velocity convention:
+    mass_flux/signed_mass_flux : signed rho*dot(U,n_out) [kg/m^2/s]
+    inlet_mass_flux            : positive magnitude directed into the domain
+    outlet_mass_flux           : positive magnitude directed out of the domain
+  patch[1] fuel_inlet
+    patch type                 : dirichlet
+    velocity type              : inlet_mass_flux
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  3.57500E-02
+    pressure type              : zero_gradient
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : fixed_value
+    temperature [K]            :  4.20000E+02
+    species type               : dirichlet
+    composition                : CH4:1.0
+  patch[2] air_inlet
+    patch type                 : dirichlet
+    velocity type              : inlet_mass_flux
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  2.34300E-01
+    pressure type              : zero_gradient
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : fixed_value
+    temperature [K]            :  4.20000E+02
+    species type               : dirichlet
+    composition                : O2:0.233,N2:0.767
+  patch[3] lip_wall
+    patch type                 : wall
+    velocity type              : no_slip
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : zero_gradient
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : zero_gradient
+    temperature [K]            :  3.00000E+02
+    species type               : zero_gradient
+  patch[4] inlet_wall
+    patch type                 : wall
+    velocity type              : no_slip
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : zero_gradient
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : zero_gradient
+    temperature [K]            :  3.00000E+02
+    species type               : zero_gradient
+  patch[5] outlet
+    patch type                 : neumann
+    velocity type              : zero_gradient
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : fixed_value
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : zero_gradient
+    temperature [K]            :  3.00000E+02
+    species type               : zero_gradient
+  patch[6] free_boundary
+    patch type                 : symmetric
+    velocity type              : symmetric
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : symmetric
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : symmetric
+    temperature [K]            :  3.00000E+02
+    species type               : symmetric
+  patch[7] zmin
+    patch type                 : symmetric
+    velocity type              : symmetric
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : symmetric
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : symmetric
+    temperature [K]            :  3.00000E+02
+    species type               : symmetric
+  patch[8] zmax
+    patch type                 : symmetric
+    velocity type              : symmetric
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : symmetric
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : symmetric
+    temperature [K]            :  3.00000E+02
+    species type               : symmetric
+
+Radiation coupling:
+  radiation enabled            : F
+  radiation pressure source    : background
+  radiation model              : none
+  radiation update interval    : 1
+  n wavenumbers                : 0
+  local wavenumber range       : 0--1
+  selected radiation species   : 0
+  radiation debug checks       : F
+  radiation diagnostics        : T
+
+Restart:
+  restart from file            : T
+  restart file                 : cases/coflow_laminar_diffusion_2D_optimized/output_nonreacting/restart/restart_00202500.rst
+  write restart                : T
+  restart interval             : 2500
+  restart output dir           : cases/coflow_laminar_diffusion_2D_optimized/output_nonreacting/restart
+  restart keep                 : 3
+  restart use file dt          : F
+  restart nsteps additional    : T
+======================================================================

@@ -1,0 +1,170 @@
+======================================================================
+RUN CONFIGURATION SUMMARY
+======================================================================
+case: cases/counterflow_screening_skip_demo/case.nml
+mesh_dir: cases/counterflow_screening_skip_demo/mesh_native
+cells: 2048
+faces: 8288
+flow/chemistry MPI ranks: 8
+radiation MPI ranks: 8
+time: nsteps=420000 dt= 3.00000E-07 output_interval=500 terminal_interval=100 terminal_detail=health dynamic_dt=T
+time limits: max_dt= 5.00000E-07 min_dt= 1.00000E-12 dt_growth_limit= 1.00200E+00
+  step rejection enabled           : T
+  max step retries                 : 8
+  step reject cut factor           :  5.00000E-01
+  step reject minimum dt           :  1.00000E-12
+  max KE growth per step           :  5.00000E+00
+  KE reject floor                  :  1.00000E-12
+  max CFL overshoot factor         :  1.25000E+00
+  reject on pressure max iter      : T
+  stop on min-dt failure           : T
+
+Numerical schemes:
+  legacy convection_scheme     : upwind
+  momentum convection          : upwind
+  species convection           : upwind
+  energy convection            : upwind
+  scalar limiter               : vanleer
+  species time scheme          : euler
+  energy time scheme           : euler
+  pressure max iterations      : 2000
+  pressure tolerance           :  1.00000E-06
+
+Flow and thermodynamics:
+  variable density             : T
+  density EOS                  : cantera
+  variable viscosity           : T
+  transport update interval    : 1
+  energy equation              : T
+  Cantera thermo               : T
+  species enthalpy diffusion   : T
+  background pressure [Pa]     :  1.01325E+05
+  background temperature [K]   :  7.00000E+02
+
+Chemistry timestep/source controls:
+  chemistry max dT per step [K]      :  5.00000E+00
+  chemistry max rel rho change       :  5.00000E-03
+  chemistry max dY per step          :  5.00000E-03
+  chemistry dt safety                :  5.00000E-01
+  chemistry source limiter           : T
+  chemistry source relaxation        :  2.50000E-01
+
+Species and chemistry:
+  species transport            : T
+  transported species count    : 5
+  reactions enabled            : T
+  Cantera mechanism            : mechanisms/1S_CH4_MP1.yaml
+  Cantera phase                : CH4_MP1_mix
+  Cantera reaction count       : 1
+  chemistry update interval    : 1
+  chemistry rtol               :  1.00000E-06
+  chemistry atol               :  1.00000E-10
+  chemistry max steps          : 10000
+  chemistry energy enabled     : T
+  chemistry T cutoff [K]       :  6.50000E+02
+  chemistry min reactive Y     :  0.00000E+00
+  chemistry_active_screening   : T
+  chemistry_n_active_species   : 2
+  chemistry_active_species_threshold :  1.00000E-08
+  chemistry_active_species_name(1) : CH4
+  chemistry_active_species_name(2) : O2
+  initial composition          : N2:1.0
+
+Ignition initialization:
+  enable_ignition_kernel    : F
+
+Boundary conditions:
+  number of patches            : 6
+  mass-flux velocity convention:
+    mass_flux/signed_mass_flux : signed rho*dot(U,n_out) [kg/m^2/s]
+    inlet_mass_flux            : positive magnitude directed into the domain
+    outlet_mass_flux           : positive magnitude directed out of the domain
+  patch[1] xmin
+    patch type                 : dirichlet
+    velocity type              : inlet_mass_flux
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  5.00000E-01
+    pressure type              : zero_gradient
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : fixed_value
+    temperature [K]            :  7.00000E+02
+    species type               : dirichlet
+    composition                : CH4:1.0
+  patch[2] xmax
+    patch type                 : dirichlet
+    velocity type              : inlet_mass_flux
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  5.00000E-01
+    pressure type              : zero_gradient
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : fixed_value
+    temperature [K]            :  7.00000E+02
+    species type               : dirichlet
+    composition                : O2:0.233,N2:0.767
+  patch[3] ymin
+    patch type                 : neumann
+    velocity type              : zero_gradient
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : fixed_value
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : zero_gradient
+    temperature [K]            :  7.00000E+02
+    species type               : zero_gradient
+  patch[4] ymax
+    patch type                 : neumann
+    velocity type              : zero_gradient
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : fixed_value
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : zero_gradient
+    temperature [K]            :  7.00000E+02
+    species type               : zero_gradient
+  patch[5] zmin
+    patch type                 : symmetric
+    velocity type              : symmetric
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : symmetric
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : symmetric
+    temperature [K]            :  7.00000E+02
+    species type               : symmetric
+  patch[6] zmax
+    patch type                 : symmetric
+    velocity type              : symmetric
+    velocity [m/s]             :  0.00000E+00  0.00000E+00  0.00000E+00
+    mass flux [kg/m^2/s]       :  0.00000E+00
+    pressure type              : symmetric
+    pressure value             :  0.00000E+00
+    pressure gradient          :  0.00000E+00
+    temperature type           : symmetric
+    temperature [K]            :  7.00000E+02
+    species type               : symmetric
+
+Radiation coupling:
+  radiation enabled            : F
+  radiation model              : spectral_test
+  radiation update interval    : 10
+  n wavenumbers                : 16
+  local wavenumber range       : 0--1
+  selected radiation species   : 2
+  radiation debug checks       : F
+  radiation diagnostics        : F
+
+Restart:
+  restart from file            : T
+  restart file                 : /home/kmukut/Radiation/GPT/cases/counterflow_screening_skip_demo/output_step_reject/restart/restart_00120000.rst
+  write restart                : T
+  restart interval             : 500
+  restart output dir           : cases/counterflow_screening_skip_demo/output_step_reject/restart
+  restart keep                 : 5
+  restart use file dt          : F
+  restart nsteps additional    : T
+======================================================================

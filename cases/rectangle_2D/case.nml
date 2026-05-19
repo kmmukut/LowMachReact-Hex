@@ -1,0 +1,107 @@
+! LowMachReact-Hex Case Configuration File
+! =========================================
+
+&mesh_input
+  mesh_dir = "cases/rectangle_2D/mesh_native"
+/
+
+&time_input
+  nsteps = 2000
+  dt = 2.5e-4
+  output_interval = 100
+  use_dynamic_dt = .false.
+  max_cfl = 0.5
+/
+
+&fluid_input
+  rho = 1.0
+  nu = 1.0e-2
+  enable_cantera = .false.
+  enable_variable_density = .true.
+  enable_variable_nu = .false.
+
+  density_eos = "cantera"
+  cantera_mech_file = "mechanisms/rk_chung.yaml"
+  cantera_phase_name = "gas"
+  
+  background_temp = 300.0
+  background_press = 101325.0
+  transport_update_interval = 100
+/
+
+
+&energy_input
+  enable_energy = .true.
+  enable_cantera_thermo = .true.
+  enable_species_enthalpy_diffusion = .true.
+  thermo_update_interval = 1
+  thermo_default_species = "CO2"
+  initial_T = 300.0
+  energy_reference_T = 298.15
+  energy_reference_h = 0.0
+  energy_cp = 1005.0
+  energy_lambda = 0.026
+/
+
+&solver_input
+  pressure_max_iter = 2000
+  pressure_tol = 1.0e-8
+  body_force_x = 0.0
+  body_force_y = 0.0
+  body_force_z = 0.0
+  convection_scheme = "central"
+/
+
+&boundary_input
+  n_patches = 5
+  patch_name = "inlet", "outlet", "wall", "zmin", "zmax"
+
+  patch_type = "dirichlet", "neumann", "wall", "symmetric", "symmetric"
+
+  patch_velocity_type = "fixed_value", "zero_gradient", "no_slip", "symmetric", "symmetric"
+  patch_pressure_type = "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
+
+  ! Hot inlet, insulated outlet/walls.
+  patch_temperature_type = "fixed_value", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
+
+  patch_species_type = "fixed_value", "zero_gradient", "zero_gradient", "zero_gradient", "zero_gradient"
+
+  ! Inlet species composition:
+  ! O2 = 0.2, N2 = 0.7, CO2 = 0.1
+  patch_Y(1,1) = 0.2
+  patch_Y(2,1) = 0.7
+  patch_Y(3,1) = 0.1
+
+
+  patch_T = 400.0, 300.0, 300.0, 300.0, 300.0
+
+  patch_u = 1.0, 0.0, 0.0, 0.0, 0.0
+  patch_v = 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_w = 0.0, 0.0, 0.0, 0.0, 0.0
+
+  patch_p = 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0
+/
+
+&output_input
+  output_dir = "cases/rectangle_2D/output"
+  write_vtu = .true.
+  write_diagnostics = .true.
+/
+
+&species_input
+  enable_species = .true.
+  enable_reactions = .false.
+  enable_cantera = .true.
+  nspecies = 3
+  species_name = "O2", "N2", "CO2"
+  initial_Y = 0.3, 0.4, 0.3
+  species_diffusivity = 5.0e-5, 2.0e-5, 3.0e-5
+/
+
+&profiling_input
+  enable_profiling = .true.
+  nested_profiling = .true.
+  write_cantera_cache_stats = .false.
+  variable_density_debug = .false.
+/

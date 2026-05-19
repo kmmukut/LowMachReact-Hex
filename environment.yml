@@ -1,0 +1,17 @@
+name: react_env
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - cantera>=3.2
+  - libcantera-devel
+  - ford
+  - gmsh
+  - meshio
+  - numpy
+  - scipy
+  - matplotlib
+  - pandas
+  - pyvista
+  - pkg-config
+  - pip

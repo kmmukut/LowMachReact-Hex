@@ -1,0 +1,62 @@
+description: Thermo-transport model demo phases using a common gas species set.
+
+phases:
+- name: Ideal_MixAvg
+  thermo: ideal-gas
+  transport: mixture-averaged
+  species:
+  - gri30.yaml/species: [CH4, O2, N2, CO2]
+  state:
+    T: 300.0
+    P: 1 atm
+    X: {CH4: 0.05, O2: 0.21, N2: 0.74}
+
+- name: Ideal_Multi
+  thermo: ideal-gas
+  transport: multicomponent
+  species:
+  - gri30.yaml/species: [CH4, O2, N2, CO2]
+  state:
+    T: 300.0
+    P: 1 atm
+    X: {CH4: 0.05, O2: 0.21, N2: 0.74}
+
+- name: PR_High
+  thermo: Peng-Robinson
+  transport: high-pressure
+  species:
+  - gri30.yaml/species: [CH4, O2, N2, CO2]
+  state:
+    T: 300.0
+    P: 1 atm
+    X: {CH4: 0.05, O2: 0.21, N2: 0.74}
+
+- name: PR_Chung
+  thermo: Peng-Robinson
+  transport: high-pressure-Chung
+  species:
+  - gri30.yaml/species: [CH4, O2, N2, CO2]
+  state:
+    T: 300.0
+    P: 1 atm
+    X: {CH4: 0.05, O2: 0.21, N2: 0.74}
+
+- name: RK_High
+  thermo: Redlich-Kwong
+  transport: high-pressure
+  species:
+  - gri30.yaml/species: [CH4, O2, N2, CO2]
+  state:
+    T: 300.0
+    P: 1 atm
+    X: {CH4: 0.05, O2: 0.21, N2: 0.74}
+
+- name: RK_Chung
+  thermo: Redlich-Kwong
+  transport: high-pressure-Chung
+  species:
+  - gri30.yaml/species: [CH4, O2, N2, CO2]
+  state:
+    T: 300.0
+    P: 1 atm
+    X: {CH4: 0.05, O2: 0.21, N2: 0.74}

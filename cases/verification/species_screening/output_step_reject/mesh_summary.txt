@@ -1,0 +1,10 @@
+points: 4290
+cells: 2048
+faces: 8288
+patches: 6
+1 xmin 32
+2 ymin 64
+3 zmin 2048
+4 zmax 2048
+5 ymax 64
+6 xmax 32

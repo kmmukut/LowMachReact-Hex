@@ -1,0 +1,132 @@
+! Non-reacting counterflow benchmark (Gmsh hex brick).
+! Opposed axial jets on xmin/xmax; open transverse outlets on ymin/ymax; symmetry on zmin/zmax.
+! Species: CH4 / O2 / N2. Reactions disabled.
+!
+! Cantera phase selection:
+!   cantera_mech_file  = "gri30.yaml"
+!   cantera_phase_name = "gri30"
+!
+! To test one of the Patch 073 demo mechanisms instead, use for example:
+!   cantera_mech_file  = "mechanisms/ideal_mixavg.yaml"
+!   cantera_phase_name = "gas"
+!
+! This file preserves the original constant-density mode:
+!   enable_variable_density = .false.
+
+&mesh_input
+mesh_dir = "cases/counterflow_nonreacting_gmsh/mesh_native"
+/
+
+&time_input
+nsteps = 200000
+dt = 5.0e-5
+output_interval = 5000
+use_dynamic_dt = .false.
+max_cfl = 0.4
+/
+
+&fluid_input
+rho = 1.17153332298
+nu = 1.58964e-5
+
+enable_cantera = .true.
+
+enable_variable_density = .true.
+enable_variable_nu = .true.
+density_eos = "cantera"
+
+cantera_mech_file = "mechanisms/ideal_mixavg.yaml"
+cantera_phase_name = "gas"
+
+background_temp = 300.0
+background_press = 101325.0
+transport_update_interval = 1
+/
+
+&solver_input
+pressure_max_iter = 2000
+pressure_tol = 1.0e-6
+body_force_x = 0.0
+body_force_y = 0.0
+body_force_z = 0.0
+convection_scheme = "upwind"  ! "upwind" or "central"
+/
+
+&boundary_input
+n_patches = 6
+patch_name = "xmin", "xmax", "ymin", "ymax", "zmin", "zmax"
+
+ ! Thin 2D slab: opposed Dirichlet inlets on x;
+ ! open outlets in y; one-cell symmetry in z.
+patch_type = "dirichlet", "dirichlet", "neumann", "neumann", "symmetric", "symmetric"
+patch_velocity_type = "fixed_value", "fixed_value", "zero_gradient", "zero_gradient", "symmetric", "symmetric"
+patch_pressure_type = "zero_gradient", "zero_gradient", "fixed_value", "fixed_value", "symmetric", "symmetric"
+
+patch_u = 0.5, -0.5, 0.0, 0.0, 0.0, 0.0
+patch_v = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+patch_w = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+patch_p = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+patch_dpdn = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+patch_T = 300.0, 300.0, 300.0, 300.0, 300.0, 300.0
+patch_temperature_type = "fixed_value", "fixed_value", "zero_gradient", "zero_gradient", "symmetric", "symmetric"
+
+patch_species_type = "dirichlet", "dirichlet", "zero_gradient", "zero_gradient", "symmetric", "symmetric"
+
+ ! Species order:
+ !   1 = CH4
+ !   2 = O2
+ !   3 = N2
+
+ ! Fuel-like stream at xmin: CH4 + O2 dilution + N2
+patch_Y(1, 1) = 0.20
+patch_Y(2, 1) = 0.05
+patch_Y(3, 1) = 0.75
+
+ ! Oxidizer stream at xmax: air-like O2 + N2
+patch_Y(1, 2) = 0.00
+patch_Y(2, 2) = 0.23
+patch_Y(3, 2) = 0.77
+/
+
+&output_input
+output_dir = "cases/counterflow_nonreacting_gmsh/output"
+write_vtu = .true.
+write_diagnostics = .true.
+/
+
+&species_input
+enable_species = .true.
+enable_reactions = .false.
+enable_cantera = .true.
+
+nspecies = 3
+species_name = "CH4", "O2", "N2"
+
+species_diffusivity = 2.0e-5, 2.0e-5, 2.0e-5
+initial_Y = 0.10, 0.14, 0.76
+/
+
+&energy_input
+enable_energy = .true.
+enable_cantera_thermo = .true.
+enable_species_enthalpy_diffusion = .true.
+
+thermo_update_interval = 1
+thermo_default_species = "N2"
+
+initial_T = 300.0
+energy_reference_T = 300.0
+energy_reference_h = 0.0
+
+energy_cp = 1005.0
+energy_lambda = 0.026
+/
+
+&profiling_input
+enable_profiling = .true.
+nested_profiling = .true.
+write_cantera_cache_stats = .true.
+variable_density_debug = .false.
+/

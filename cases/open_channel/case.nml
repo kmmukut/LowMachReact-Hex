@@ -1,0 +1,75 @@
+! LowMachReact-Hex Case Configuration File
+! =========================================
+
+&mesh_input
+  mesh_dir = "cases/open_channel/mesh_native"
+/
+
+&time_input
+  nsteps = 2000
+  dt = 5.0e-4
+  output_interval = 100
+  use_dynamic_dt = .false.
+  max_cfl = 0.5
+/
+
+&fluid_input
+  rho = 1.0
+  nu = 1.0e-2
+  
+  enable_cantera = .false.
+  cantera_mech_file = "gri30.yaml"
+  background_temp = 300.0
+  background_press = 101325.0
+/
+
+&solver_input
+  pressure_max_iter = 500
+  pressure_tol = 1.0e-7
+  body_force_x = 0.0
+  body_force_y = 0.0
+  body_force_z = 0.0
+  convection_scheme = "central"
+/
+
+&boundary_input
+  n_patches = 6
+  patch_name = "xmin", "xmax", "ymin", "ymax", "zmin", "zmax"
+  
+  patch_type = "dirichlet", "dirichlet", "wall", "wall", "periodic", "periodic"
+  
+  patch_velocity_type = "zero_gradient", "zero_gradient", "no_slip", "no_slip", "periodic", "periodic"
+  patch_pressure_type = "dirichlet", "dirichlet", "zero_gradient", "zero_gradient", "periodic", "periodic"
+  
+  patch_u = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_v = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_w = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+  patch_p = 1.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+  patch_species_type = "dirichlet", "zero_gradient", "zero_gradient", "zero_gradient", "periodic", "periodic"
+  patch_Y(1, 1) = 0.5
+  patch_Y(2, 1) = 0.4
+  patch_Y(3, 1) = 0.1
+/
+
+&output_input
+  output_dir = "cases/open_channel/output"
+  write_vtu = .true.
+  write_diagnostics = .true.
+/
+
+&species_input
+  enable_species = .false.
+  enable_reactions = .false.
+  enable_cantera = .false.
+  
+  nspecies = 3
+  species_name = "O2", "N2", "CH4"
+  species_diffusivity = 1.0e-5, 1.0e-5, 1.0e-5
+  initial_Y = 0.2, 0.8, 0.0
+/
+
+&profiling_input
+  enable_profiling = .true.
+  nested_profiling = .true.
+/

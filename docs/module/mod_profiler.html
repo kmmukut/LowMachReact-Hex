@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="description" content="Fortran 2008 MPI finite-volume solver for low-Mach flows.">
+    <meta name="author" content="Khaled Mosharraf Mukut" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>mod_profiler &ndash; LowMachReact-Hex</title>
+
+    <link href="../css/bootstrap.min.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <link href="../css/font-awesome.min.css" rel="stylesheet">
+    <link href="../css/local.css" rel="stylesheet">
+    <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <script src="../js/jquery-2.1.3.min.js"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="../index.html">LowMachReact-Hex </a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="dropdown hidden-xs visible-sm visible-md hidden-lg">
+              <a href="#" class="dropdown-toggle"
+              data-toggle="dropdown" role="button"
+              aria-haspopup="true"
+     aria-expanded="false">Contents <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+            <li><a href="../lists/files.html">Source Files</a></li>
+            <li><a href="../lists/modules.html">Modules</a></li>
+            <li><a href="../lists/procedures.html">Procedures</a></li>
+                   <li><a href="../lists/types.html">Derived Types</a></li>
+            <li><a href="../program/lowmach_react_hex.html">Program</a></li>
+       
+            </ul>
+        
+            </li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/files.html">Source Files</a></li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/modules.html">Modules</a></li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../lists/procedures.html">Procedures</a></li>
+                             <li class="visible-xs hidden-sm visible-lg"><a href="../lists/types.html">Derived Types</a></li>
+<li class="visible-xs hidden-sm visible-lg"><a href="../program/lowmach_react_hex.html">Program</a></li>
+          </ul>
+        <form action="../search.html" class="navbar-form navbar-right" role="search">
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+        </div>
+<!--
+        <button type="submit" class="btn btn-default">Submit</button>
+-->
+        </form>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+  <div class="row">
+    <h1>mod_profiler 
+    <small>Module</small>
+    </h1>
+    <div class="row">
+  <div class="col-lg-12">
+<div class="well well-sm">
+  <ul class="list-inline" style="margin-bottom:0px;display:inline">
+     <li><i class="fa fa-list-ol"></i>
+       <a data-toggle="tooltip"
+    data-placement="bottom" data-html="true"
+    title=" 8.1% of total for modules and submodules.">292 statements</a>
+     </li> 
+    <li><i class="fa fa-code"></i><a href="../src/mod_profiler.f90"> Source File</a></li>
+  </ul>
+  <ol class="breadcrumb in-well text-right">
+     <li><a href='../sourcefile/mod_profiler.f90.html'>mod_profiler.f90</a></li>
+     <li class="active">mod_profiler</li>
+  </ol>
+</div>
+</div>
+</div>
+<script>
+  $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+  })
+</script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+    <div id="sidebar">
+  <h3>Contents</h3>
+ 
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#subs-0">Subroutines</a></h3></div>
+  <div class="list-group">
+    <div id="subs-0" class="panel-collapse collapse">
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_configure">profiler_configure</a>
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_reset">profiler_reset</a>
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_start">profiler_start</a>
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_stop">profiler_stop</a>
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_report">profiler_report</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <p>Performance profiling and execution timing utilities.</p>
+<p>Supports:
+- Flat timing report for all named regions.
+- Optional nested report based on profiler_start/profiler_stop call stack.
+- Runtime enable/disable via profiler_configure().</p>
+<br>        <div class="panel panel-default">
+      <div class="panel-heading">
+  <h3 class="panel-title">Uses</h3>
+      </div>
+      <ul class="list-group">
+      <li class="list-group-item">
+  <ul class="list-inline">
+    <li><a href="http://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node409.htm">mpi_f08</a></li>
+    <li><a href='../module/mod_kinds.html'>mod_kinds</a></li>
+    <li><a href="http://fortranwiki.org/fortran/show/iso_fortran_env">iso_fortran_env</a></li>
+  </ul>
+      </li>
+      <li class="list-group-item">
+  <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.2 (20260126.1125)
+ -->
+<!-- Title: module~~mod_profiler~~UsesGraph Pages: 1 -->
+<svg id="modulemod_profilerUsesGraph" width="321pt" height="94pt"
+ viewBox="0.00 0.00 321.00 94.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~mod_profiler~~UsesGraph" class="graph" transform="scale(1 1) rotate(0) translate(4 90.27)">
+<title>module~~mod_profiler~~UsesGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-90.27 316.81,-90.27 316.81,4 -4,4"/>
+<!-- module~mod_profiler -->
+<g id="module~~mod_profiler~~UsesGraph_node1" class="node">
+<title>module~mod_profiler</title>
+<polygon fill="none" stroke="black" points="312.81,-44.27 233.79,-44.27 233.79,-20 312.81,-20 312.81,-44.27"/>
+<text xml:space="preserve" text-anchor="middle" x="273.3" y="-28.53" font-family="Helvetica,sans-Serif" font-size="10.50">mod_profiler</text>
+</g>
+<!-- mpi_f08 -->
+<g id="module~~mod_profiler~~UsesGraph_node2" class="node">
+<title>mpi_f08</title>
+<g id="a_module~~mod_profiler~~UsesGraph_node2"><a xlink:href="http://www.mpi-forum.org/docs/mpi-3.1/mpi31-report/node409.htm" xlink:title="mpi_f08">
+<polygon fill="#337ab7" stroke="#337ab7" points="190.66,-86.27 136.4,-86.27 136.4,-62 190.66,-62 190.66,-86.27"/>
+<text xml:space="preserve" text-anchor="middle" x="163.53" y="-70.54" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mpi_f08</text>
+</a>
+</g>
+</g>
+<!-- module~mod_profiler&#45;&gt;mpi_f08 -->
+<g id="module~~mod_profiler~~UsesGraph_edge1" class="edge">
+<title>module~mod_profiler&#45;&gt;mpi_f08</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M239.97,-44.74C227.88,-49.45 214.07,-54.83 201.59,-59.69"/>
+<polygon fill="#000000" stroke="#000000" points="200.5,-56.36 192.45,-63.25 203.04,-62.88 200.5,-56.36"/>
+</g>
+<!-- module~mod_kinds -->
+<g id="module~~mod_profiler~~UsesGraph_node3" class="node">
+<title>module~mod_kinds</title>
+<g id="a_module~~mod_profiler~~UsesGraph_node3"><a xlink:href=".././module/mod_kinds.html" xlink:title="mod_kinds">
+<polygon fill="#337ab7" stroke="#337ab7" points="197.79,-44.27 129.27,-44.27 129.27,-20 197.79,-20 197.79,-44.27"/>
+<text xml:space="preserve" text-anchor="middle" x="163.53" y="-28.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_kinds</text>
+</a>
+</g>
+</g>
+<!-- module~mod_profiler&#45;&gt;module~mod_kinds -->
+<g id="module~~mod_profiler~~UsesGraph_edge2" class="edge">
+<title>module~mod_profiler&#45;&gt;module~mod_kinds</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M233.39,-32.13C225.61,-32.13 217.39,-32.13 209.42,-32.13"/>
+<polygon fill="#000000" stroke="#000000" points="209.55,-28.64 199.55,-32.14 209.55,-35.64 209.55,-28.64"/>
+</g>
+<!-- iso_fortran_env -->
+<g id="module~~mod_profiler~~UsesGraph_node4" class="node">
+<title>iso_fortran_env</title>
+<g id="a_module~~mod_profiler~~UsesGraph_node4"><a xlink:href="http://fortranwiki.org/fortran/show/iso_fortran_env" xlink:title="iso_fortran_env">
+<polygon fill="#337ab7" stroke="#337ab7" points="93.27,-24.27 0,-24.27 0,0 93.27,0 93.27,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="46.63" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">iso_fortran_env</text>
+</a>
+</g>
+</g>
+<!-- module~mod_profiler&#45;&gt;iso_fortran_env -->
+<g id="module~~mod_profiler~~UsesGraph_edge3" class="edge">
+<title>module~mod_profiler&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M235.2,-19.52C223.39,-16.09 210.17,-12.85 197.79,-11.13 167.26,-6.92 132.91,-6.81 104.78,-7.91"/>
+<polygon fill="#000000" stroke="#000000" points="104.87,-4.4 95.04,-8.36 105.19,-11.4 104.87,-4.4"/>
+</g>
+<!-- module~mod_kinds&#45;&gt;iso_fortran_env -->
+<g id="module~~mod_profiler~~UsesGraph_edge4" class="edge">
+<title>module~mod_kinds&#45;&gt;iso_fortran_env</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M128.99,-26.3C121.34,-24.96 113,-23.51 104.67,-22.06"/>
+<polygon fill="#000000" stroke="#000000" points="105.33,-18.63 94.88,-20.36 104.13,-25.52 105.33,-18.63"/>
+</g>
+</g>
+</svg>
+</div><div><a type="button" class="graph-help" data-toggle="modal" href="#graph-help-text">Help</a></div><div class="modal fade" id="graph-help-text" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><h4 class="modal-title" id="-graph-help-label">Graph Key</h4></div><div class="modal-body">
+    <p>Nodes of different colours represent the following: </p>
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.2 (20260126.1125)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="511pt" height="32pt"
+ viewBox="0.00 0.00 511.00 32.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 28.27)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-28.27 506.88,-28.27 506.88,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-24.27 0,-24.27 0,0 54,0 54,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="144.13,-24.27 71.87,-24.27 71.87,0 144.13,0 144.13,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="108" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="231.63,-24.27 162.37,-24.27 162.37,0 231.63,0 231.63,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="197" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="306.26,-24.27 249.74,-24.27 249.74,0 306.26,0 306.26,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="278" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="381.26,-24.27 324.74,-24.27 324.74,0 381.26,0 381.26,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="353" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="502.88,-24.27 399.12,-24.27 399.12,0 502.88,0 502.88,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="451" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+    
+    <p>Solid arrows point from a submodule to the (sub)module which it is
+    descended from. Dashed arrows point from a module or program unit to 
+    modules which it uses.
+    </p>
+    </div></div></div></div>
+      </li>
+      </ul>
+    </div>
+
+        <div class="panel panel-default">
+      <div class="panel-heading">
+  <h3 class="panel-title">Used by</h3>
+      </div>
+      <ul class="list-group">
+  <li class="list-group-item">
+    <div class="depgraph"><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.2 (20260126.1125)
+ -->
+<!-- Title: module~~mod_profiler~~UsedByGraph Pages: 1 -->
+<svg id="modulemod_profilerUsedByGraph" width="641pt" height="716pt"
+ viewBox="0.00 0.00 641.00 716.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="module~~mod_profiler~~UsedByGraph" class="graph" transform="scale(0.898262 0.898262) rotate(0) translate(4 793.55)">
+<title>module~~mod_profiler~~UsedByGraph</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-793.55 709.6,-793.55 709.6,4 -4,4"/>
+<!-- module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_node1" class="node">
+<title>module~mod_profiler</title>
+<polygon fill="none" stroke="black" points="79.02,-402.27 0,-402.27 0,-378 79.02,-378 79.02,-402.27"/>
+<text xml:space="preserve" text-anchor="middle" x="39.51" y="-386.53" font-family="Helvetica,sans-Serif" font-size="10.50">mod_profiler</text>
+</g>
+<!-- module~mod_flow_projection -->
+<g id="module~~mod_profiler~~UsedByGraph_node2" class="node">
+<title>module~mod_flow_projection</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node2"><a xlink:href=".././module/mod_flow_projection.html" xlink:title="mod_flow_projection">
+<polygon fill="#337ab7" stroke="#337ab7" points="281.04,-738.27 160.02,-738.27 160.02,-714 281.04,-714 281.04,-738.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-722.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_flow_projection</text>
+</a>
+</g>
+</g>
+<!-- module~mod_flow_projection&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge1" class="edge">
+<title>module~mod_flow_projection&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M159.52,-725.65C143.29,-722.68 126.93,-716.65 115.02,-705.13 72.79,-664.32 49.85,-480.15 42.85,-413.94"/>
+<polygon fill="#000000" stroke="#000000" points="46.35,-413.77 41.85,-404.18 39.39,-414.48 46.35,-413.77"/>
+</g>
+<!-- proc~flow_gather_owned_scalar_root -->
+<g id="module~~mod_profiler~~UsedByGraph_node3" class="node">
+<title>proc~flow_gather_owned_scalar_root</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node3"><a xlink:href=".././proc/flow_gather_owned_scalar_root.html" xlink:title="flow_gather_owned_scalar_root">
+<polygon fill="#d9534f" stroke="#d9534f" points="309.54,-696.27 131.52,-696.27 131.52,-672 309.54,-672 309.54,-696.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-680.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_gather_owned_scalar_root</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_gather_owned_scalar_root&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge3" class="edge">
+<title>proc~flow_gather_owned_scalar_root&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M131.43,-674.34C125.45,-671.37 119.89,-667.68 115.02,-663.13 78.15,-628.69 52.48,-473.79 43.77,-413.89"/>
+<polygon fill="#000000" stroke="#000000" points="47.26,-413.53 42.39,-404.12 40.33,-414.52 47.26,-413.53"/>
+</g>
+<!-- proc~flow_global_sum_owned -->
+<g id="module~~mod_profiler~~UsedByGraph_node4" class="node">
+<title>proc~flow_global_sum_owned</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node4"><a xlink:href=".././proc/flow_global_sum_owned.html" xlink:title="flow_global_sum_owned">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="290.42,-654.27 150.64,-654.27 150.64,-630 290.42,-630 290.42,-654.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-638.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_global_sum_owned</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_global_sum_owned&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge4" class="edge">
+<title>proc~flow_global_sum_owned&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M150.31,-638.86C137.4,-635.47 124.89,-629.94 115.02,-621.13 53.82,-566.52 42.61,-461.41 40.75,-414.16"/>
+<polygon fill="#000000" stroke="#000000" points="44.25,-414.13 40.49,-404.23 37.25,-414.32 44.25,-414.13"/>
+</g>
+<!-- proc~flow_allgather_owned_v4 -->
+<g id="module~~mod_profiler~~UsedByGraph_node5" class="node">
+<title>proc~flow_allgather_owned_v4</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node5"><a xlink:href=".././proc/flow_allgather_owned_v4.html" xlink:title="flow_allgather_owned_v4">
+<polygon fill="#d9534f" stroke="#d9534f" points="293.04,-612.27 148.02,-612.27 148.02,-588 293.04,-588 293.04,-612.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-596.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_allgather_owned_v4</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_allgather_owned_v4&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge2" class="edge">
+<title>proc~flow_allgather_owned_v4&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M147.76,-595.56C135.87,-592.17 124.39,-586.97 115.02,-579.13 64.14,-536.56 47.8,-454.52 42.72,-413.99"/>
+<polygon fill="#000000" stroke="#000000" points="46.2,-413.67 41.62,-404.12 39.25,-414.44 46.2,-413.67"/>
+</g>
+<!-- proc~flow_allreduce_global_scalar -->
+<g id="module~~mod_profiler~~UsedByGraph_node6" class="node">
+<title>proc~flow_allreduce_global_scalar</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node6"><a xlink:href=".././proc/flow_allreduce_global_scalar.html" xlink:title="flow_allreduce_global_scalar">
+<polygon fill="#d9534f" stroke="#d9534f" points="302.42,-570.27 138.64,-570.27 138.64,-546 302.42,-546 302.42,-570.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-554.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_allreduce_global_scalar</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_allreduce_global_scalar&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge5" class="edge">
+<title>proc~flow_allreduce_global_scalar&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M138.41,-549.62C130.02,-546.52 122.02,-542.45 115.02,-537.13 74.24,-506.14 54.06,-446.61 45.61,-413.61"/>
+<polygon fill="#000000" stroke="#000000" points="49.1,-413.14 43.36,-404.23 42.29,-414.77 49.1,-413.14"/>
+</g>
+<!-- proc~flow_allgather_owned_matrix -->
+<g id="module~~mod_profiler~~UsedByGraph_node7" class="node">
+<title>proc~flow_allgather_owned_matrix</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node7"><a xlink:href=".././proc/flow_allgather_owned_matrix.html" xlink:title="flow_allgather_owned_matrix">
+<polygon fill="#d9534f" stroke="#d9534f" points="303.92,-528.27 137.14,-528.27 137.14,-504 303.92,-504 303.92,-528.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-512.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_allgather_owned_matrix</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_allgather_owned_matrix&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge6" class="edge">
+<title>proc~flow_allgather_owned_matrix&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M136.74,-505.71C129.07,-502.94 121.69,-499.47 115.02,-495.13 84.11,-475.06 62.11,-437.29 50.36,-412.94"/>
+<polygon fill="#000000" stroke="#000000" points="53.55,-411.5 46.19,-403.88 47.19,-414.43 53.55,-411.5"/>
+</g>
+<!-- proc~flow_global_two_dots_owned -->
+<g id="module~~mod_profiler~~UsedByGraph_node8" class="node">
+<title>proc~flow_global_two_dots_owned</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node8"><a xlink:href=".././proc/flow_global_two_dots_owned.html" xlink:title="flow_global_two_dots_owned">
+<polygon fill="#d9534f" stroke="#d9534f" points="302.42,-486.27 138.64,-486.27 138.64,-462 302.42,-462 302.42,-486.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-470.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_global_two_dots_owned</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_global_two_dots_owned&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge7" class="edge">
+<title>proc~flow_global_two_dots_owned&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M138.31,-462.07C130.25,-459.62 122.35,-456.68 115.02,-453.13 93.67,-442.82 73.4,-424.96 59.4,-410.88"/>
+<polygon fill="#000000" stroke="#000000" points="62.05,-408.58 52.59,-403.79 57,-413.43 62.05,-408.58"/>
+</g>
+<!-- proc~flow_exchange_face_scalar -->
+<g id="module~~mod_profiler~~UsedByGraph_node9" class="node">
+<title>proc~flow_exchange_face_scalar</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node9"><a xlink:href=".././proc/flow_exchange_face_scalar.html" xlink:title="flow_exchange_face_scalar">
+<polygon fill="#d9534f" stroke="#d9534f" points="298.67,-444.27 142.39,-444.27 142.39,-420 298.67,-420 298.67,-444.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-428.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_exchange_face_scalar</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_exchange_face_scalar&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge8" class="edge">
+<title>proc~flow_exchange_face_scalar&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M152.74,-419.51C140.17,-416.91 127.16,-414.06 115.02,-411.13 107.03,-409.21 98.6,-407 90.4,-404.76"/>
+<polygon fill="#000000" stroke="#000000" points="91.45,-401.42 80.88,-402.11 89.57,-408.17 91.45,-401.42"/>
+</g>
+<!-- proc~update_transport_properties -->
+<g id="module~~mod_profiler~~UsedByGraph_node10" class="node">
+<title>proc~update_transport_properties</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node10"><a xlink:href=".././proc/update_transport_properties.html" xlink:title="update_transport_properties">
+<polygon fill="#d9534f" stroke="#d9534f" points="301.67,-402.27 139.39,-402.27 139.39,-378 301.67,-378 301.67,-402.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-386.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">update_transport_properties</text>
+</a>
+</g>
+</g>
+<!-- proc~update_transport_properties&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge9" class="edge">
+<title>proc~update_transport_properties&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M138.92,-390.13C122.36,-390.13 105.38,-390.13 90.29,-390.13"/>
+<polygon fill="#000000" stroke="#000000" points="90.68,-386.64 80.68,-390.14 90.68,-393.64 90.68,-386.64"/>
+</g>
+<!-- program~lowmach_react_hex -->
+<g id="module~~mod_profiler~~UsedByGraph_node11" class="node">
+<title>program~lowmach_react_hex</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node11"><a xlink:href=".././program/lowmach_react_hex.html" xlink:title="lowmach_react_hex">
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="705.6,-738.27 589.83,-738.27 589.83,-714 705.6,-714 705.6,-738.27"/>
+<text xml:space="preserve" text-anchor="middle" x="647.71" y="-722.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">lowmach_react_hex</text>
+</a>
+</g>
+</g>
+<!-- program~lowmach_react_hex&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge10" class="edge">
+<title>program~lowmach_react_hex&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M401.3,-766.13C273.8,-763.96 211.25,-830.8 115.02,-747.13 64.31,-703.05 46.47,-486.65 41.85,-413.98"/>
+<polygon fill="#000000" stroke="#000000" points="45.35,-413.8 41.25,-404.03 38.36,-414.22 45.35,-413.8"/>
+</g>
+<!-- program~lowmach_react_hex&#45;&gt;module~mod_flow_projection -->
+<g id="module~~mod_profiler~~UsedByGraph_edge21" class="edge">
+<title>program~lowmach_react_hex&#45;&gt;module~mod_flow_projection</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M604.8,-738.7C556.54,-751.84 474.71,-770.05 403.3,-766.13"/>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M401.3,-766.13C389.46,-765.93 331.14,-752.57 284.08,-741.35"/>
+<polygon fill="#000000" stroke="#000000" points="285.03,-737.98 274.49,-739.05 283.4,-744.78 285.03,-737.98"/>
+</g>
+<!-- module~mod_output -->
+<g id="module~~mod_profiler~~UsedByGraph_node21" class="node">
+<title>module~mod_output</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node21"><a xlink:href=".././module/mod_output.html" xlink:title="mod_output">
+<polygon fill="#337ab7" stroke="#337ab7" points="553.83,-738.27 478.56,-738.27 478.56,-714 553.83,-714 553.83,-738.27"/>
+<text xml:space="preserve" text-anchor="middle" x="516.19" y="-722.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_output</text>
+</a>
+</g>
+</g>
+<!-- program~lowmach_react_hex&#45;&gt;module~mod_output -->
+<g id="module~~mod_profiler~~UsedByGraph_edge23" class="edge">
+<title>program~lowmach_react_hex&#45;&gt;module~mod_output</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M589.53,-726.13C581.42,-726.13 573.16,-726.13 565.25,-726.13"/>
+<polygon fill="#000000" stroke="#000000" points="565.49,-722.64 555.49,-726.14 565.49,-729.64 565.49,-722.64"/>
+</g>
+<!-- module~mod_species -->
+<g id="module~~mod_profiler~~UsedByGraph_node22" class="node">
+<title>module~mod_species</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node22"><a xlink:href=".././module/mod_species.html" xlink:title="mod_species">
+<polygon fill="#337ab7" stroke="#337ab7" points="442.56,-698.27 362.04,-698.27 362.04,-674 442.56,-674 442.56,-698.27"/>
+<text xml:space="preserve" text-anchor="middle" x="402.3" y="-682.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">mod_species</text>
+</a>
+</g>
+</g>
+<!-- program~lowmach_react_hex&#45;&gt;module~mod_species -->
+<g id="module~~mod_profiler~~UsedByGraph_edge25" class="edge">
+<title>program~lowmach_react_hex&#45;&gt;module~mod_species</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M595.31,-713.58C581.86,-710.55 567.35,-707.51 553.83,-705.13 520.73,-699.32 483.24,-694.58 453.96,-691.29"/>
+<polygon fill="#000000" stroke="#000000" points="454.59,-687.84 444.26,-690.22 453.82,-694.8 454.59,-687.84"/>
+</g>
+<!-- proc~flow_gather_owned_matrix_root -->
+<g id="module~~mod_profiler~~UsedByGraph_node12" class="node">
+<title>proc~flow_gather_owned_matrix_root</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node12"><a xlink:href=".././proc/flow_gather_owned_matrix_root.html" xlink:title="flow_gather_owned_matrix_root">
+<polygon fill="#d9534f" stroke="#d9534f" points="310.67,-360.27 130.39,-360.27 130.39,-336 310.67,-336 310.67,-360.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-344.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_gather_owned_matrix_root</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_gather_owned_matrix_root&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge14" class="edge">
+<title>proc~flow_gather_owned_matrix_root&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M152.74,-360.76C140.17,-363.36 127.16,-366.21 115.02,-369.13 107.03,-371.06 98.6,-373.27 90.4,-375.51"/>
+<polygon fill="#000000" stroke="#000000" points="89.57,-372.1 80.88,-378.16 91.45,-378.85 89.57,-372.1"/>
+</g>
+<!-- proc~flow_exchange_cell_scalar -->
+<g id="module~~mod_profiler~~UsedByGraph_node13" class="node">
+<title>proc~flow_exchange_cell_scalar</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node13"><a xlink:href=".././proc/flow_exchange_cell_scalar.html" xlink:title="flow_exchange_cell_scalar">
+<polygon fill="#d9534f" stroke="#d9534f" points="296.42,-318.27 144.64,-318.27 144.64,-294 296.42,-294 296.42,-318.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-302.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_exchange_cell_scalar</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_exchange_cell_scalar&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge11" class="edge">
+<title>proc~flow_exchange_cell_scalar&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M144.37,-316.45C134.24,-319.21 124.18,-322.71 115.02,-327.13 93.67,-337.45 73.4,-355.31 59.4,-369.39"/>
+<polygon fill="#000000" stroke="#000000" points="57,-366.84 52.59,-376.48 62.05,-371.69 57,-366.84"/>
+</g>
+<!-- proc~flow_allgather_owned_scalar -->
+<g id="module~~mod_profiler~~UsedByGraph_node14" class="node">
+<title>proc~flow_allgather_owned_scalar</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node14"><a xlink:href=".././proc/flow_allgather_owned_scalar.html" xlink:title="flow_allgather_owned_scalar">
+<polygon fill="#d9534f" stroke="#d9534f" points="302.79,-276.27 138.27,-276.27 138.27,-252 302.79,-252 302.79,-276.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-260.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_allgather_owned_scalar</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_allgather_owned_scalar&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge18" class="edge">
+<title>proc~flow_allgather_owned_scalar&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M137.81,-274.17C129.76,-277.01 122,-280.6 115.02,-285.13 84.11,-305.21 62.11,-342.98 50.36,-367.33"/>
+<polygon fill="#000000" stroke="#000000" points="47.19,-365.84 46.19,-376.39 53.55,-368.77 47.19,-365.84"/>
+</g>
+<!-- proc~flow_allgather_owned_matrix_inplace -->
+<g id="module~~mod_profiler~~UsedByGraph_node15" class="node">
+<title>proc~flow_allgather_owned_matrix_inplace</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node15"><a xlink:href=".././proc/flow_allgather_owned_matrix_inplace.html" xlink:title="flow_allgather_owned_matrix_inplace">
+<polygon fill="#d9534f" stroke="#d9534f" points="326.04,-234.27 115.02,-234.27 115.02,-210 326.04,-210 326.04,-234.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-218.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_allgather_owned_matrix_inplace</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_allgather_owned_matrix_inplace&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge19" class="edge">
+<title>proc~flow_allgather_owned_matrix_inplace&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M128.82,-234.73C123.94,-237.11 119.29,-239.89 115.02,-243.13 74.24,-274.13 54.06,-333.66 45.61,-366.66"/>
+<polygon fill="#000000" stroke="#000000" points="42.29,-365.5 43.36,-376.04 49.1,-367.13 42.29,-365.5"/>
+</g>
+<!-- proc~flow_global_dots_owned -->
+<g id="module~~mod_profiler~~UsedByGraph_node16" class="node">
+<title>proc~flow_global_dots_owned</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node16"><a xlink:href=".././proc/flow_global_dots_owned.html" xlink:title="flow_global_dots_owned">
+<polygon fill="#d9534f" stroke="#d9534f" points="290.42,-192.27 150.64,-192.27 150.64,-168 290.42,-168 290.42,-192.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-176.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_global_dots_owned</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_global_dots_owned&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge12" class="edge">
+<title>proc~flow_global_dots_owned&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M150.19,-184.05C137.45,-187.41 125.03,-192.76 115.02,-201.13 64.14,-243.71 47.8,-325.75 42.72,-366.28"/>
+<polygon fill="#000000" stroke="#000000" points="39.25,-365.83 41.62,-376.15 46.2,-366.6 39.25,-365.83"/>
+</g>
+<!-- proc~flow_global_max_owned -->
+<g id="module~~mod_profiler~~UsedByGraph_node17" class="node">
+<title>proc~flow_global_max_owned</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node17"><a xlink:href=".././proc/flow_global_max_owned.html" xlink:title="flow_global_max_owned">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="290.79,-150.27 150.27,-150.27 150.27,-126 290.79,-126 290.79,-150.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-134.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_global_max_owned</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_global_max_owned&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge15" class="edge">
+<title>proc~flow_global_max_owned&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M150.04,-141.48C137.23,-144.88 124.82,-150.39 115.02,-159.13 53.82,-213.75 42.61,-318.86 40.75,-366.11"/>
+<polygon fill="#000000" stroke="#000000" points="37.25,-365.95 40.49,-376.04 44.25,-366.14 37.25,-365.95"/>
+</g>
+<!-- proc~flow_exchange_cell_matrix -->
+<g id="module~~mod_profiler~~UsedByGraph_node18" class="node">
+<title>proc~flow_exchange_cell_matrix</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node18"><a xlink:href=".././proc/flow_exchange_cell_matrix.html" xlink:title="flow_exchange_cell_matrix">
+<polygon fill="#d9534f" stroke="#d9534f" points="297.54,-108.27 143.52,-108.27 143.52,-84 297.54,-84 297.54,-108.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-92.54" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_exchange_cell_matrix</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_exchange_cell_matrix&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge13" class="edge">
+<title>proc~flow_exchange_cell_matrix&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M143.03,-101.15C132.69,-104.64 122.93,-109.74 115.02,-117.14 78.15,-151.58 52.48,-306.48 43.77,-366.38"/>
+<polygon fill="#000000" stroke="#000000" points="40.33,-365.75 42.39,-376.15 47.26,-366.74 40.33,-365.75"/>
+</g>
+<!-- proc~flow_allreduce_global_vector -->
+<g id="module~~mod_profiler~~UsedByGraph_node19" class="node">
+<title>proc~flow_allreduce_global_vector</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node19"><a xlink:href=".././proc/flow_allreduce_global_vector.html" xlink:title="flow_allreduce_global_vector">
+<polygon fill="#d9534f" stroke="#d9534f" points="303.17,-66.27 137.89,-66.27 137.89,-42 303.17,-42 303.17,-66.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-50.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_allreduce_global_vector</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_allreduce_global_vector&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge17" class="edge">
+<title>proc~flow_allreduce_global_vector&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M137.57,-60.86C129.23,-64.27 121.47,-68.9 115.02,-75.14 72.79,-115.95 49.85,-300.12 42.85,-366.33"/>
+<polygon fill="#000000" stroke="#000000" points="39.39,-365.79 41.85,-376.09 46.35,-366.5 39.39,-365.79"/>
+</g>
+<!-- proc~flow_global_dot_owned -->
+<g id="module~~mod_profiler~~UsedByGraph_node20" class="node">
+<title>proc~flow_global_dot_owned</title>
+<g id="a_module~~mod_profiler~~UsedByGraph_node20"><a xlink:href=".././proc/flow_global_dot_owned.html" xlink:title="flow_global_dot_owned">
+<polygon fill="#d94e8f" stroke="#d94e8f" points="287.79,-24.27 153.27,-24.27 153.27,0 287.79,0 287.79,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="220.53" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">flow_global_dot_owned</text>
+</a>
+</g>
+</g>
+<!-- proc~flow_global_dot_owned&#45;&gt;module~mod_profiler -->
+<g id="module~~mod_profiler~~UsedByGraph_edge16" class="edge">
+<title>proc~flow_global_dot_owned&#45;&gt;module~mod_profiler</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M152.8,-13.79C138.79,-17.12 125.2,-23.03 115.02,-33.13 67.44,-80.37 47.59,-293.78 42.15,-366.09"/>
+<polygon fill="#000000" stroke="#000000" points="38.66,-365.79 41.43,-376.01 45.65,-366.29 38.66,-365.79"/>
+</g>
+<!-- module~mod_output&#45;&gt;module~mod_flow_projection -->
+<g id="module~~mod_profiler~~UsedByGraph_edge20" class="edge">
+<title>module~mod_output&#45;&gt;module~mod_flow_projection</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M478.3,-726.13C431.94,-726.13 351.37,-726.13 292.82,-726.13"/>
+<polygon fill="#000000" stroke="#000000" points="292.94,-722.64 282.94,-726.14 292.94,-729.64 292.94,-722.64"/>
+</g>
+<!-- module~mod_output&#45;&gt;module~mod_species -->
+<g id="module~~mod_profiler~~UsedByGraph_edge24" class="edge">
+<title>module~mod_output&#45;&gt;module~mod_species</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M480.1,-713.59C470.2,-710.05 459.29,-706.15 448.88,-702.43"/>
+<polygon fill="#000000" stroke="#000000" points="450.29,-699.22 439.7,-699.15 447.94,-705.81 450.29,-699.22"/>
+</g>
+<!-- module~mod_species&#45;&gt;module~mod_flow_projection -->
+<g id="module~~mod_profiler~~UsedByGraph_edge22" class="edge">
+<title>module~mod_species&#45;&gt;module~mod_flow_projection</title>
+<path fill="none" stroke="#000000" stroke-dasharray="5,2" d="M361.55,-696.56C350.11,-699.45 337.61,-702.51 326.04,-705.13 315.21,-707.59 303.72,-710.05 292.46,-712.37"/>
+<polygon fill="#000000" stroke="#000000" points="291.91,-708.91 282.81,-714.34 293.31,-715.77 291.91,-708.91"/>
+</g>
+</g>
+</svg>
+</div><script>var panmodulemod_profilerUsedByGraph = svgPanZoom('#modulemod_profilerUsedByGraph', {zoomEnabled: true,controlIconsEnabled: true, fit: true, center: true,}); </script><div><a type="button" class="graph-help" data-toggle="modal" href="#graph-help-text">Help</a></div><div class="modal fade" id="graph-help-text" tabindex="-1" role="dialog"><div class="modal-dialog modal-lg" role="document"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><h4 class="modal-title" id="-graph-help-label">Graph Key</h4></div><div class="modal-body">
+    <p>Nodes of different colours represent the following: </p>
+    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Generated by graphviz version 14.1.2 (20260126.1125)
+ -->
+<!-- Title: Graph Key Pages: 1 -->
+<svg width="511pt" height="32pt"
+ viewBox="0.00 0.00 511.00 32.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 28.27)">
+<title>Graph Key</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-28.27 506.88,-28.27 506.88,4 -4,4"/>
+<!-- Module -->
+<g id="node1" class="node">
+<title>Module</title>
+<polygon fill="#337ab7" stroke="#337ab7" points="54,-24.27 0,-24.27 0,0 54,0 54,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="27" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Module</text>
+</g>
+<!-- Submodule -->
+<g id="node2" class="node">
+<title>Submodule</title>
+<polygon fill="#5bc0de" stroke="#5bc0de" points="144.13,-24.27 71.87,-24.27 71.87,0 144.13,0 144.13,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="108" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Submodule</text>
+</g>
+<!-- Subroutine -->
+<g id="node3" class="node">
+<title>Subroutine</title>
+<polygon fill="#d9534f" stroke="#d9534f" points="231.63,-24.27 162.37,-24.27 162.37,0 231.63,0 231.63,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="197" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Subroutine</text>
+</g>
+<!-- Function -->
+<g id="node4" class="node">
+<title>Function</title>
+<polygon fill="#d94e8f" stroke="#d94e8f" points="306.26,-24.27 249.74,-24.27 249.74,0 306.26,0 306.26,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="278" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Function</text>
+</g>
+<!-- Program -->
+<g id="node5" class="node">
+<title>Program</title>
+<polygon fill="#f0ad4e" stroke="#f0ad4e" points="381.26,-24.27 324.74,-24.27 324.74,0 381.26,0 381.26,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="353" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50" fill="white">Program</text>
+</g>
+<!-- This Page&#39;s Entity -->
+<g id="node6" class="node">
+<title>This Page&#39;s Entity</title>
+<polygon fill="none" stroke="black" points="502.88,-24.27 399.12,-24.27 399.12,0 502.88,0 502.88,-24.27"/>
+<text xml:space="preserve" text-anchor="middle" x="451" y="-8.53" font-family="Helvetica,sans-Serif" font-size="10.50">This Page&#39;s Entity</text>
+</g>
+</g>
+</svg>
+
+    
+    <p>Solid arrows point from a submodule to the (sub)module which it is
+    descended from. Dashed arrows point from a module or program unit to 
+    modules which it uses.
+    </p>
+    </div></div></div></div>
+  </li>
+      </ul>
+    </div>
+
+    <br>
+
+    <section class="visible-xs visible-sm hidden-md">
+      <h3>Contents</h3>
+ 
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#subs-1">Subroutines</a></h3></div>
+  <div class="list-group">
+    <div id="subs-1" class="panel-collapse collapse">
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_configure">profiler_configure</a>
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_reset">profiler_reset</a>
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_start">profiler_start</a>
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_stop">profiler_stop</a>
+      <a class="list-group-item" href="../module/mod_profiler.html#proc-profiler_report">profiler_report</a>
+    </div>
+  </div>
+</div>
+
+    </section>
+    <br class="visible-xs visible-sm hidden-md">
+
+
+    
+    
+
+    
+    
+
+    <section>
+    <h2>Subroutines</h2>
+      <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-profiler_configure"></span><h3>public subroutine <a href='../proc/profiler_configure.html'>profiler_configure</a>(enabled, nested)</h3></div>
+  <div class="panel-body">
+       
+<p>Configure profiling behavior at runtime.</p>
+    
+<h4>Arguments</h4>      <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" ></span>logical,</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>enabled</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>logical,</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>nested</strong></td><td></td>
+</tr>
+</tbody>
+</table>
+
+
+  </div>
+  </div>
+
+      <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-profiler_reset"></span><h3>public subroutine <a href='../proc/profiler_reset.html'>profiler_reset</a>()</h3></div>
+  <div class="panel-body">
+       
+<p>Reset all profiler state.</p>
+    
+<h4>Arguments</h4>      <em>None</em>
+
+  </div>
+  </div>
+
+      <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-profiler_start"></span><h3>public subroutine <a href='../proc/profiler_start.html'>profiler_start</a>(name)</h3></div>
+  <div class="panel-body">
+       
+<p>Starts a timer for a named kernel.</p>
+    
+<h4>Arguments</h4>      <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" ></span>character(len=*),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>name</strong></td><td></td>
+</tr>
+</tbody>
+</table>
+
+
+  </div>
+  </div>
+
+      <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-profiler_stop"></span><h3>public subroutine <a href='../proc/profiler_stop.html'>profiler_stop</a>(name)</h3></div>
+  <div class="panel-body">
+       
+<p>Stops a timer and accumulates the elapsed time.</p>
+    
+<h4>Arguments</h4>      <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" ></span>character(len=*),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>name</strong></td><td></td>
+</tr>
+</tbody>
+</table>
+
+
+  </div>
+  </div>
+
+      <div class="panel panel-default">
+  <div class="panel-heading codesum"><span class="anchor" id="proc-profiler_report"></span><h3>public subroutine <a href='../proc/profiler_report.html'>profiler_report</a>(comm, rank, nprocs)</h3></div>
+  <div class="panel-body">
+       
+<p>Generates a collective performance report across all MPI ranks.</p>
+    
+<h4>Arguments</h4>      <table class="table table-striped varlist">
+<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
+<tbody>
+<tr>
+  <td><span class="anchor" ></span>type(MPI_Comm),</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>comm</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>integer,</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>rank</strong></td><td></td>
+</tr>
+<tr>
+  <td><span class="anchor" ></span>integer,</td>
+<td>intent(in)</td>
+  <td></td>  <td></td><td>::</td>
+  <td><strong>nprocs</strong></td><td></td>
+</tr>
+</tbody>
+</table>
+
+
+  </div>
+  </div>
+
+    </section>    
+    <br>
+    
+    </div>
+  </div>
+
+    <hr>    
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+      <div class="row">
+        <div class="col-xs-6 col-md-6"><p>LowMachReact-Hex was developed by Khaled Mosharraf Mukut<br>&copy; 2026 
+</p>
+        </div>
+        <div class="col-xs-6 col-md-6">
+          <p class="text-right">
+            Documentation generated by 
+            <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+          </p>
+        </div>
+      </div>
+      <br>
+      </div> <!-- /container -->    
+    </footer>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+<!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+-->
+    <script src="../js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../js/ie10-viewport-bug-workaround.js"></script>
+
+    <!-- MathJax JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } },
+        jax: ['input/TeX','input/MathML','output/HTML-CSS'],
+        extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script src="../tipuesearch/tipuesearch_content.js"></script>
+    <script src="../tipuesearch/tipuesearch_set.js"></script>
+    <script src="../tipuesearch/tipuesearch.js"></script>
+    
+  </body>
+</html>
